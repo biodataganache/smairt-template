@@ -49,7 +49,7 @@ An MCP connector is useful when developers want the assistant to discover this w
 
 MCP is a delivery layer here; the skill remains the source of truth.
 
-For local testing with Claude Code before any shared deployment, see
+For testing the MCP server with Claude before any shared deployment, see
 `docs/LOCAL_MCP_TESTING.md`.
 
 The skill does not need to be added to a generated project by default unless the maintainers want every new SMAIRT project to ship with it. A follow-up change could copy `skills/smairt-research/` into `{{ cookiecutter.project_slug }}/skills/` if that is the preferred distribution model.

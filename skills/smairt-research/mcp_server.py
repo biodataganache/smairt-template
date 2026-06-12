@@ -1,5 +1,6 @@
-"""Local MCP server for testing the SMAIRT research skill with Claude Code."""
+"""MCP server for testing the SMAIRT research skill."""
 
+import argparse
 from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
@@ -9,6 +10,31 @@ ROOT = Path(__file__).resolve().parent
 SKILL_PATH = ROOT / "SKILL.md"
 WORKFLOW_PATH = ROOT / "references" / "workflow.md"
 
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run the SMAIRT research MCP server.")
+    parser.add_argument(
+        "--transport",
+        choices=("stdio", "streamable-http", "http"),
+        default="stdio",
+        help="MCP transport to use. Use streamable-http/http for Claude web via a tunnel.",
+    )
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Host for streamable-http mode.",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port for streamable-http mode.",
+    )
+    return parser.parse_args()
+
+
+ARGS = _parse_args()
+
 mcp = FastMCP(
     "SMAIRT Research",
     instructions=(
@@ -17,6 +43,8 @@ mcp = FastMCP(
         "SMAIRT project, structure experiments with the scientific method, "
         "or preserve a research breadcrumb trail across AI sessions."
     ),
+    host=ARGS.host,
+    port=ARGS.port,
 )
 
 
@@ -131,4 +159,5 @@ two experiments.
 
 
 if __name__ == "__main__":
-    mcp.run()
+    transport = "streamable-http" if ARGS.transport == "http" else ARGS.transport
+    mcp.run(transport=transport)
