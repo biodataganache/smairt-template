@@ -17,12 +17,14 @@ This project runs in **orchestrated topology**. Treat memory as files, not chat:
 - `FINDINGS.md` — layer 2: durable, scoped findings (read before designing anything)
 - `prompts/COMPACTION.md` — how to compact, promote findings, and restart cheaply
 - `prompts/roles/ORCHESTRATOR.md` — your default role: design, delegate, review, own memory
-- `prompts/roles/BUILDER.md` — the disposable worker you spawn for execution-heavy tasks
+- `prompts/roles/BUILDER.md` — the disposable worker contract (tool-agnostic)
+- `.claude/agents/builder.md` — the real Builder sub-agent (spawn it with the Task tool)
 - `prompts/handoffs/` — Build Brief / Build Report templates for delegation
 
 Default to acting as the **Orchestrator**: keep this thread lean, delegate noisy
-execution (debugging, big logs) to Builders, and never trust a Builder's result
-without checking the log file.
+execution (debugging, big logs) to the `builder` sub-agent via the Task tool, and
+never trust its result without checking the log file. See
+`prompts/roles/ORCHESTRATOR.md` for how to delegate.
 {% endif %}
 ## SMAIRT workflow
 

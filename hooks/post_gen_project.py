@@ -83,6 +83,7 @@ def remove_orchestrated_files():
     dirs_to_remove = [
         os.path.join("prompts", "roles"),
         os.path.join("prompts", "handoffs"),
+        os.path.join(".claude", "agents"),
     ]
     for f in files_to_remove:
         if os.path.exists(f):
@@ -90,6 +91,10 @@ def remove_orchestrated_files():
     for d in dirs_to_remove:
         if os.path.exists(d):
             shutil.rmtree(d)
+    # Remove the .claude directory only if the orchestrated agents were the only
+    # thing in it (don't clobber a user's other Claude Code config).
+    if os.path.isdir(".claude") and not os.listdir(".claude"):
+        os.rmdir(".claude")
 
 
 def remove_auto_load_files():
@@ -276,7 +281,8 @@ def main():
         remove_orchestrated_files()
     else:
         print("✓ Orchestrated topology: added PROJECT_STATE.md, FINDINGS.md, "
-              "prompts/COMPACTION.md, prompts/roles/, prompts/handoffs/")
+              "prompts/COMPACTION.md, prompts/roles/, prompts/handoffs/, "
+              "and the Claude Code Builder sub-agent (.claude/agents/builder.md)")
 
     # Handle auto-loaded context files (CLAUDE.md / AGENTS.md). 'yes' keeps them so
     # the AI reads the specified prompts automatically at session start (works in
