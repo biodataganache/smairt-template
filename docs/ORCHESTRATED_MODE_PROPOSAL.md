@@ -1,419 +1,438 @@
-# SMAIRT Orchestrated Mode Proposal: Lean Two-Tier Agents for Focus & Context Control
+# SMAIRT Orchestrated Mode: Keeping the AI On Track Without Blowing the Budget
 
-## Executive Summary
+## Summary
 
-This document proposes a new SMAIRT workflow mode — **orchestrated mode** — whose
-goal is to keep the AI on task and keep the main thread's context window small,
-under **strong budget constraints and no parallelization**.
+Running a long SMAIRT project through a chat-based AI causes two problems. The AI
+slowly loses track of what it's doing, and the conversation gets expensive. This
+proposal adds an optional **orchestrated mode** that addresses both at low cost.
 
-The headline conclusion, derived from a token-cost model in §8:
+Three findings drive the design:
 
-> **Compaction is the cost lever. Delegation is the focus lever. Layered memory
-> is the recall lever.**
-> Aggressively externalizing state and restarting the thread ("compaction") cuts
-> token spend ~3–5× and is nearly free. Adding a disposable "builder" sub-agent on
-> top is roughly **cost-neutral** for sequential work — it buys reliability and a
-> clean main thread, *not* token savings. It only becomes a net cost *win* when a
-> single iteration is dominated by heavy execution/debugging, or when work
-> parallelizes (which we are explicitly not doing). And a lean working-state file
-> alone *forgets* — so memory is split into three layers (§6) so old, context-
-> scoped findings are never lost or misapplied.
+1. The biggest cost saving is nearly free. Have the AI keep a short "where we are
+   now" file and start a fresh chat whenever the current one gets bloated. This one
+   habit cuts cost by roughly 3x to 5x and keeps the AI focused. We call it
+   compaction.
+2. A second "helper" AI improves focus, not cost. Handing messy execution work to a
+   throwaway sub-agent keeps the main chat clean, but it costs about the same in
+   total. Use it for reliability, not savings.
+3. A short status file forgets things. So memory is split into three layers: a tiny
+   live status, a curated list of lasting findings, and the full archive on disk.
+   That way a result from ten iterations ago is never lost or misapplied.
 
-So the recommended design is **two tiers, not three**: a single lean
-**Orchestrator** (Manager + Architect fused) plus optional **transient Builders**,
-sitting on top of a mandatory **three-layer memory protocol** (working state +
-scoped findings ledger + permanent archive).
+The recommendation is to build the cheap memory habits first, since they are the
+real win, and make the helper-AI part opt-in for later.
 
 ---
 
-## 1. Goals and Constraints
+## 1. What this is trying to do
 
-| | |
+There are two goals and three constraints.
+
+| | What it means |
 |---|---|
-| **Goal A** | Keep the LLM on task across a long research project |
-| **Goal B** | Keep the main thread's context window small |
-| **Constraint 1** | Strong token budget — total spend matters, not just main-thread size |
-| **Constraint 2** | No parallelization — work is sequential (one experiment at a time) |
-| **Constraint 3** | Stay tool-agnostic (Roo, Cursor, Windsurf, Claude, ChatGPT) |
+| Goal A: stay on track | The AI shouldn't drift, repeat itself, or forget a decision made 20 steps back. |
+| Goal B: keep the chat small | A bloated conversation is slow, forgetful, and costly. The active chat should stay lean. |
+| Constraint 1: tight budget | Total spend matters, not just chat size. |
+| Constraint 2: one thing at a time | We are not running experiments in parallel. |
+| Constraint 3: tool-agnostic | It has to work in Roo, Cursor, Windsurf, Claude, or a plain browser chat. |
 
-Goals A and B partly conflict with Constraint 1: offloading work to a sub-agent
-shrinks the main thread but raises *total* tokens, because a cold sub-agent
-re-reads context to orient itself. The cost model in §8 resolves the tradeoff.
-
----
-
-## 2. Core Insight: Recurring vs. One-Time Context Cost
-
-Every turn on a conversation thread re-sends that thread's **entire accumulated
-context** as input tokens. Therefore:
-
-- **Main-thread context is a recurring tax.** 15k tokens of debugging noise added
-  to the main thread early in a session is re-transmitted on *every* subsequent
-  turn. Over 30 turns that single mess costs ~450k tokens.
-- **A disposable sub-context is a one-time cost.** The same work done in a builder
-  that returns a two-line summary costs its tokens once; the main thread never
-  carries it.
-- **A restart erases the tax entirely.** Writing state to a file and starting a
-  fresh thread drops accumulated noise for ~free.
-
-This is why naive single-threading is expensive: noise accumulates and is paid
-repeatedly. Both compaction and delegation attack that recurring tax — but
-compaction attacks it far more cheaply, because it doesn't re-pay orientation.
+One tension is worth naming up front. Goal B (small chat) can work against
+Constraint 1 (low cost). Moving work into a helper AI shrinks the main chat, but the
+helper has to re-read context to get oriented, so it can raise total spend. Section 6
+settles that tradeoff with numbers.
 
 ---
 
-## 3. Architecture: Two Tiers
+## 2. The idea everything rests on
+
+Every message you send re-sends the whole conversation so far. The AI has no memory
+between turns except the transcript you hand it, so each new turn pays for all the
+text that came before it, again.
+
+That single fact explains the design.
+
+A long chat is a recurring cost. Say a messy debugging session dumps 15,000 tokens of
+errors and logs into the chat early on. If you then take 30 more turns, you re-send
+that mess about 30 times. It is not paid once. It is paid on every turn that follows.
+
+A throwaway side-chat is a one-time cost. Do that same debugging in a disposable
+helper that hands back a two-line summary, and the main chat never carries the 15,000
+tokens at all.
+
+Starting fresh erases the cost. Write down where you are, open a new chat, and the
+accumulated junk is gone.
+
+So there are two ways to stop paying: delegate the mess to a helper, or restart the
+chat from a short summary. Restarting is far cheaper, because nobody has to re-read
+context to get oriented.
+
+---
+
+## 3. The design: two roles, not three
+
+The original sketch had three roles: a Manager, an Architect, and Builders. Under "no
+parallelism plus tight budget," the middle role isn't worth its keep, so we fold it
+in. That leaves two roles.
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│  ORCHESTRATOR  (stable thread; Manager + Architect fused) │
-│  • talks to the user                                      │
-│  • owns the research question + north-star state          │
-│  • designs experiments, writes hypotheses, reviews results│
-│  • delegates execution; never debugs inline               │
-└───────────────┬──────────────────────────────────────────┘
-                │  Build Brief (self-contained)
-                ▼
-        ┌───────────────────────┐
-        │  BUILDER (transient)  │   ← spawned only when an iteration is
-        │  • writes one script  │     execution-heavy; otherwise skipped
-        │  • runs & debugs it   │
-        │  • returns Build Report (short summary + log path)
-        └───────────────────────┘
++-------------------------------------------------------------+
+|  ORCHESTRATOR: the one steady chat you work in              |
+|    - talks to you                                           |
+|    - owns the question, the plan, and the memory files      |
+|    - designs each experiment and interprets the results     |
+|    - hands messy execution down; never debugs inline        |
++---------------+---------------------------------------------+
+                |  a self-contained "Build Brief"
+                v
+        +----------------------------------------+
+        |  BUILDER: a throwaway helper           |
+        |    - spawned only for execution-heavy  |
+        |      steps; skipped otherwise          |
+        |    - writes one script, runs it,       |
+        |      fights the bugs                   |
+        |    - hands back a short "Build Report" |
+        |      (key numbers and the log path)    |
+        +----------------------------------------+
 ```
 
-### Why not three tiers (no separate standing Architect)
+The Orchestrator is the single chat you actually talk to. It holds the question, the
+plan, and the memory, and it does the thinking: designing experiments, reading
+results, deciding what comes next.
 
-A separate, *persistent* Architect was the part of the original idea that
-parallelization would have justified. Without parallelization it is pure overhead:
+A Builder is a disposable worker. When a step is going to be messy, with lots of
+debugging or big logs, the Orchestrator writes it a self-contained brief and lets it
+do the dirty work in its own throwaway context. The Builder returns a clean summary
+and is then discarded.
 
-- A second standing thread is a second context to keep alive and re-inject every
-  turn — it doubles the "recurring tax" of §2 for the planning layer.
-- It adds a Manager↔Architect handoff round-trip with nothing to parallelize
-  against.
-- Experiment design is *intermittent thinking*, not a process that needs its own
-  permanent thread. The Orchestrator wears the "architect hat" (or uses a
-  plan-mode) when designing, then returns to driving.
-
-Fusing Manager + Architect keeps one authoritative thread holding the north-star
-— which is also the best thing for Goal A (staying on task).
-
----
-
-## 4. Roles Mapped to SMAIRT Artifacts
-
-The artifacts are the shared memory. Agents coordinate by reading/writing files,
-not by passing long messages.
-
-| Role | Stable? | Owns (writes) | Reads | Never does |
-|------|---------|---------------|-------|------------|
-| **Orchestrator** | yes (persistent thread) | `PROJECT_STATE.md`, `background/`, `plans/PLAN_*.md`, `hypotheses/HYPOTHESIS_XX.md`, `analysis/ANALYSIS_XX.md` | prior analyses, `KNOWN_PATTERNS.md` | inline debugging; long log parsing |
-| **Builder** | no (disposable) | `experiments/script_XX.py`, `results/logs/` | the Build Brief + conventions + `KNOWN_PATTERNS.md` only | design decisions; user interaction |
+Why drop the standalone Architect? A separate, always-running designer AI would be a
+second long chat to keep alive and re-send every turn. That doubles the recurring
+cost from Section 2, with nothing to parallelize against. Experiment design is
+occasional thinking, not a job that needs its own permanent chat. So the Orchestrator
+just does the design work when it's time, then goes back to driving. One
+authoritative chat is also the best thing for staying on track (Goal A).
 
 ---
 
-## 5. Handoff Contracts
+## 4. Memory: think of it as a lab notebook
 
-Builders start **cold**, so the brief must be self-contained. Templated documents:
+A lean main chat only works if the project's memory lives in files, not in the chat
+history. But you can't put everything in one file. A short status note forgets
+long-term findings, and a giant log is too big to reread every session.
 
-- **Build Brief (Orchestrator → Builder):** the exact script to write, inputs,
-  expected outputs, where to log, which conventions / `KNOWN_PATTERNS` entries
-  apply, and the definition of done. Assume the builder has read nothing else.
-- **Build Report (Builder → Orchestrator):** what ran, log path, key numbers,
-  anomalies, errors hit. Kept short — this is the only thing that re-enters the
-  main thread.
+So memory has three layers, like a good lab notebook.
 
-The Orchestrator validates the report **against the log file**, never trusting the
-builder's claim of success (same skepticism SMAIRT already applies to LLM
-literature claims).
+| Layer | File(s) | What it's for | Stays small? | Reread every session? |
+|-------|---------|---------------|--------------|----------------------|
+| 1. Live status | `PROJECT_STATE.md` | Where are we right now? | Yes, overwritten | Yes |
+| 2. Findings ledger | `FINDINGS.md` (plus `KNOWN_PATTERNS.md` for code and errors) | What have we learned that's still true? | Yes, curated | Yes |
+| 3. Archive | `analysis/`, `results/logs/`, `hypotheses/` | Every result, ever | No | No, searched when needed |
 
----
+Nothing is ever thrown away. The status note churns, the ledger is hand-curated, and
+the archive is permanent. Layer 1 keeps the AI on task, layer 2 stops it forgetting
+or repeating work, and layer 3 is the permanent record you can always dig into.
 
-## 6. Memory & State Architecture (the cheap, mandatory layer)
+### 4.1 The live status note (`PROJECT_STATE.md`)
 
-A lean main thread only works if memory lives in **files, not the chat**. But a
-single overwritten state file is just *working memory* — it forgets long-term
-findings. So memory is **three layers**, each with a different job. This is the
-part that does most of the work for both goals, at near-zero cost.
+One short file the Orchestrator keeps current: the question, the current hypothesis,
+the last result, the next step, and any loose ends. It is reread at the start of
+every session. Keep it short. If a section is growing, that content belongs in the
+ledger or the archive instead.
 
-| Layer | File(s) | Holds | Size | Overwritten? | Loaded each session? |
-|-------|---------|-------|------|--------------|----------------------|
-| **1. Working state** | `PROJECT_STATE.md` | "Where we are right now" | tiny | yes | yes |
-| **2. Findings ledger** | `FINDINGS.md` (+ `KNOWN_PATTERNS.md` for code/errors) | "What we've learned that's still true" | small, curated | append/edit | yes |
-| **3. Archive** | `analysis/`, `results/logs/`, `hypotheses/` | every result, ever | large | never | no — searched on demand |
+### 4.2 The findings ledger (`FINDINGS.md`): never write a bare verdict
 
-Nothing is ever deleted: the working state churns, the ledger is curated, the
-archive is permanent. Layer 1 keeps the AI on task; layer 2 prevents forgetting and
-duplicate work; layer 3 is the searchable system of record.
-
-### 6.1 Working state — `PROJECT_STATE.md`
-
-A single north-star file the Orchestrator keeps current: research question, current
-hypothesis, last result, next step, open threads. Re-injected on every fresh start.
-This is what keeps the AI on task.
-
-### 6.2 Findings ledger — scoped, conditional, never bare verdicts
-
-A finding is **not** a universal truth ("X doesn't work"); it is a claim bound to
-the context it was found in. Every entry carries its **scope**, so the model can
-tell runs apart and knows when a result no longer applies. Bare verdicts are
-forbidden. Entry template:
+This is what stops the AI forgetting what it learned. The rule: a finding is never a
+flat statement like "X doesn't work." It is always a claim plus the context it was
+found in. Every entry records its scope, so the AI can tell two runs apart and knows
+when an old result no longer applies.
 
 ```
 ### F-017: Frequency weighting improves AUPRC
 - Claim:      frequency weighting helps the model
-- Scope:      real dataset (N≈50k), phase 03_real, iter 17
+- Scope:      real dataset (N approx 50k), phase 03_real, iter 17
 - Evidence:   analysis/ANALYSIS_17.md, results/logs/script_17*.log
 - Status:     established
-- Supersedes: F-007 (failed on synthetic N≈500 — small-sample artifact)
+- Supersedes: F-007 (it failed on synthetic data, N approx 500, a small-sample artifact)
 ```
 
-Status values: `established` · `provisional` (narrow context, untested at scale) ·
-`needs-revalidation` · `superseded-by F-NN`.
+Status can be `established`, `provisional` (seen only in a narrow setting),
+`needs-revalidation` (the situation changed, so don't trust it yet), or
+`superseded-by F-NN`.
 
-### 6.3 The re-validation rule (when context changes)
+### 4.3 What to do when the situation changes
 
-> When the dataset, scale, or phase changes, findings from a narrower context
-> become **provisional**. Re-validate before relying on them; record the new result
-> with its new scope and link it to the old one. Keep both — *"X fails on small data
-> but works at scale"* is a richer, truer finding than either run alone.
+This is the case you raised. A result from a small early dataset may not hold on a
+bigger one later. The rule:
 
-This makes SMAIRT's existing "works within certain boundaries" principle and its
-phase-transition guidance ("validate whether results transfer") into structured data.
+> When the dataset, scale, or phase changes, treat older narrow-context findings as
+> provisional. Re-test before relying on them, record the new result with its new
+> scope, and link the two. Keep both. "X fails on small data but works at scale" is a
+> richer, truer finding than either run alone.
 
-### 6.4 The promotion habit
+This is SMAIRT's existing "works within certain boundaries" idea, written down as
+structured data instead of left implicit.
 
-Forgetting happens when a key result never leaves its iteration's analysis file. So:
-when a result graduates from "a number in one iteration" to "a fact that should
-shape future work," the Orchestrator **promotes** it into `FINDINGS.md` with full
-scope. Before designing any new experiment, it reads `FINDINGS.md` and searches
-recent `analysis/` files — this is what stops duplicate work and stale verdicts.
-Promotion is the single behavioral rule that makes long-term recall work.
+### 4.4 The habit that makes memory work: promotion
 
-### 6.5 Compaction & caching
+Forgetting happens when a useful result stays buried in one iteration's analysis file
+and is never lifted up. So the rule is: when a result graduates from "a number from
+one run" to "a fact that should shape what we do next," the Orchestrator promotes it
+into `FINDINGS.md`, with full scope. And before designing any new experiment, it
+reads the ledger and skims recent analyses first. That is what stops duplicate work
+and stale assumptions. Promotion is the single behavior that makes long-term recall
+actually work.
 
-- **Compaction** — when the Orchestrator thread grows long, write state to
-  `PROJECT_STATE.md`, start a fresh thread, rehydrate from layers 1–2 (and search
-  layer 3 as needed). Resets context bloat better than any sub-agent. Reuse the
-  existing `compile_for_ai.py` and `CONTEXT_INDEX.md` primitives.
-- **Cacheable prefix** — put stable content (role prompt, conventions, ledger) at
-  the front of every prompt so prompt caching covers it.
+### 4.5 Compaction and caching
+
+Compaction means save and restart. When the chat gets long, update
+`PROJECT_STATE.md`, start a fresh chat, and reload from layers 1 and 2, digging into
+the archive only when you need a specific old result. This clears accumulated junk
+better than any helper AI. SMAIRT already has the plumbing for it in
+`compile_for_ai.py` and `CONTEXT_INDEX.md`.
+
+Caching means put the stable stuff first. Keep unchanging content (role instructions,
+conventions, the ledger) at the top of every prompt, so the AI's prompt cache can
+serve it at a fraction of the price. Section 6 has the numbers.
 
 ---
 
-## 7. What to Offload vs. Keep
+## 5. What goes to a Builder, and what stays put
 
-Offload **high-token, low-residual-value** work; keep **low-token, high-value** work.
+The rule is simple. Send the high-volume, low-value work down, and keep the small,
+valuable thinking up top.
 
-| Send to Builder | Keep in Orchestrator |
-|-----------------|----------------------|
-| running / re-running scripts | the research question |
-| error & stack-trace iteration | hypotheses and design decisions |
-| big log parsing | conclusions drawn from analysis |
-| file / codebase exploration | the next-step decision |
+| Send to a Builder | Keep in the Orchestrator |
+|-------------------|--------------------------|
+| Running and re-running scripts | The research question |
+| Fighting errors and stack traces | Hypotheses and design decisions |
+| Wading through big logs | The conclusions drawn from results |
+| Exploring unfamiliar files | Deciding the next step |
 
-The builder's job is to absorb the token-heavy mess and hand back a clean residue.
+A Builder absorbs the token-heavy mess and hands back a clean, short residue. Two
+contracts make that work, and both are just fill-in templates.
+
+The Build Brief (Orchestrator to Builder) gives the exact script to write, its
+inputs, expected outputs, where to log, which conventions apply, and what "done"
+means. The Builder starts cold and reads nothing else, so the brief has to stand on
+its own.
+
+The Build Report (Builder to Orchestrator) gives what ran, where the log is, the key
+numbers, and any surprises. It is kept short, because it is the only thing that
+re-enters the main chat.
+
+One discipline matters: the Orchestrator checks the Build Report against the actual
+log file, never taking the Builder's "it worked" on faith. This is the same
+skepticism SMAIRT already applies to anything an LLM claims.
 
 ---
 
-## 8. Cost Model and Estimates
+## 6. What it costs
 
-> **These are illustrative estimates from an explicit model, not measurements.**
-> They are for *relative* comparison of architectures. Assumptions are stated so
-> you can re-run them with your own numbers.
+The numbers below come from a simple, explicit model, not from measuring a real
+project. They are meant for comparing the options, not for billing. The full
+arithmetic is in the Appendix; this section gives the result.
 
-### Assumptions
+We compare three ways of working over a session of about five iterations.
 
-| Symbol | Meaning | Value |
-|--------|---------|-------|
-| `B` | Orchestrator base context (role + state + conventions) | 8k tokens |
-| `E` | Execution/debugging noise generated per iteration | 15k tokens |
-| `T` | Turns per iteration | 6 |
-| `N` | Iterations in the session | 5 |
-| — | Builder priming (brief + conventions re-read) | 6k tokens |
-| — | Cost ≈ cumulative **input** tokens (context re-sent each turn); output ignored for clarity |
+- A, Naive: one long chat, no restarts, no helper. Junk piles up and gets re-sent
+  every turn.
+- B, Restart habit: one chat, but you compact and restart between iterations.
+- C, Helper too: the restart habit plus a Builder for execution.
 
-### Three architectures, no caching
+### The bottom line, in dollars (Claude Opus 4.8 rates)
 
-**A — Single thread, naive** (no compaction, no builder). Noise accumulates across
-iterations and is re-sent every turn:
+| Way of working | Without caching | With caching |
+|----------------|-----------------|--------------|
+| A, Naive | about $8 to $9 per session | about $7 to $8 (caching can't help the junk) |
+| B, Restart habit | about $3 to $4 | about $1.50 to $2.50 |
+| C, Helper too | about $3 to $4 | about $1.50 to $2.50 |
 
-```
-input ≈ T · Σ[ B + (i-1)·E + E/2 ]  for i=1..5
-      = 6 · [5·8k + 15k·10 + 5·7.5k] = 6 · 227.5k ≈ 1.37M tokens
-```
-
-**B — Single thread + compaction** (restart between iterations; no builder). Each
-iteration starts fresh; noise only builds *within* an iteration:
-
-```
-input ≈ N · T · (B + E/2) = 5 · 6 · 15.5k ≈ 465k tokens   (+~10k compaction) ≈ 0.47M
-```
-
-**C — Orchestrator + Builder + compaction**. Execution noise lives in the builder,
-not the main thread; orchestrator runs ~3 lean turns/iteration:
-
-```
-orchestrator ≈ N · 3 · (B + 1k report)          = 5 · 3 · 9k   ≈ 135k
-builder      ≈ N · (prime + T · (E/2))           = 5 · (6k+45k) ≈ 255k
-total                                                            ≈ 0.39M–0.56M
-```
-(≈0.56M with builder priming re-paid each iteration; ≈0.39M if the builder prime
-is small/stable.)
-
-### Summary (no caching)
-
-| Architecture | Est. session input | vs. naive | Main-thread context |
-|--------------|--------------------|-----------|---------------------|
-| **A** Naive single thread | ~1.37M | 1.0× | grows unbounded |
-| **B** Single + compaction | ~0.47M | **~2.9× cheaper** | small, resets each iteration |
-| **C** Orchestrator + builder | ~0.39M–0.56M | ~2.4–3.5× cheaper | smallest, stays clean *within* an iteration |
-
-### With prompt caching
-
-Caching (~0.1× on cached prefix tokens) helps B and C far more than A, because
-their stable-prefix fraction is large while A is dominated by non-cacheable
-accumulating noise:
-
-| Architecture | Est. session input, cached |
-|--------------|----------------------------|
-| **A** | ~1.2M (caching barely helps; noise isn't cacheable) |
-| **B** | ~0.25M |
-| **C** | ~0.27M |
-
-### In dollars (Claude Opus 4.8 rates)
-
-Rate card (per 1M tokens):
+Those figures use this rate card (per 1M tokens):
 
 | Token type | Rate |
 |------------|------|
 | Input (uncached) | $5.00 |
 | Output | $25.00 |
-| Cache write — 5-min TTL (1.25×) | $6.25 |
-| Cache write — 1-hour TTL (2×) | $10.00 |
-| Cache read (~0.1×) | $0.50 |
+| Cache write (5 minute) | $6.25 |
+| Cache write (1 hour) | $10.00 |
+| Cache read | $0.50 |
 
-The decisive ratio: a **cache read is ~10% of a fresh input token** ($0.50 vs $5.00)
-— the reason the cacheable-prefix + compaction layer is so cheap. Applying these
-rates to the per-session token estimates above (input-dominated; ~$1–2 of output
-added per session):
+The number that makes everything cheap is the cache read rate. A cached token costs
+about 10% of a fresh one ($0.50 versus $5.00). That is why putting stable content
+first and reusing it pays off so much.
 
-| Architecture | No caching | With caching |
-|--------------|-----------|--------------|
-| **A** Naive single thread | **~$8–9** | **~$7–8** (noise isn't cacheable) |
-| **B** Single + compaction | **~$3–4** | **~$1.5–2.5** |
-| **C** Orchestrator + builder | **~$3–4** | **~$1.5–2.5** |
+### Three things to take away
 
-The dollar view confirms the token view: the **~$8 → ~$3** drop is almost entirely
-the **compaction + memory protocol** (P0), not the builder tier (B ≈ C). Under a
-tight budget, the P0 layer is where the savings live; builders are a focus/
-reliability choice, roughly cost-neutral.
+1. The restart habit is the big lever. Going from A to B is roughly a 3x to 5x drop
+   in cost, and it is nearly free to adopt. Do this no matter what else you decide.
+2. The helper AI is roughly cost-neutral. B and C cost about the same. The helper
+   moves the mess out of the main chat rather than removing it, and pays a small
+   re-orientation cost, so total spend is a wash or slightly worse.
+3. So the helper is a focus tool, not a savings tool. Its real payoff is a main chat
+   that never sees debugging noise: steadier, more predictable, and protected from one
+   ugly debugging session bloating everything.
 
-### What the model says
+### When the helper does save money
 
-1. **Compaction is the dominant lever** — ~3–5× cheaper than naive, essentially
-   free to implement. Do this regardless of anything else.
-2. **The builder is ~cost-neutral vs. compaction alone** for sequential work
-   (B ≈ C). It moves the execution noise out of the main thread rather than
-   eliminating it, and re-pays orientation — so total tokens are a wash, sometimes
-   slightly worse.
-3. **The builder's payoff is non-cost:** a main thread that never sees execution
-   noise stays more focused (Goal A) and more predictable, and avoids a single
-   long debugging slog bloating the active context mid-iteration.
+Only when a single iteration is dominated by heavy execution, with lots of debugging
+or big outputs. In that case the helper caps the main chat's size, while a single
+chat would re-send a growing mess across that iteration's turns. For short, clean
+experiments it is a small loss, because you pay to orient the helper for little gain.
 
-### Sensitivity — when the builder *does* save tokens
-
-The builder becomes a net cost **win** when, within one iteration, execution noise
-is large relative to design work — i.e. `E` is big or debugging takes many turns.
-In the limit of heavy debugging, the builder caps the orchestrator at `B` while a
-single thread would re-send a growing `E` across that iteration's turns. It is a
-net **loss** when iterations are short and clean (the 6k priming dominates).
-
-> **Rule of thumb:** use a builder for iterations you expect to be debugging-heavy;
-> for short, clean experiments, skip it and stay single-thread + compaction.
+> Rule of thumb: use a Builder for iterations you expect to be debugging-heavy. For
+> quick, clean experiments, skip it and rely on restart plus the memory files.
 
 ---
 
-## 9. When NOT to Use a Builder
+## 7. When not to use a Builder
 
-- Short, clean experiments (priming cost > noise avoided).
-- Tightly-coupled reasoning that needs the full evolving context in one place.
-- Anything where the human is iterating conversationally with the Orchestrator.
+- Short, clean experiments, where orienting the helper costs more than the mess it
+  avoids.
+- Tightly-coupled reasoning that needs the whole evolving picture in one place.
+- Anything where you are iterating conversationally with the Orchestrator yourself.
 
-Default to **single thread + compaction**; reach for a builder only on heavy
-execution. The mode should make builders *opt-in per iteration*, not automatic.
+The default is one chat plus the restart habit. Reach for a Builder only when a step
+is going to be messy. Builders should be opt-in per step, never automatic.
 
 ---
 
-## 10. Implementation as a SMAIRT Mode
+## 8. How we would build it
 
-Tool-agnostic: express the mode as **role prompt files + handoff templates + a
-router**, not a hardwired sub-agent API. It then degrades gracefully — in Claude
-Code the Orchestrator can spawn real Task sub-agents as builders; in a plain web
-chat the same files are driven by the human switching hats.
+Because SMAIRT has to run anywhere, the mode is just prompt files, handoff templates,
+and a small index, not a hardwired sub-agent API. It then degrades gracefully. In
+Claude Code the Orchestrator can spawn real sub-agents as Builders. In a plain
+browser chat, the same files are driven by a human doing each role in turn.
 
-### New cookiecutter variable
+A cookiecutter option turns it on:
 
 ```json
 { "agent_topology": ["single", "orchestrated"] }
 ```
 
-- `single` (default): one thread + state/compaction protocol.
-- `orchestrated`: adds Orchestrator/Builder roles and handoff templates.
+- `single` (default): one chat plus the memory and restart protocol.
+- `orchestrated`: adds the Orchestrator and Builder roles and the handoff templates.
 
-### Files to add
+Files the orchestrated option adds:
 
 ```
-PROJECT_STATE.md                    # layer 1: working state (both topologies)
-FINDINGS.md                         # layer 2: scoped findings ledger (both topologies)
-prompts/roles/ORCHESTRATOR.md       # role: design + review + delegate, never debug inline
-prompts/roles/BUILDER.md            # cold-start contract; self-contained
-prompts/handoffs/BUILD_BRIEF.md     # Orchestrator → Builder template
-prompts/handoffs/BUILD_REPORT.md    # Builder → Orchestrator template
-prompts/COMPACTION.md               # when/how to write state, promote findings, and restart
+PROJECT_STATE.md                 # layer 1: live status
+FINDINGS.md                      # layer 2: findings ledger
+prompts/COMPACTION.md            # how to save state, promote findings, and restart
+prompts/roles/ORCHESTRATOR.md    # the steady-chat role: design, review, delegate
+prompts/roles/BUILDER.md         # the cold-start helper contract
+prompts/handoffs/BUILD_BRIEF.md  # Orchestrator to Builder template
+prompts/handoffs/BUILD_REPORT.md # Builder to Orchestrator template
 ```
 
-Extend the existing `prompts/CONTEXT_INDEX.md` into a per-role router (which files
-each role reads). Reuse `scripts/compile_for_ai.py` as the rehydration primitive.
+It also extends `prompts/CONTEXT_INDEX.md` into an index of which files each role
+reads, and reuses `scripts/compile_for_ai.py` for reloading a fresh chat.
+
+### Suggested order, most value first
+
+| Priority | Do this | Why |
+|----------|---------|-----|
+| P0 | `PROJECT_STATE.md` plus the restart protocol (`COMPACTION.md`) | The 3x to 5x cost win; helps both goals; nearly free |
+| P0 | `FINDINGS.md` plus the promotion and re-validation rules | Long-term recall; stops duplicate work and stale findings |
+| P0 | Put stable content first so it caches | Multiplies every other saving |
+| P1 | The Orchestrator and Builder roles plus handoff templates, run by hand | Proves the workflow with no infrastructure |
+| P2 | Wire the Orchestrator to spawn a real Builder in one tool (Claude Code) | A working reference implementation |
+| P3 | The `agent_topology` cookiecutter option | Package it up |
+
+Start at P0. For a budget-conscious, one-experiment-at-a-time project, almost all the
+benefit is there before any helper AI exists.
 
 ---
 
-## 11. Priority & Phased Rollout
+## 9. Risks and open questions
 
-| Priority | Step | Why |
-|----------|------|-----|
-| **P0** | `PROJECT_STATE.md` + `prompts/COMPACTION.md` | The ~3–5× cost lever; helps both goals; near-free |
-| **P0** | `FINDINGS.md` ledger + promotion habit + re-validation rule | Long-term recall; prevents duplicate work & stale, out-of-scope verdicts |
-| **P0** | Cacheable-prefix ordering in role/context files | Multiplies every other saving |
-| **P1** | Orchestrator + Builder role files + handoff templates (manual, one human switching hats) | Validates the protocol with zero infra |
-| **P2** | Wire Orchestrator → real Builder sub-agent in one tool (Claude Code Task) | Reference implementation |
-| **P3** | `agent_topology` cookiecutter variable + conditional generation | Productize the mode |
+The Builder could claim success it didn't earn. The fix is to check its report
+against the actual log file, not its words.
 
-Start at P0. Most of the benefit for a budget-constrained, sequential workflow is
-there before any agent hierarchy exists.
+Restarting could lose context. The fix is to keep `PROJECT_STATE.md` disciplined and
+use `compile_for_ai.py`. We should write a checklist of what must survive a restart.
 
----
+The ledger could rot. Bare verdicts could creep back in, or results could get logged
+without scope. The fix is to require a `Scope:` line in every entry and to mark
+anything out of scope as `needs-revalidation` rather than trusting or deleting it.
 
-## 12. Open Questions & Risks
+Where does the human sit? At the Orchestrator level, the same place
+`intellectual_contribution.md` and novel-direction spotting already live.
 
-- **Builder result hallucination** — mitigated by Orchestrator validating against
-  the log file, not the report text.
-- **Compaction losing context** — mitigated by `PROJECT_STATE.md` discipline and
-  `compile_for_ai.py`; needs a checklist of what must survive a restart.
-- **Findings ledger drift** — bare verdicts creep back in, or scale-dependent
-  results get recorded without scope. Mitigated by forbidding bare verdicts in the
-  entry template and requiring a `Scope:` field; an out-of-scope finding should be
-  marked `needs-revalidation`, never silently trusted or deleted.
-- **Human-in-the-loop placement** — the human stays at the Orchestrator tier,
-  where `intellectual_contribution.md` and novel-direction detection already live.
-- **Measure before productizing** — the §8 numbers are a model; instrument a real
-  project to confirm the B≈C result before committing to the builder tier.
+Measure before committing to Builders. The Section 6 numbers are a model. We should
+instrument one real project to confirm that B and C cost about the same before
+investing in the helper-AI tier.
 
 ---
 
-## Next Steps
+## 10. Next steps
 
-1. Implement P0 (`PROJECT_STATE.md` + compaction protocol + cacheable ordering).
-2. Trial the Orchestrator/Builder roles manually on one debugging-heavy iteration.
-3. Instrument token usage on a real project to validate the cost model.
-4. If validated, add the `agent_topology` cookiecutter variable.
+1. Ship P0: the live status file, the restart protocol, and cache-friendly ordering.
+2. Try the Orchestrator and Builder roles by hand on one debugging-heavy iteration.
+3. Instrument token usage on a real project to check the cost model.
+4. If it holds up, add the `agent_topology` cookiecutter option.
+
+---
+
+## Appendix: the cost arithmetic
+
+The dollar figures in Section 6 come from this model. It is deliberately simple, and
+every assumption is listed so you can re-run it with your own numbers.
+
+### Assumptions
+
+| Symbol | Meaning | Value |
+|--------|---------|-------|
+| `B` | Orchestrator's base context (role, status, conventions) | 8k tokens |
+| `E` | Execution and debugging noise generated per iteration | 15k tokens |
+| `T` | Turns per iteration | 6 |
+| `N` | Iterations in the session | 5 |
+| | Builder priming (re-reading the brief and conventions) | 6k tokens |
+| | "Cost" approximates total input tokens re-sent across all turns; output is ignored for simplicity |
+
+### The three architectures (no caching)
+
+A, Naive single chat. Junk accumulates across iterations and is re-sent every turn:
+
+```
+input ~ T * sum[ B + (i-1)*E + E/2 ]  for i = 1..5
+      = 6 * [5*8k + 15k*10 + 5*7.5k] = 6 * 227.5k ~ 1.37M tokens
+```
+
+B, Restart between iterations. Each iteration starts fresh, so junk only builds up
+within one iteration:
+
+```
+input ~ N * T * (B + E/2) = 5 * 6 * 15.5k ~ 465k tokens   (plus about 10k for compaction) ~ 0.47M
+```
+
+C, Restart plus Builder. The execution noise lives in the Builder, not the main chat,
+and the Orchestrator runs about 3 lean turns per iteration:
+
+```
+orchestrator ~ N * 3 * (B + 1k report)   = 5 * 3 * 9k   ~ 135k
+builder      ~ N * (prime + T * E/2)     = 5 * (6k+45k) ~ 255k
+total                                                     ~ 0.39M to 0.56M
+```
+
+### Summary
+
+| Architecture | Input tokens per session | vs. naive | Main-chat size |
+|--------------|--------------------------|-----------|----------------|
+| A, Naive | about 1.37M | 1.0x | grows without bound |
+| B, Restart | about 0.47M | about 2.9x cheaper | small, resets each iteration |
+| C, Restart plus Builder | about 0.39M to 0.56M | about 2.4x to 3.5x cheaper | smallest, stays clean within an iteration |
+
+### With caching
+
+Caching serves repeated prefix tokens at about 10% of full price. It helps B and C
+far more than A, because most of their context is stable and reusable, while A is
+dominated by ever-changing junk that can't be cached.
+
+| Architecture | Input tokens per session, cached |
+|--------------|----------------------------------|
+| A | about 1.2M (caching barely helps) |
+| B | about 0.25M |
+| C | about 0.27M |
+
+Multiply these by the rate card in Section 6 to get the dollar figures. The takeaway
+is the same at every step. The restart habit is the lever. The Builder buys focus,
+not savings.
