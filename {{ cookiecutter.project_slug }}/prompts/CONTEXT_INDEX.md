@@ -16,7 +16,23 @@ Read these files to understand the project from scratch:
 | 3 | `prompts/KNOWN_PATTERNS.md` | Patterns to reuse, errors to avoid |
 | 4 | `background/` | Research question and context |
 | 5 | Most recent `analysis/ANALYSIS_*.md` | Current state of the project |
+{% if cookiecutter.agent_topology == 'orchestrated' %}
+---
 
+## Orchestrated Mode — Memory & Roles
+
+This project uses the **orchestrated** topology (Orchestrator + transient Builders,
+layered memory). Per-role reading:
+
+| Role / Task | Read |
+|-------------|------|
+| Every session start | `PROJECT_STATE.md` (layer 1) → `FINDINGS.md` (layer 2) → recent `analysis/` |
+| Acting as Orchestrator | `prompts/roles/ORCHESTRATOR.md` |
+| Spawning a Builder | `prompts/handoffs/BUILD_BRIEF.md` (fill it in, self-contained) |
+| Acting as a Builder | `prompts/roles/BUILDER.md` + the Build Brief only |
+| Compacting / restarting | `prompts/COMPACTION.md` |
+| Before designing an experiment | `FINDINGS.md` + search recent `analysis/` (avoid repeats / honor must-holds) |
+{% endif %}
 ---
 
 ## Writing a New Experiment

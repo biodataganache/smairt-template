@@ -18,8 +18,9 @@ You are operating within an AI-integrated IDE (VSCode with Roo/Zoo, Cursor, Wind
 
 - Do NOT ask the user to paste file contents — read them yourself
 - Do NOT tell the user to copy output — read log files directly
-- Do NOT generate "paste here" comment blocks — results live in log files
-- DO read relevant files before generating code (check existing patterns)
+{% if cookiecutter.workflow_mode == 'browser_paste' %}- DO end each script with a pasted-output comment block (browser-paste mode) — the script preserves its own results
+{% else %}- Do NOT generate "paste here" comment blocks — results live in log files
+{% endif %}- DO read relevant files before generating code (check existing patterns)
 - DO write analysis documents directly after interpreting results
 - DO update documentation (hypotheses, analysis files) as you go
 
@@ -175,8 +176,12 @@ Every experiment produces a complete audit trail:
 - **Hypothesis file** → what we expected
 - **Analysis file** → what we learned
 
-This replaces the legacy "paste output as comments" pattern. In an IDE-native
+{% if cookiecutter.workflow_mode == 'browser_paste' %}In browser-paste mode, each script's pasted-output comment block is part of this
+trail alongside the log file — the AI may not have direct file access, so the
+pasted output preserves results in the script itself.
+{% else %}This replaces the legacy "paste output as comments" pattern. In an IDE-native
 workflow, all these artifacts are machine-readable and AI-accessible.
+{% endif %}
 
 ---
 

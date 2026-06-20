@@ -67,6 +67,43 @@ def remove_browser_paste_files():
         if os.path.exists(f):
             os.remove(f)
 
+
+def remove_orchestrated_files():
+    """Remove all orchestrated-topology files so 'single' == the original template.
+
+    The orchestrated mode (manager/architect-style Orchestrator + transient Builders,
+    plus the layered-memory protocol) is opt-in. In 'single' topology we strip every
+    file it adds, leaving the classic SMAIRT layout untouched.
+    """
+    files_to_remove = [
+        "PROJECT_STATE.md",
+        "FINDINGS.md",
+        os.path.join("prompts", "COMPACTION.md"),
+    ]
+    dirs_to_remove = [
+        os.path.join("prompts", "roles"),
+        os.path.join("prompts", "handoffs"),
+    ]
+    for f in files_to_remove:
+        if os.path.exists(f):
+            os.remove(f)
+    for d in dirs_to_remove:
+        if os.path.exists(d):
+            shutil.rmtree(d)
+
+
+def remove_auto_load_files():
+    """Remove the auto-loaded context files (CLAUDE.md / AGENTS.md).
+
+    These make the AI read prompts/AI_CONTEXT.md, prompts/CODE_CONVENTIONS.md, and
+    background/01_initial_question.md automatically at session start. When
+    auto_load_context == 'no', drop them — the project falls back to the manual
+    paste-the-session-start-prompt workflow (prompts/SESSION_START.md).
+    """
+    for f in ["CLAUDE.md", "AGENTS.md"]:
+        if os.path.exists(f):
+            os.remove(f)
+
 def print_ide_native_message():
     """Print success message for IDE-native workflow."""
     print("""
@@ -231,6 +268,26 @@ def main():
     workflow_mode = "{{ cookiecutter.workflow_mode }}"
     if workflow_mode == "ide_native":
         remove_browser_paste_files()
+
+    # Handle agent topology — 'single' is the original template; 'orchestrated'
+    # adds the Orchestrator/Builder roles and the layered-memory protocol.
+    agent_topology = "{{ cookiecutter.agent_topology }}"
+    if agent_topology == "single":
+        remove_orchestrated_files()
+    else:
+        print("✓ Orchestrated topology: added PROJECT_STATE.md, FINDINGS.md, "
+              "prompts/COMPACTION.md, prompts/roles/, prompts/handoffs/")
+
+    # Handle auto-loaded context files (CLAUDE.md / AGENTS.md). 'yes' keeps them so
+    # the AI reads the specified prompts automatically at session start (works in
+    # both topologies); 'no' falls back to the manual SESSION_START.md workflow.
+    auto_load_context = "{{ cookiecutter.auto_load_context }}"
+    if auto_load_context == "no":
+        remove_auto_load_files()
+    else:
+        print("✓ Auto-load context: CLAUDE.md / AGENTS.md will read "
+              "prompts/AI_CONTEXT.md, prompts/CODE_CONVENTIONS.md, and "
+              "background/01_initial_question.md at session start")
 
     # Print success message based on mode
     project_mode = "{{ cookiecutter.project_mode }}"

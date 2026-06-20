@@ -6,6 +6,8 @@
     "description": "A brief description of your research question",
     "project_mode": ["standard", "paper_driven"],
     "workflow_mode": ["ide_native", "browser_paste"],
+    "agent_topology": ["single", "orchestrated"],
+    "auto_load_context": ["yes", "no"],
     "initial_research_question": "What is the main question you are trying to answer?",
     "domain": ["machine_learning", "data_science", "computational_biology", "physics", "chemistry", "engineering", "other"],
     "ai_tool": ["roo_zoo", "cursor", "windsurf", "claude", "chatgpt", "other"],
