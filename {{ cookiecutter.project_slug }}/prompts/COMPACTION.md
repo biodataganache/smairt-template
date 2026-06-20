@@ -41,14 +41,15 @@ token-cost lever — cheaper than any sub-agent.
 ## The promotion checklist (what makes recall work)
 
 Forgetting happens when a key result never leaves its iteration's analysis file.
-Promote a result to `FINDINGS.md` when it graduates from *"a number in one run"* to
-*"a fact that should shape future work."* Promote it with **full scope**:
+Promote a result to `FINDINGS.md` when it graduates from "a number in one run" to "a
+fact that should shape future work." Use the entry schema in `FINDINGS.md`:
 
-- [ ] Does it change what we'd do next, or what future scripts must include? → promote
-- [ ] Recorded as a `Claim` + `Scope` (dataset, size, phase, conditions)? (never a bare verdict)
-- [ ] Linked to its `Evidence` (analysis file + log)?
-- [ ] Given a `Status` (`established` / `provisional`)?
-- [ ] If it changes a standing rule, also add it to **Requirements / Must-Holds**.
+- [ ] Does it change what we would do next, or what future scripts must include? If so, promote it.
+- [ ] Written with a `Claim` and a `Scope` (size, phase, conditions). Never a bare verdict.
+- [ ] Carries `Data` (what it ran on) and `Metric` (the headline number).
+- [ ] Linked to its `Evidence` (analysis file plus log).
+- [ ] Given a `Status` (`established` or `provisional`).
+- [ ] If it sets a standing rule, also add it to Requirements / Must-Holds.
 
 ## The re-validation rule (when context changes)
 

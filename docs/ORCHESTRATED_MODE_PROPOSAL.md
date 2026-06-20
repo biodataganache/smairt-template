@@ -155,18 +155,23 @@ so two runs of the same intervention are distinguishable and an out-of-scope res
 flagged rather than silently trusted.
 
 ```
-### F-017: Frequency weighting improves AUPRC
-- Claim:      frequency weighting improves the target metric
-- Scope:      real dataset (N approx 50k), phase 03_real, iter 17
-- Evidence:   analysis/ANALYSIS_17.md, results/logs/script_17*.log
+### F-017: Frequency weighting improves AUPRC at scale
+- Claim:      frequency weighting improves AUPRC on the real dataset
+- Scope:      N approx 50k, phase 03_real, fusion model
+- Metric:     AUPRC 0.81 vs 0.74 unweighted
+- Data:       data/real/transcriptomics_v3.parquet (train split)
+- Evidence:   analysis/ANALYSIS_17.md, results/logs/script_17_freqweight.log
 - Status:     established
-- Supersedes: F-007 (failed on synthetic data, N approx 500; small-sample artifact)
+- Date:       2026-05-02, iter 17
+- Supersedes: F-007 (failed at N approx 500; small-sample artifact)
 ```
 
-Status is one of `established`, `provisional` (observed only in a narrow scope),
-`needs-revalidation` (scope has since changed; not currently trustworthy), or
-`superseded-by F-NN`. The `Supersedes` and `superseded-by` links form a small directed
-graph, so the history of a claim is reconstructable rather than overwritten.
+`Data` names what was run on; `Scope` is the regime the claim is bound to. Status is
+one of `established`, `provisional` (observed only in a narrow scope),
+`needs-revalidation` (scope has since changed; not currently trustworthy),
+`superseded-by F-NNN`, or `refuted` (tested and does not hold; nothing replaced it).
+The `Supersedes` and `superseded-by` links form a small directed graph, so the history
+of a claim is reconstructable rather than overwritten.
 
 ### 4.3 Re-validation on scope change
 
