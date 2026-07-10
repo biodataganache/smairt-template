@@ -16,6 +16,7 @@ The **next steps** from your analysis feed right back into the background for th
 ## Files
 
 - `ANALYSIS_TEMPLATE.md` - Template for documenting each iteration's results, interpretation, and next steps
+- `FINAL_REPORT_TEMPLATE.md` - Template for synthesizing the full research state at any major checkpoint
 - `BREADCRUMB_TRAIL.md` - Running log of all analyses performed (paper-driven mode)
 - `ANALYSIS_PLAN.md` - Paper structure mapping and iteration planning (paper-driven mode)
 - `REPOSITORY_PLAN.md` - Repository organization plan (paper-driven mode)
@@ -40,3 +41,15 @@ hypotheses/H1_*.md → experiments/script_XX_*.py → results/logs/script_XX_*.l
 4. What are the logical next steps?
 
 Next steps (#4) will often be used to seed the next round of experimentation. Document any reusable patterns or recurring errors in `prompts/KNOWN_PATTERNS.md`.
+
+## Final Report Checkpoints
+
+Use `FINAL_REPORT_TEMPLATE.md` to create `FINAL_REPORT.md` at major research checkpoints:
+
+- after one or more iterations establish a coherent finding,
+- before transitioning to a new phase or track,
+- before handoff to another researcher or AI tool,
+- before drafting a paper or external report,
+- whenever the project conclusions need to be upgraded from iteration-level analysis to project-level synthesis.
+
+The final report should be framed as an actual research report. It should synthesize evidence, limitations, reproducibility assets, and next steps without describing the work as a demonstration or template exercise.

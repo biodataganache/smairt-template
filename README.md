@@ -133,8 +133,9 @@ my_smairt_project/
 ├── plans/                      # Planning documents
 ├── hypotheses/                 # Per-iteration hypothesis files
 │   └── HYPOTHESIS_TEMPLATE.md
-├── analysis/                   # Per-iteration analysis files
-│   └── ANALYSIS_TEMPLATE.md
+├── analysis/                   # Per-iteration analysis files and research synthesis
+│   ├── ANALYSIS_TEMPLATE.md
+│   └── FINAL_REPORT_TEMPLATE.md
 ├── experiments/                # Scripts organized by phase
 │   ├── 01_synthetic/
 │   ├── 02_downloaded/
@@ -189,6 +190,11 @@ script_X1_...   — Track X (interpretation)
 `scripts/shared/` provides reusable utilities:
 - `TeeLogger` — Dual console/file logging
 - Custom metrics, data loading, model architectures
+
+### Final Report Checkpoints
+`analysis/FINAL_REPORT_TEMPLATE.md` provides a consistent format for project-level research synthesis. Use it to create or update `analysis/FINAL_REPORT.md` after coherent findings emerge, before phase transitions, before handoff, before paper drafting, or at project completion.
+
+The final report complements numbered analysis files by synthesizing the central question, study scope, audit trail, results matrix, cross-iteration conclusions, reproducibility assets, limitations, and next steps.
 
 ### Plans Directory
 `plans/` holds planning documents created before complex work begins.

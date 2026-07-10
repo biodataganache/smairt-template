@@ -126,6 +126,20 @@ The final scientific product won't have all experiments together—it will be ba
 
 ---
 
+## Final Report Checkpoints
+
+Use `analysis/FINAL_REPORT_TEMPLATE.md` to create or update `analysis/FINAL_REPORT.md` whenever the project reaches a synthesis point:
+
+- after one or more iterations establish a coherent finding,
+- before transitioning to a new phase or track,
+- before handoff to another researcher or AI tool,
+- before drafting a paper or external report,
+- at the end of a project.
+
+The final report should read as an actual research report: central question, study scope, audit trail, results matrix, iteration-level findings, cross-iteration comparison, conclusions, reproducibility assets, limitations, and next steps.
+
+---
+
 ## Caveats
 
 - **Literature limitations:** LLMs can't do a deep dive on the literature. Be suspicious about what they bring from the literature—verify important claims independently.
