@@ -126,7 +126,7 @@ The final scientific product won't have all experiments together—it will be ba
 
 ---
 
-## Final Report Checkpoints
+## Study Report Checkpoints
 
 Use `analysis/STUDY_REPORT_TEMPLATE.md` to create or update `analysis/STUDY_REPORT.md` whenever the project reaches a synthesis point:
 
