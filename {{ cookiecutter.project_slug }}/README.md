@@ -136,7 +136,7 @@ Use `analysis/STUDY_REPORT_TEMPLATE.md` to create or update `analysis/STUDY_REPO
 - before drafting a paper or external report,
 - at the end of a project.
 
-The final report should read as an actual research report: central question, study scope, audit trail, results matrix, iteration-level findings, cross-iteration comparison, conclusions, reproducibility assets, limitations, and next steps.
+The study report should read as an actual research report: central question, study scope, audit trail, results matrix, iteration-level findings, cross-iteration comparison, conclusions, reproducibility assets, limitations, and next steps.
 
 ---
 
