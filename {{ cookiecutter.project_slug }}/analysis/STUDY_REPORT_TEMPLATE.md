@@ -1,4 +1,4 @@
-# Final Report — [Project or Study Title]
+# Study Report — [Project or Study Title]
 
 | Field | Details |
 |---|---|
@@ -7,22 +7,26 @@
 | Methodological Approach | [Hypothesis-driven computational study / experimental analysis / benchmark validation / other] |
 | Generated | [YYYY-MM-DD] |
 | Last Updated | [YYYY-MM-DD] |
-| Report Status | DRAFT / ACTIVE / UPDATED / FINAL |
+| Report Status | DRAFT / INTERIM / UPDATED / FINAL |
 | Primary Sources | [background/01_initial_question.md](../background/01_initial_question.md); [ANALYSIS_01.md](ANALYSIS_01.md); [add additional analysis files] |
 
 ---
 
 ## How to Use This Template
 
-Use this file to create a project-level research synthesis at any major checkpoint. It can be written after one iteration, after a phase transition, before a handoff, before paper drafting, or at the end of the project. Unlike `ANALYSIS_XX.md`, which interprets one experiment or iteration, the final report synthesizes the whole research state so far.
+Use this file to create a project-level research synthesis at any major checkpoint. It can be written after one iteration, after a phase transition, before a handoff, before paper drafting, or at the end of the project. Unlike `ANALYSIS_XX.md`, which interprets one experiment or iteration, the study report synthesizes the whole research state so far — whether the project is still in progress or complete.
 
 Recommended workflow:
 
-1. Copy this file to `FINAL_REPORT.md` or to a dated version such as `FINAL_REPORT_YYYYMMDD.md`.
+1. Copy this file to `STUDY_REPORT.md` in the same `analysis/` folder. If you want to preserve a dated snapshot alongside the living document, also save a copy such as `analysis/reports/STUDY_REPORT_YYYYMMDD.md`.
 2. Read the research audit trail: `background/`, `hypotheses/`, `experiments/`, `results/logs/`, `results/figures/`, `analysis/`, and `prompts/intellectual_contribution.md`.
 3. Fill every section from evidence in the project files, not from memory.
 4. Keep the framing as an actual research report. Do not describe the project as a demo, template exercise, or AI-code-generation example.
-5. Mark the report status as `UPDATED` whenever new iterations change the conclusions.
+5. Set `Report Status` to reflect where the project actually stands:
+   - `DRAFT` — first pass, sections still being filled in.
+   - `INTERIM` — accurate as of the current iteration, but the project is still active and conclusions may change.
+   - `UPDATED` — a prior report was revised because new iterations changed the conclusions.
+   - `FINAL` — the project has reached its planned end state and no further iterations are expected.
 
 ---
 

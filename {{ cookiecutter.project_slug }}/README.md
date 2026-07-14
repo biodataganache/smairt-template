@@ -128,7 +128,7 @@ The final scientific product won't have all experiments together—it will be ba
 
 ## Final Report Checkpoints
 
-Use `analysis/FINAL_REPORT_TEMPLATE.md` to create or update `analysis/FINAL_REPORT.md` whenever the project reaches a synthesis point:
+Use `analysis/STUDY_REPORT_TEMPLATE.md` to create or update `analysis/STUDY_REPORT.md` whenever the project reaches a synthesis point:
 
 - after one or more iterations establish a coherent finding,
 - before transitioning to a new phase or track,

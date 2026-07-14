@@ -218,7 +218,7 @@ This creates a clear chain of reasoning across iterations.
 
 ## Optional Step: Create or Update a Report at Research Checkpoints
 
-Use `analysis/FINAL_REPORT_TEMPLATE.md` to create `analysis/FINAL_REPORT.md` when the project reaches a synthesis point.
+Use `analysis/STUDY_REPORT_TEMPLATE.md` to create `analysis/STUDY_REPORT.md` when the project reaches a synthesis point. The `Report Status` field inside the report (`DRAFT`, `INTERIM`, `UPDATED`, or `FINAL`) tracks progress, so the file name stays the same whether the project is ongoing or complete.
 
 Good checkpoints include:
 - after a coherent finding emerges from one or more iterations,
