@@ -83,7 +83,7 @@ Notes:
 
 ---
 
-## 4. Final Results Matrix
+## 4. Results Matrix
 
 | Result Area | Best or Representative Case | Main Quantitative Outcome | Interpretation |
 |---|---:|---:|---|
