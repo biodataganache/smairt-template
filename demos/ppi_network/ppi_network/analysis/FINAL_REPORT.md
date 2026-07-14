@@ -8,7 +8,7 @@
 | Generated | 2026-07-10 |
 | Last Updated | 2026-07-10 |
 | Report Status | FINAL |
-| Primary Sources | [background/01_initial_question.md](background/01_initial_question.md); [ANALYSIS_01.md](analysis/ANALYSIS_01.md); [ANALYSIS_02.md](analysis/ANALYSIS_02.md); [ANALYSIS_B01.md](analysis/ANALYSIS_B01.md) |
+| Primary Sources | [background/01_initial_question.md](../background/01_initial_question.md); [ANALYSIS_01.md](ANALYSIS_01.md); [ANALYSIS_02.md](ANALYSIS_02.md); [ANALYSIS_B01.md](ANALYSIS_B01.md) |
 
 ---
 
@@ -46,9 +46,9 @@ The real benchmark is small and restricted to a curated subnetwork. It does not 
 
 | Iteration | Hypothesis | Script or Method | Log or Evidence | Analysis | Status |
 |---|---|---|---|---|---|
-| 01 | [HYPOTHESIS_01.md](ppi_network/ppi_network/hypotheses/HYPOTHESIS_01.md) | [script_01_synthetic_validation.py](ppi_network/ppi_network/experiments/01_synthetic/script_01_synthetic_validation.py) | [script_01_synthetic_validation_20260629_125128.log](ppi_network/ppi_network/results/logs/script_01_synthetic_validation_20260629_125128.log) | [ANALYSIS_01.md](ppi_network/ppi_network/analysis/ANALYSIS_01.md) | Supported |
-| 02 | [HYPOTHESIS_02.md](ppi_network/ppi_network/hypotheses/HYPOTHESIS_02.md) | [script_02_noise_robustness.py](ppi_network/ppi_network/experiments/01_synthetic/script_02_noise_robustness.py) | [script_02_noise_robustness_20260630_083436.log](ppi_network/ppi_network/results/logs/script_02_noise_robustness_20260630_083436.log) | [ANALYSIS_02.md](ppi_network/ppi_network/analysis/ANALYSIS_02.md) | Partially supported |
-| B01 | [HYPOTHESIS_B01.md](ppi_network/ppi_network/hypotheses/HYPOTHESIS_B01.md) | [script_B02_yeast_benchmark.py](ppi_network/ppi_network/experiments/02_downloaded/script_B02_yeast_benchmark.py) | [script_B02_yeast_benchmark_20260630_084535.log](ppi_network/ppi_network/results/logs/script_B02_yeast_benchmark_20260630_084535.log) | [ANALYSIS_B01.md](ppi_network/ppi_network/analysis/ANALYSIS_B01.md) | Partially supported |
+| 01 | [HYPOTHESIS_01.md](../hypotheses/HYPOTHESIS_01.md) | [script_01_synthetic_validation.py](../experiments/01_synthetic/script_01_synthetic_validation.py) | [script_01_synthetic_validation_20260629_125128.log](../results/logs/script_01_synthetic_validation_20260629_125128.log) | [ANALYSIS_01.md](ANALYSIS_01.md) | Supported |
+| 02 | [HYPOTHESIS_02.md](../hypotheses/HYPOTHESIS_02.md) | [script_02_noise_robustness.py](../experiments/01_synthetic/script_02_noise_robustness.py) | [script_02_noise_robustness_20260630_083436.log](../results/logs/script_02_noise_robustness_20260630_083436.log) | [ANALYSIS_02.md](ANALYSIS_02.md) | Partially supported |
+| B01 | [HYPOTHESIS_B01.md](../hypotheses/HYPOTHESIS_B01.md) | [script_B02_yeast_benchmark.py](../experiments/02_downloaded/script_B02_yeast_benchmark.py) | [script_B02_yeast_benchmark_20260630_084535.log](../results/logs/script_B02_yeast_benchmark_20260630_084535.log) | [ANALYSIS_B01.md](ANALYSIS_B01.md) | Partially supported |
 
 ---
 
@@ -93,12 +93,12 @@ The yeast benchmark separated curated physical complexes perfectly, but top-3 ce
 
 | Artifact | Purpose |
 |---|---|
-| [script_01_synthetic_validation.py](ppi_network/ppi_network/experiments/01_synthetic/script_01_synthetic_validation.py) | Synthetic hub and community baseline. |
-| [script_02_noise_robustness.py](ppi_network/ppi_network/experiments/01_synthetic/script_02_noise_robustness.py) | Edge-noise robustness sweep. |
-| [script_B02_yeast_benchmark.py](ppi_network/ppi_network/experiments/02_downloaded/script_B02_yeast_benchmark.py) | Real yeast PPI benchmark evaluation. |
-| [script_01_synthetic_validation_network.png](ppi_network/ppi_network/results/figures/script_01_synthetic_validation_network.png) | Synthetic network visualization. |
-| [script_02_noise_robustness_metrics.png](ppi_network/ppi_network/results/figures/script_02_noise_robustness_metrics.png) | Robustness metric curves. |
-| [script_B02_yeast_benchmark_yeast.png](ppi_network/ppi_network/results/figures/script_B02_yeast_benchmark_yeast.png) | Yeast network with complexes and essential nodes. |
+| [script_01_synthetic_validation.py](../experiments/01_synthetic/script_01_synthetic_validation.py) | Synthetic hub and community baseline. |
+| [script_02_noise_robustness.py](../experiments/01_synthetic/script_02_noise_robustness.py) | Edge-noise robustness sweep. |
+| [script_B02_yeast_benchmark.py](../experiments/02_downloaded/script_B02_yeast_benchmark.py) | Real yeast PPI benchmark evaluation. |
+| [script_01_synthetic_validation_network.png](../results/figures/script_01_synthetic_validation_network.png) | Synthetic network visualization. |
+| [script_02_noise_robustness_metrics.png](../results/figures/script_02_noise_robustness_metrics.png) | Robustness metric curves. |
+| [script_B02_yeast_benchmark_yeast.png](../results/figures/script_B02_yeast_benchmark_yeast.png) | Yeast network with complexes and essential nodes. |
 
 ---
 

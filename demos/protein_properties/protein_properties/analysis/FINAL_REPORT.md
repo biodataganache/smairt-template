@@ -8,7 +8,7 @@
 | Generated | 2026-07-10 |
 | Last Updated | 2026-07-10 |
 | Report Status | FINAL |
-| Primary Sources | [background/01_initial_question.md](background/01_initial_question.md); [ANALYSIS_01.md](analysis/ANALYSIS_01.md); [ANALYSIS_02.md](analysis/ANALYSIS_02.md); [ANALYSIS_03.md](analysis/ANALYSIS_03.md) |
+| Primary Sources | [background/01_initial_question.md](../background/01_initial_question.md); [ANALYSIS_01.md](ANALYSIS_01.md); [ANALYSIS_02.md](ANALYSIS_02.md); [ANALYSIS_03.md](ANALYSIS_03.md) |
 
 ---
 
@@ -44,9 +44,9 @@ The study does not model three-dimensional structure, signal peptides, beta-barr
 
 | Iteration | Hypothesis | Script or Method | Log or Evidence | Analysis | Status |
 |---|---|---|---|---|---|
-| 01 | [HYPOTHESIS_01.md](protein_properties/protein_properties/hypotheses/HYPOTHESIS_01.md) | [script_01_validate_calculators.py](protein_properties/protein_properties/experiments/01_synthetic/script_01_validate_calculators.py) | [script_01_validate_calculators_20260630_090732.log](protein_properties/protein_properties/results/logs/script_01_validate_calculators_20260630_090732.log) | [ANALYSIS_01.md](protein_properties/protein_properties/analysis/ANALYSIS_01.md) | Supported |
-| 02 | [HYPOTHESIS_02.md](protein_properties/protein_properties/hypotheses/HYPOTHESIS_02.md) | [script_02_synthetic_classification.py](protein_properties/protein_properties/experiments/01_synthetic/script_02_synthetic_classification.py) | [script_02_synthetic_classification_20260630_090904.log](protein_properties/protein_properties/results/logs/script_02_synthetic_classification_20260630_090904.log) | [ANALYSIS_02.md](protein_properties/protein_properties/analysis/ANALYSIS_02.md) | Supported |
-| 03 | [HYPOTHESIS_03.md](protein_properties/protein_properties/hypotheses/HYPOTHESIS_03.md) | [script_04_benchmark_classification.py](protein_properties/protein_properties/experiments/02_downloaded/script_04_benchmark_classification.py) | [script_04_benchmark_classification_20260630_091724.log](protein_properties/protein_properties/results/logs/script_04_benchmark_classification_20260630_091724.log) | [ANALYSIS_03.md](protein_properties/protein_properties/analysis/ANALYSIS_03.md) | Partially supported |
+| 01 | [HYPOTHESIS_01.md](../hypotheses/HYPOTHESIS_01.md) | [script_01_validate_calculators.py](../experiments/01_synthetic/script_01_validate_calculators.py) | [script_01_validate_calculators_20260630_090732.log](../results/logs/script_01_validate_calculators_20260630_090732.log) | [ANALYSIS_01.md](ANALYSIS_01.md) | Supported |
+| 02 | [HYPOTHESIS_02.md](../hypotheses/HYPOTHESIS_02.md) | [script_02_synthetic_classification.py](../experiments/01_synthetic/script_02_synthetic_classification.py) | [script_02_synthetic_classification_20260630_090904.log](../results/logs/script_02_synthetic_classification_20260630_090904.log) | [ANALYSIS_02.md](ANALYSIS_02.md) | Supported |
+| 03 | [HYPOTHESIS_03.md](../hypotheses/HYPOTHESIS_03.md) | [script_04_benchmark_classification.py](../experiments/02_downloaded/script_04_benchmark_classification.py) | [script_04_benchmark_classification_20260630_091724.log](../results/logs/script_04_benchmark_classification_20260630_091724.log) | [ANALYSIS_03.md](ANALYSIS_03.md) | Partially supported |
 
 ---
 
@@ -89,11 +89,11 @@ Whole-sequence GRAVY collapsed to 41.67% accuracy on real reviewed human protein
 
 | Artifact | Purpose |
 |---|---|
-| [script_01_validate_calculators.py](protein_properties/protein_properties/experiments/01_synthetic/script_01_validate_calculators.py) | Validates MW, pI, and GRAVY calculators. |
-| [script_02_synthetic_classification.py](protein_properties/protein_properties/experiments/01_synthetic/script_02_synthetic_classification.py) | Tests synthetic membrane-vs-soluble classification. |
-| [script_04_benchmark_classification.py](protein_properties/protein_properties/experiments/02_downloaded/script_04_benchmark_classification.py) | Tests real reviewed UniProt classification. |
-| [gravy_distributions.png](protein_properties/protein_properties/results/figures/gravy_distributions.png) | Synthetic hydropathy separation plot. |
-| [uniprot_distribution_comparison.png](protein_properties/protein_properties/results/figures/uniprot_distribution_comparison.png) | Whole-sequence vs window GRAVY comparison. |
+| [script_01_validate_calculators.py](../experiments/01_synthetic/script_01_validate_calculators.py) | Validates MW, pI, and GRAVY calculators. |
+| [script_02_synthetic_classification.py](../experiments/01_synthetic/script_02_synthetic_classification.py) | Tests synthetic membrane-vs-soluble classification. |
+| [script_04_benchmark_classification.py](../experiments/02_downloaded/script_04_benchmark_classification.py) | Tests real reviewed UniProt classification. |
+| [gravy_distributions.png](../results/figures/gravy_distributions.png) | Synthetic hydropathy separation plot. |
+| [uniprot_distribution_comparison.png](../results/figures/uniprot_distribution_comparison.png) | Whole-sequence vs window GRAVY comparison. |
 
 ---
 

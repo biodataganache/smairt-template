@@ -8,7 +8,7 @@
 | Generated | 2026-07-10 |
 | Last Updated | 2026-07-10 |
 | Report Status | FINAL |
-| Primary Sources | [background/01_initial_question.md](background/01_initial_question.md); [ANALYSIS_01.md](analysis/ANALYSIS_01.md); [ANALYSIS_04.md](analysis/ANALYSIS_04.md); [ANALYSIS_08.md](analysis/ANALYSIS_08.md); [ANALYSIS_09.md](analysis/ANALYSIS_09.md) |
+| Primary Sources | [background/01_initial_question.md](../background/01_initial_question.md); [ANALYSIS_01.md](ANALYSIS_01.md); [ANALYSIS_04.md](ANALYSIS_04.md); [ANALYSIS_08.md](ANALYSIS_08.md); [ANALYSIS_09.md](ANALYSIS_09.md) |
 
 ---
 
@@ -46,10 +46,10 @@ The study does not train a competitive large protein language model, does not ex
 
 | Iteration | Hypothesis | Script or Method | Log or Evidence | Analysis | Status |
 |---|---|---|---|---|---|
-| 01 | [HYPOTHESIS_01.md](protein_lm/protein_language_model/hypotheses/HYPOTHESIS_01.md) | [script_01_validate_generator.py](protein_lm/protein_language_model/experiments/01_synthetic/script_01_validate_generator.py) | [script_01_validate_generator_20260629_094052.log](protein_lm/protein_language_model/results/logs/script_01_validate_generator_20260629_094052.log) | [ANALYSIS_01.md](protein_lm/protein_language_model/analysis/ANALYSIS_01.md) | Supported |
-| 04 | [HYPOTHESIS_04.md](protein_lm/protein_language_model/hypotheses/HYPOTHESIS_04.md) | [script_04_conservation_sweep.py](protein_lm/protein_language_model/experiments/01_synthetic/script_04_conservation_sweep.py) | [script_04_conservation_sweep_20260629_100305.log](protein_lm/protein_language_model/results/logs/script_04_conservation_sweep_20260629_100305.log) | [ANALYSIS_04.md](protein_lm/protein_language_model/analysis/ANALYSIS_04.md) | Supported |
-| 08 | [HYPOTHESIS_08.md](protein_lm/protein_language_model/hypotheses/HYPOTHESIS_08.md) | [script_08_identity_coupling.py](protein_lm/protein_language_model/experiments/01_synthetic/script_08_identity_coupling.py) | [script_08_identity_coupling_20260629_104619.log](protein_lm/protein_language_model/results/logs/script_08_identity_coupling_20260629_104619.log) | [ANALYSIS_08.md](protein_lm/protein_language_model/analysis/ANALYSIS_08.md) | Supported |
-| 09 | [HYPOTHESIS_09.md](protein_lm/protein_language_model/hypotheses/HYPOTHESIS_09.md) | [script_09_esm2_family_separation.py](protein_lm/protein_language_model/experiments/03_real_data/script_09_esm2_family_separation.py) | [script_09_esm2_family_separation_20260629_113657.log](protein_lm/protein_language_model/results/logs/script_09_esm2_family_separation_20260629_113657.log) | [ANALYSIS_09.md](protein_lm/protein_language_model/analysis/ANALYSIS_09.md) | Supported |
+| 01 | [HYPOTHESIS_01.md](../hypotheses/HYPOTHESIS_01.md) | [script_01_validate_generator.py](../experiments/01_synthetic/script_01_validate_generator.py) | [script_01_validate_generator_20260629_094052.log](../results/logs/script_01_validate_generator_20260629_094052.log) | [ANALYSIS_01.md](ANALYSIS_01.md) | Supported |
+| 04 | [HYPOTHESIS_04.md](../hypotheses/HYPOTHESIS_04.md) | [script_04_conservation_sweep.py](../experiments/01_synthetic/script_04_conservation_sweep.py) | [script_04_conservation_sweep_20260629_100305.log](../results/logs/script_04_conservation_sweep_20260629_100305.log) | [ANALYSIS_04.md](ANALYSIS_04.md) | Supported |
+| 08 | [HYPOTHESIS_08.md](../hypotheses/HYPOTHESIS_08.md) | [script_08_identity_coupling.py](../experiments/01_synthetic/script_08_identity_coupling.py) | [script_08_identity_coupling_20260629_104619.log](../results/logs/script_08_identity_coupling_20260629_104619.log) | [ANALYSIS_08.md](ANALYSIS_08.md) | Supported |
+| 09 | [HYPOTHESIS_09.md](../hypotheses/HYPOTHESIS_09.md) | [script_09_esm2_family_separation.py](../experiments/03_real_data/script_09_esm2_family_separation.py) | [script_09_esm2_family_separation_20260629_113657.log](../results/logs/script_09_esm2_family_separation_20260629_113657.log) | [ANALYSIS_09.md](ANALYSIS_09.md) | Supported |
 
 ---
 
@@ -94,12 +94,12 @@ Frozen ESM-2 embeddings separated reviewed UniProt globins from cytochrome c pro
 
 | Artifact | Purpose |
 |---|---|
-| [script_01_validate_generator.py](protein_lm/protein_language_model/experiments/01_synthetic/script_01_validate_generator.py) | Validates planted synthetic motif data. |
-| [script_04_conservation_sweep.py](protein_lm/protein_language_model/experiments/01_synthetic/script_04_conservation_sweep.py) | Tests motif recovery versus planted conservation. |
-| [script_08_identity_coupling.py](protein_lm/protein_language_model/experiments/01_synthetic/script_08_identity_coupling.py) | Tests learned-rule embedding separation. |
-| [script_09_esm2_family_separation.py](protein_lm/protein_language_model/experiments/03_real_data/script_09_esm2_family_separation.py) | Tests real family separation with frozen ESM-2. |
-| [script_08_auc_vs_controls.png](protein_lm/protein_language_model/results/figures/script_08_auc_vs_controls.png) | Synthetic trained-vs-control embedding result. |
-| [script_09_auc_vs_controls.png](protein_lm/protein_language_model/results/figures/script_09_auc_vs_controls.png) | Real ESM-2 embedding controls. |
+| [script_01_validate_generator.py](../experiments/01_synthetic/script_01_validate_generator.py) | Validates planted synthetic motif data. |
+| [script_04_conservation_sweep.py](../experiments/01_synthetic/script_04_conservation_sweep.py) | Tests motif recovery versus planted conservation. |
+| [script_08_identity_coupling.py](../experiments/01_synthetic/script_08_identity_coupling.py) | Tests learned-rule embedding separation. |
+| [script_09_esm2_family_separation.py](../experiments/03_real_data/script_09_esm2_family_separation.py) | Tests real family separation with frozen ESM-2. |
+| [script_08_auc_vs_controls.png](../results/figures/script_08_auc_vs_controls.png) | Synthetic trained-vs-control embedding result. |
+| [script_09_auc_vs_controls.png](../results/figures/script_09_auc_vs_controls.png) | Real ESM-2 embedding controls. |
 
 ---
 

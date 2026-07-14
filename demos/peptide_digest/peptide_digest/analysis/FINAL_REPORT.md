@@ -8,7 +8,7 @@
 | Generated | 2026-07-10 |
 | Last Updated | 2026-07-10 |
 | Report Status | FINAL |
-| Primary Sources | [background/01_initial_question.md](background/01_initial_question.md); [ANALYSIS_01.md](analysis/ANALYSIS_01.md); [ANALYSIS_02.md](analysis/ANALYSIS_02.md); [ANALYSIS_03.md](analysis/ANALYSIS_03.md) |
+| Primary Sources | [background/01_initial_question.md](../background/01_initial_question.md); [ANALYSIS_01.md](ANALYSIS_01.md); [ANALYSIS_02.md](ANALYSIS_02.md); [ANALYSIS_03.md](ANALYSIS_03.md) |
 
 ---
 
@@ -46,9 +46,9 @@ The current implementation does not model post-translational modifications, isot
 
 | Iteration | Hypothesis | Script or Method | Log or Evidence | Analysis | Status |
 |---|---|---|---|---|---|
-| 01 | [HYPOTHESIS_01.md](peptide_digest/peptide_digest/hypotheses/HYPOTHESIS_01.md) | [script_01_tryptic_digestion_smoke_test.py](peptide_digest/peptide_digest/experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py) | [script_01_tryptic_digestion_smoke_test_20260629_084613.log](peptide_digest/peptide_digest/results/logs/script_01_tryptic_digestion_smoke_test_20260629_084613.log) | [ANALYSIS_01.md](peptide_digest/peptide_digest/analysis/ANALYSIS_01.md) | Supported |
-| 02 | [HYPOTHESIS_02.md](peptide_digest/peptide_digest/hypotheses/HYPOTHESIS_02.md) | [script_02_missed_cleavages_validation.py](peptide_digest/peptide_digest/experiments/01_synthetic/script_02_missed_cleavages_validation.py) | [script_02_missed_cleavages_validation_20260629_085242.log](peptide_digest/peptide_digest/results/logs/script_02_missed_cleavages_validation_20260629_085242.log) | [ANALYSIS_02.md](peptide_digest/peptide_digest/analysis/ANALYSIS_02.md) | Supported |
-| 03 | [HYPOTHESIS_03.md](peptide_digest/peptide_digest/hypotheses/HYPOTHESIS_03.md) | [script_03_peptide_filtration.py](peptide_digest/peptide_digest/experiments/01_synthetic/script_03_peptide_filtration.py) | [script_03_peptide_filtration_20260629_090845.log](peptide_digest/peptide_digest/results/logs/script_03_peptide_filtration_20260629_090845.log) | [ANALYSIS_03.md](peptide_digest/peptide_digest/analysis/ANALYSIS_03.md) | Supported |
+| 01 | [HYPOTHESIS_01.md](../hypotheses/HYPOTHESIS_01.md) | [script_01_tryptic_digestion_smoke_test.py](../experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py) | [script_01_tryptic_digestion_smoke_test_20260629_084613.log](../results/logs/script_01_tryptic_digestion_smoke_test_20260629_084613.log) | [ANALYSIS_01.md](ANALYSIS_01.md) | Supported |
+| 02 | [HYPOTHESIS_02.md](../hypotheses/HYPOTHESIS_02.md) | [script_02_missed_cleavages_validation.py](../experiments/01_synthetic/script_02_missed_cleavages_validation.py) | [script_02_missed_cleavages_validation_20260629_085242.log](../results/logs/script_02_missed_cleavages_validation_20260629_085242.log) | [ANALYSIS_02.md](ANALYSIS_02.md) | Supported |
+| 03 | [HYPOTHESIS_03.md](../hypotheses/HYPOTHESIS_03.md) | [script_03_peptide_filtration.py](../experiments/01_synthetic/script_03_peptide_filtration.py) | [script_03_peptide_filtration_20260629_090845.log](../results/logs/script_03_peptide_filtration_20260629_090845.log) | [ANALYSIS_03.md](ANALYSIS_03.md) | Supported |
 
 ---
 
@@ -92,11 +92,11 @@ The third iteration added monoisotopic peptide mass calculation and MS-observabl
 
 | Artifact | Purpose |
 |---|---|
-| [script_01_tryptic_digestion_smoke_test.py](peptide_digest/peptide_digest/experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py) | Validates canonical cleavage and proline exceptions. |
-| [script_02_missed_cleavages_validation.py](peptide_digest/peptide_digest/experiments/01_synthetic/script_02_missed_cleavages_validation.py) | Validates missed-cleavage enumeration. |
-| [script_03_peptide_filtration.py](peptide_digest/peptide_digest/experiments/01_synthetic/script_03_peptide_filtration.py) | Computes masses and MS-observable peptide fractions. |
-| [results/logs/](peptide_digest/peptide_digest/results/logs) | Raw execution logs for all completed runs. |
-| [analysis/](peptide_digest/peptide_digest/analysis) | Interpretation files for all completed iterations. |
+| [script_01_tryptic_digestion_smoke_test.py](../experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py) | Validates canonical cleavage and proline exceptions. |
+| [script_02_missed_cleavages_validation.py](../experiments/01_synthetic/script_02_missed_cleavages_validation.py) | Validates missed-cleavage enumeration. |
+| [script_03_peptide_filtration.py](../experiments/01_synthetic/script_03_peptide_filtration.py) | Computes masses and MS-observable peptide fractions. |
+| [results/logs/](../results/logs) | Raw execution logs for all completed runs. |
+| [analysis/](.) | Interpretation files for all completed iterations. |
 
 ---
 

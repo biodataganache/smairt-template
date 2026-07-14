@@ -6,7 +6,7 @@
 | Study Scope | Artemis II-style free-return trajectory in the Earth-Moon Circular Restricted Three-Body Problem |
 | Methodological Approach | Hypothesis-driven computational astrodynamics study |
 | Generated | 2026-07-10 |
-| Primary Sources | [background/01_initial_question.md](background/01_initial_question.md); [ANALYSIS_01.md](analysis/ANALYSIS_01.md); [ANALYSIS_02.md](analysis/ANALYSIS_02.md); [ANALYSIS_03.md](analysis/ANALYSIS_03.md) |
+| Primary Sources | [background/01_initial_question.md](../background/01_initial_question.md); [ANALYSIS_01.md](ANALYSIS_01.md); [ANALYSIS_02.md](ANALYSIS_02.md); [ANALYSIS_03.md](ANALYSIS_03.md) |
 
 ---
 
@@ -26,7 +26,7 @@ This report serves as a comprehensive synthesis of the lunar free-return investi
 
 Can a translunar-injection burn from low-Earth orbit produce a free-return trajectory: one that loops behind the Moon and returns to a low Earth perigee with no further burns?
 
-Source: [background/01_initial_question.md](lunar/lunar_free_return/background/01_initial_question.md)
+Source: [background/01_initial_question.md](../background/01_initial_question.md)
 
 ### Model Used
 
@@ -54,11 +54,11 @@ The research record connects each hypothesis to its implementation, run log, int
 
 | Iteration | Hypothesis | Script | Log | Analysis | Status |
 |---|---|---|---|---|---|
-| 01 | [HYPOTHESIS_01.md](lunar/lunar_free_return/hypotheses/HYPOTHESIS_01.md) | [script_01_trajectory_sweep.py](lunar/lunar_free_return/experiments/01_synthetic/script_01_trajectory_sweep.py) | [script_01_trajectory_sweep_20260625_095910.log](lunar/lunar_free_return/results/logs/script_01_trajectory_sweep_20260625_095910.log) | [ANALYSIS_01.md](lunar/lunar_free_return/analysis/ANALYSIS_01.md) | Supported |
-| 02 | [HYPOTHESIS_02.md](lunar/lunar_free_return/hypotheses/HYPOTHESIS_02.md) | [script_02_lunar_intercept.py](lunar/lunar_free_return/experiments/01_synthetic/script_02_lunar_intercept.py) | [script_02_lunar_intercept_20260625_112846.log](lunar/lunar_free_return/results/logs/script_02_lunar_intercept_20260625_112846.log) | [ANALYSIS_02.md](lunar/lunar_free_return/analysis/ANALYSIS_02.md) | Supported |
-| 03 | [HYPOTHESIS_03.md](lunar/lunar_free_return/hypotheses/HYPOTHESIS_03.md) | [script_03_multi_loop_return.py](lunar/lunar_free_return/experiments/01_synthetic/script_03_multi_loop_return.py) | [script_03_multi_loop_return_20260625_122118.log](lunar/lunar_free_return/results/logs/script_03_multi_loop_return_20260625_122118.log) | [ANALYSIS_03.md](lunar/lunar_free_return/analysis/ANALYSIS_03.md) | Partially supported; physical constraint discovered |
+| 01 | [HYPOTHESIS_01.md](../hypotheses/HYPOTHESIS_01.md) | [script_01_trajectory_sweep.py](../experiments/01_synthetic/script_01_trajectory_sweep.py) | [script_01_trajectory_sweep_20260625_095910.log](../results/logs/script_01_trajectory_sweep_20260625_095910.log) | [ANALYSIS_01.md](ANALYSIS_01.md) | Supported |
+| 02 | [HYPOTHESIS_02.md](../hypotheses/HYPOTHESIS_02.md) | [script_02_lunar_intercept.py](../experiments/01_synthetic/script_02_lunar_intercept.py) | [script_02_lunar_intercept_20260625_112846.log](../results/logs/script_02_lunar_intercept_20260625_112846.log) | [ANALYSIS_02.md](ANALYSIS_02.md) | Supported |
+| 03 | [HYPOTHESIS_03.md](../hypotheses/HYPOTHESIS_03.md) | [script_03_multi_loop_return.py](../experiments/01_synthetic/script_03_multi_loop_return.py) | [script_03_multi_loop_return_20260625_122118.log](../results/logs/script_03_multi_loop_return_20260625_122118.log) | [ANALYSIS_03.md](ANALYSIS_03.md) | Partially supported; physical constraint discovered |
 
-Note: [HYPOTHESIS_03.md](lunar/lunar_free_return/hypotheses/HYPOTHESIS_03.md) still lists its status as pending, but [ANALYSIS_03.md](lunar/lunar_free_return/analysis/ANALYSIS_03.md) provides the post-run assessment: the original exactly-three-loop prediction was not supported, while the broader multi-loop return concept was partially supported through the discovery of a 1.25-loop passive return boundary.
+Note: [HYPOTHESIS_03.md](../hypotheses/HYPOTHESIS_03.md) still lists its status as pending, but [ANALYSIS_03.md](ANALYSIS_03.md) provides the post-run assessment: the original exactly-three-loop prediction was not supported, while the broader multi-loop return concept was partially supported through the discovery of a 1.25-loop passive return boundary.
 
 ---
 
@@ -78,7 +78,7 @@ Note: [HYPOTHESIS_03.md](lunar/lunar_free_return/hypotheses/HYPOTHESIS_03.md) st
 
 Find a narrow translunar injection speed corridor that sends the spacecraft behind the Moon and returns it to a low-Earth perigee without post-injection propulsion.
 
-Sources: [HYPOTHESIS_01.md](lunar/lunar_free_return/hypotheses/HYPOTHESIS_01.md), [ANALYSIS_01.md](lunar/lunar_free_return/analysis/ANALYSIS_01.md)
+Sources: [HYPOTHESIS_01.md](../hypotheses/HYPOTHESIS_01.md), [ANALYSIS_01.md](ANALYSIS_01.md)
 
 ### Method
 
@@ -99,9 +99,9 @@ The hypothesis was supported. The free-return trajectory sits on a sharp transit
 
 ### Generated Artifacts
 
-- Log: [script_01_trajectory_sweep_20260625_095910.log](lunar/lunar_free_return/results/logs/script_01_trajectory_sweep_20260625_095910.log)
-- Trajectory figure: [script_01_trajectory_sweep_trajectories.png](lunar/lunar_free_return/results/figures/script_01_trajectory_sweep_trajectories.png)
-- Metrics figure: [script_01_trajectory_sweep_metrics.png](lunar/lunar_free_return/results/figures/script_01_trajectory_sweep_metrics.png)
+- Log: [script_01_trajectory_sweep_20260625_095910.log](../results/logs/script_01_trajectory_sweep_20260625_095910.log)
+- Trajectory figure: [script_01_trajectory_sweep_trajectories.png](../results/figures/script_01_trajectory_sweep_trajectories.png)
+- Metrics figure: [script_01_trajectory_sweep_metrics.png](../results/figures/script_01_trajectory_sweep_metrics.png)
 
 ---
 
@@ -111,7 +111,7 @@ The hypothesis was supported. The free-return trajectory sits on a sharp transit
 
 Shift from a safe lunar flyby to a direct lunar intercept and determine whether low-energy trajectories preferentially hit the Moon's leading hemisphere.
 
-Sources: [HYPOTHESIS_02.md](lunar/lunar_free_return/hypotheses/HYPOTHESIS_02.md), [ANALYSIS_02.md](lunar/lunar_free_return/analysis/ANALYSIS_02.md)
+Sources: [HYPOTHESIS_02.md](../hypotheses/HYPOTHESIS_02.md), [ANALYSIS_02.md](ANALYSIS_02.md)
 
 ### Method
 
@@ -133,9 +133,9 @@ The hypothesis was supported. Direct impacts occur in a different phase-angle co
 
 ### Generated Artifacts
 
-- Log: [script_02_lunar_intercept_20260625_112846.log](lunar/lunar_free_return/results/logs/script_02_lunar_intercept_20260625_112846.log)
-- Trajectory figure: [script_02_lunar_intercept_trajectories.png](lunar/lunar_free_return/results/figures/script_02_lunar_intercept_trajectories.png)
-- Impact-distribution figure: [script_02_lunar_intercept_impacts.png](lunar/lunar_free_return/results/figures/script_02_lunar_intercept_impacts.png)
+- Log: [script_02_lunar_intercept_20260625_112846.log](../results/logs/script_02_lunar_intercept_20260625_112846.log)
+- Trajectory figure: [script_02_lunar_intercept_trajectories.png](../results/figures/script_02_lunar_intercept_trajectories.png)
+- Impact-distribution figure: [script_02_lunar_intercept_impacts.png](../results/figures/script_02_lunar_intercept_impacts.png)
 
 ---
 
@@ -145,7 +145,7 @@ The hypothesis was supported. Direct impacts occur in a different phase-angle co
 
 Search for resonant passive lunar free-return trajectories that execute exactly three loops around the Moon before returning to Earth.
 
-Sources: [HYPOTHESIS_03.md](lunar/lunar_free_return/hypotheses/HYPOTHESIS_03.md), [ANALYSIS_03.md](lunar/lunar_free_return/analysis/ANALYSIS_03.md), [script_03_multi_loop_return_summary.txt](lunar/lunar_free_return/results/logs/script_03_multi_loop_return_summary.txt)
+Sources: [HYPOTHESIS_03.md](../hypotheses/HYPOTHESIS_03.md), [ANALYSIS_03.md](ANALYSIS_03.md), [script_03_multi_loop_return_summary.txt](../results/logs/script_03_multi_loop_return_summary.txt)
 
 ### Method
 
@@ -170,10 +170,10 @@ This is a scientifically useful outcome: the analysis did not force a positive r
 
 ### Generated Artifacts
 
-- Log: [script_03_multi_loop_return_20260625_122118.log](lunar/lunar_free_return/results/logs/script_03_multi_loop_return_20260625_122118.log)
-- Summary table: [script_03_multi_loop_return_summary.txt](lunar/lunar_free_return/results/logs/script_03_multi_loop_return_summary.txt)
-- Trajectory figure: [script_03_multi_loop_return_trajectories.png](lunar/lunar_free_return/results/figures/script_03_multi_loop_return_trajectories.png)
-- Lunar close-up figure: [script_03_multi_loop_return_lunar_closeup.png](lunar/lunar_free_return/results/figures/script_03_multi_loop_return_lunar_closeup.png)
+- Log: [script_03_multi_loop_return_20260625_122118.log](../results/logs/script_03_multi_loop_return_20260625_122118.log)
+- Summary table: [script_03_multi_loop_return_summary.txt](../results/logs/script_03_multi_loop_return_summary.txt)
+- Trajectory figure: [script_03_multi_loop_return_trajectories.png](../results/figures/script_03_multi_loop_return_trajectories.png)
+- Lunar close-up figure: [script_03_multi_loop_return_lunar_closeup.png](../results/figures/script_03_multi_loop_return_lunar_closeup.png)
 
 ---
 
@@ -214,7 +214,7 @@ The project moved from a basic free-return proof, to a targeted collision corrid
 
 ## 10. Human Intellectual Contributions
 
-The human contribution log is recorded in [intellectual_contribution.md](lunar/lunar_free_return/prompts/intellectual_contribution.md). The most important human-guided turning points were:
+The human contribution log is recorded in [intellectual_contribution.md](../prompts/intellectual_contribution.md). The most important human-guided turning points were:
 
 | Iteration | Human Contribution | Why It Mattered |
 |---|---|---|
@@ -232,39 +232,39 @@ This provenance is scientifically important: assumptions were actively tested, f
 
 | Script | Purpose |
 |---|---|
-| [script_01_trajectory_sweep.py](lunar/lunar_free_return/experiments/01_synthetic/script_01_trajectory_sweep.py) | Standard free-return trajectory sweep. |
-| [script_02_lunar_intercept.py](lunar/lunar_free_return/experiments/01_synthetic/script_02_lunar_intercept.py) | Direct lunar impact corridor search. |
-| [script_03_multi_loop_return.py](lunar/lunar_free_return/experiments/01_synthetic/script_03_multi_loop_return.py) | Multi-loop passive return search and boundary mapping. |
-| [search_intercept.py](lunar/lunar_free_return/experiments/01_synthetic/search_intercept.py) | Exploratory intercept search helper. |
-| [fine_intercept_search.py](lunar/lunar_free_return/experiments/01_synthetic/fine_intercept_search.py) | Fine exploratory intercept search helper. |
+| [script_01_trajectory_sweep.py](../experiments/01_synthetic/script_01_trajectory_sweep.py) | Standard free-return trajectory sweep. |
+| [script_02_lunar_intercept.py](../experiments/01_synthetic/script_02_lunar_intercept.py) | Direct lunar impact corridor search. |
+| [script_03_multi_loop_return.py](../experiments/01_synthetic/script_03_multi_loop_return.py) | Multi-loop passive return search and boundary mapping. |
+| [search_intercept.py](../experiments/01_synthetic/search_intercept.py) | Exploratory intercept search helper. |
+| [fine_intercept_search.py](../experiments/01_synthetic/fine_intercept_search.py) | Fine exploratory intercept search helper. |
 
 ### Logs
 
 | Log | Notes |
 |---|---|
-| [script_01_trajectory_sweep_20260625_095910.log](lunar/lunar_free_return/results/logs/script_01_trajectory_sweep_20260625_095910.log) | Final selected Iteration 1 run. |
-| [script_02_lunar_intercept_20260625_112846.log](lunar/lunar_free_return/results/logs/script_02_lunar_intercept_20260625_112846.log) | Final selected Iteration 2 run. |
-| [script_03_multi_loop_return_20260625_122118.log](lunar/lunar_free_return/results/logs/script_03_multi_loop_return_20260625_122118.log) | Final selected Iteration 3 run. |
-| [script_03_multi_loop_return_summary.txt](lunar/lunar_free_return/results/logs/script_03_multi_loop_return_summary.txt) | Sorted valid multi-loop return trajectories. |
+| [script_01_trajectory_sweep_20260625_095910.log](../results/logs/script_01_trajectory_sweep_20260625_095910.log) | Final selected Iteration 1 run. |
+| [script_02_lunar_intercept_20260625_112846.log](../results/logs/script_02_lunar_intercept_20260625_112846.log) | Final selected Iteration 2 run. |
+| [script_03_multi_loop_return_20260625_122118.log](../results/logs/script_03_multi_loop_return_20260625_122118.log) | Final selected Iteration 3 run. |
+| [script_03_multi_loop_return_summary.txt](../results/logs/script_03_multi_loop_return_summary.txt) | Sorted valid multi-loop return trajectories. |
 
 ### Figures
 
 | Figure | Notes |
 |---|---|
-| [script_01_trajectory_sweep_trajectories.png](lunar/lunar_free_return/results/figures/script_01_trajectory_sweep_trajectories.png) | Free-return trajectory paths. |
-| [script_01_trajectory_sweep_metrics.png](lunar/lunar_free_return/results/figures/script_01_trajectory_sweep_metrics.png) | Free-return sensitivity metrics. |
-| [script_02_lunar_intercept_trajectories.png](lunar/lunar_free_return/results/figures/script_02_lunar_intercept_trajectories.png) | Direct-intercept trajectory paths. |
-| [script_02_lunar_intercept_impacts.png](lunar/lunar_free_return/results/figures/script_02_lunar_intercept_impacts.png) | Lunar impact point distribution. |
-| [script_03_multi_loop_return_trajectories.png](lunar/lunar_free_return/results/figures/script_03_multi_loop_return_trajectories.png) | Multi-loop return trajectories. |
-| [script_03_multi_loop_return_lunar_closeup.png](lunar/lunar_free_return/results/figures/script_03_multi_loop_return_lunar_closeup.png) | Lunar-vicinity close-up of looping behavior. |
+| [script_01_trajectory_sweep_trajectories.png](../results/figures/script_01_trajectory_sweep_trajectories.png) | Free-return trajectory paths. |
+| [script_01_trajectory_sweep_metrics.png](../results/figures/script_01_trajectory_sweep_metrics.png) | Free-return sensitivity metrics. |
+| [script_02_lunar_intercept_trajectories.png](../results/figures/script_02_lunar_intercept_trajectories.png) | Direct-intercept trajectory paths. |
+| [script_02_lunar_intercept_impacts.png](../results/figures/script_02_lunar_intercept_impacts.png) | Lunar impact point distribution. |
+| [script_03_multi_loop_return_trajectories.png](../results/figures/script_03_multi_loop_return_trajectories.png) | Multi-loop return trajectories. |
+| [script_03_multi_loop_return_lunar_closeup.png](../results/figures/script_03_multi_loop_return_lunar_closeup.png) | Lunar-vicinity close-up of looping behavior. |
 
 ### Interpretation Files
 
 | File | Purpose |
 |---|---|
-| [ANALYSIS_01.md](lunar/lunar_free_return/analysis/ANALYSIS_01.md) | Interprets standard free-return discovery. |
-| [ANALYSIS_02.md](lunar/lunar_free_return/analysis/ANALYSIS_02.md) | Interprets direct lunar intercept mapping. |
-| [ANALYSIS_03.md](lunar/lunar_free_return/analysis/ANALYSIS_03.md) | Interprets passive multi-loop boundary discovery. |
+| [ANALYSIS_01.md](ANALYSIS_01.md) | Interprets standard free-return discovery. |
+| [ANALYSIS_02.md](ANALYSIS_02.md) | Interprets direct lunar intercept mapping. |
+| [ANALYSIS_03.md](ANALYSIS_03.md) | Interprets passive multi-loop boundary discovery. |
 
 ---
 
@@ -287,7 +287,7 @@ This provenance is scientifically important: assumptions were actively tested, f
 3. Add stochastic injection errors and compute the mid-course correction budget needed to preserve safe return.
 4. Extend the model to three dimensions and evaluate inclination effects.
 5. Model active correction maneuvers near apolune to test whether exactly three-loop returns can be stabilized.
-6. Build a paper-style narrative in [paper_draft/](lunar/lunar_free_return/paper_draft) using the selected results and figures.
+6. Build a paper-style narrative in [paper_draft/](../paper_draft) using the selected results and figures.
 
 ---
 
