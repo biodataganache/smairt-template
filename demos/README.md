@@ -269,5 +269,3 @@ Because synthetic data gives you a known answer. If your method cannot recover a
 - Record interpretation, not just output.
 - Be honest about model limits and data caveats.
 - Treat these demos as scaffolds for scientific reasoning, not autonomous pipelines.
-
-SMAIRT works best when the repo teaches both **how to run the framework** and **how to think inside it**.
