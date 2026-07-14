@@ -1,0 +1,6 @@
+# Lunar demo. cookiecutter generates the SMAIRT project; numpy/scipy/matplotlib
+# are what you'll use to build and plot the trajectory.
+cookiecutter
+numpy
+scipy
+matplotlib

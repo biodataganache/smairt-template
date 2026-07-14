@@ -1,0 +1,6 @@
+# Math demo: SIRD epidemic modeling
+# CPU-only, no network needed at runtime (cookiecutter fetches the template once).
+cookiecutter
+numpy
+scipy
+matplotlib

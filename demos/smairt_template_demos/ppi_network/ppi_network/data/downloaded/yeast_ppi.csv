@@ -1,0 +1,16 @@
+p1,p2,score,p1_essential,p2_essential,module,source
+HTB1,ACT1,818.0,False,True,Background,STRING_API
+HTB1,HHO1,987.0,False,False,Chromatin,STRING_API
+HTB1,HTA1,999.0,False,False,Chromatin,STRING_API
+HTA1,ACT1,532.0,False,True,Background,STRING_API
+HTA1,HHO1,978.0,False,False,Chromatin,STRING_API
+ACT1,RPL3,492.0,True,True,Background,STRING_API
+ACT1,HHO1,542.0,True,False,Background,STRING_API
+ACT1,RPS3,642.0,True,True,Background,STRING_API
+ACT1,RPS2,683.0,True,False,Background,STRING_API
+ACT1,MYO2,998.0,True,True,Cytoskeleton,STRING_API
+ACT1,COF1,999.0,True,True,Cytoskeleton,STRING_API
+RPS2,RPL3,999.0,False,True,Background,STRING_API
+RPS2,RPS3,999.0,False,True,Background,STRING_API
+COF1,MYO2,520.0,True,True,Cytoskeleton,STRING_API
+RPS3,RPL3,999.0,True,True,Ribosome,STRING_API
