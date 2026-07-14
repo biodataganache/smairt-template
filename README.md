@@ -194,7 +194,7 @@ script_X1_...   — Track X (interpretation)
 ### Study Report Checkpoints
 `analysis/STUDY_REPORT_TEMPLATE.md` provides a consistent format for project-level research synthesis. Use it to create or update `analysis/STUDY_REPORT.md` after coherent findings emerge, before phase transitions, before handoff, before paper drafting, or at project completion. Set the `Report Status` field inside the report (`DRAFT`, `INTERIM`, `UPDATED`, or `FINAL`) to reflect where the project actually stands — the filename itself does not change as the project progresses.
 
-The final report complements numbered analysis files by synthesizing the central question, study scope, audit trail, results matrix, cross-iteration conclusions, reproducibility assets, limitations, and next steps.
+The study report complements numbered analysis files by synthesizing the central question, study scope, audit trail, results matrix, cross-iteration conclusions, reproducibility assets, limitations, and next steps.
 
 ### Plans Directory
 `plans/` holds planning documents created before complex work begins.
