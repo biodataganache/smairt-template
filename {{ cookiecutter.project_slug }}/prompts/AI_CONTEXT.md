@@ -65,6 +65,40 @@ Each iteration produces:
 
 ---
 
+## Study Report Checkpoints
+
+Beyond per-iteration analysis files, the project can accumulate a project-level
+research synthesis at `analysis/STUDY_REPORT.md`, based on
+`analysis/STUDY_REPORT_TEMPLATE.md`. This is not a one-time end-of-project
+deliverable — it is a living document you should proactively suggest creating
+or updating whenever the project reaches a natural checkpoint, such as:
+
+- one or more iterations establish a coherent, citable finding
+- the project is about to transition to a new phase or track (e.g., synthetic → downloaded)
+- the user asks for a summary, status update, or "where are we" recap
+- before a handoff to another researcher, tool, or AI session
+- before drafting a paper or external report
+
+When you notice one of these checkpoints, proactively ask the user:
+
+> "This looks like a good checkpoint to update `analysis/STUDY_REPORT.md`. Want me to create or update it?"
+
+If the report does not yet exist, copy `analysis/STUDY_REPORT_TEMPLATE.md` to
+`analysis/STUDY_REPORT.md` and fill it from the actual project files (hypotheses,
+logs, figures, analysis files) — never from memory. Set the `Report Status`
+field to reflect where the project actually stands:
+
+- `DRAFT` — first pass, sections still being filled in
+- `INTERIM` — accurate as of the current iteration, project still active
+- `UPDATED` — a prior report was revised because new iterations changed conclusions
+- `FINAL` — the project has reached its planned end state
+
+The filename never changes as the project progresses — only the `Report Status`
+field does. Do not wait for the user to remember this file exists; the whole
+point is that you help track when a synthesis checkpoint is due.
+
+---
+
 ## The Data Progression
 {% if cookiecutter.starting_phase == 'synthetic' %}
 This project uses the full three-phase data progression:

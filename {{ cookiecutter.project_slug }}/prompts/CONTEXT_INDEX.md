@@ -43,6 +43,21 @@ Read these files to understand the project from scratch:
 
 ---
 
+## Writing or Updating the Study Report
+
+| File | Why |
+|------|-----|
+| `analysis/STUDY_REPORT_TEMPLATE.md` | Structure for the project-level synthesis |
+| `analysis/STUDY_REPORT.md` (if it exists) | Current version to update rather than overwrite |
+| Recent `analysis/ANALYSIS_*.md` | Evidence to synthesize |
+| `hypotheses/HYPOTHESIS_*.md` | Status of each tested hypothesis |
+| `prompts/intellectual_contribution.md` | Human contributions to credit |
+
+Suggest this whenever a coherent finding emerges, before a phase transition,
+before a handoff, or when the user asks for a project status summary.
+
+---
+
 ## Planning a New Track
 
 | File | Why |
