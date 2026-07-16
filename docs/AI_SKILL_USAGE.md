@@ -6,7 +6,7 @@ This branch adds a portable AI skill at `skills/smairt-research/`.
 
 - `skills/smairt-research/SKILL.md`: the main skill instructions.
 - `skills/smairt-research/references/workflow.md`: optional details an assistant can load when needed.
-- `skills/smairt-research/agents/openai.yaml`: UI metadata for OpenAI/Codex-style skill catalogs.
+- `skills/smairt-research/agents/openai.yaml`: UI metadata for OpenAI-style skill catalogs.
 
 ## Use in an existing ChatGPT or Claude workflow
 
@@ -27,7 +27,7 @@ Current hypothesis: [your hypothesis or "please help define it"]
 Help me design the first testable experiment, generate a numbered script, log output to results/logs, and create a results comment block so the project can be reloaded into future AI sessions.
 ```
 
-## Use as a Codex/OpenAI-style skill
+## Use as an OpenAI-style skill
 
 Copy or package the full folder:
 
@@ -49,15 +49,10 @@ An MCP connector is useful when developers want the assistant to discover this w
 
 MCP is a delivery layer here; the skill remains the source of truth.
 
-## PR path
+For testing the MCP server with Claude before any shared deployment, see
+`docs/LOCAL_MCP_TESTING.md`.
 
-You can push this branch and open a PR for review. The branch can be reviewed before the skill is treated as part of the template:
-
-```bash
-git push -u origin codex-smairt-ai-skill
-```
-
-The skill does not need to be added to a generated project by default unless the maintainers want every new SMAIRT project to ship with it. A follow-up PR could copy `skills/smairt-research/` into `{{ cookiecutter.project_slug }}/skills/` if that is the preferred distribution model.
+The skill does not need to be added to a generated project by default unless the maintainers want every new SMAIRT project to ship with it. A follow-up change could copy `skills/smairt-research/` into `{{ cookiecutter.project_slug }}/skills/` if that is the preferred distribution model.
 
 ## Shareable developer example
 
