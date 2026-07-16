@@ -1,0 +1,6 @@
+# Peptide digest demo. cookiecutter generates the SMAIRT project. The digestion,
+# mass, and length calculations are pure Python (standard library) so there are
+# no heavy dependencies and no data download needed. matplotlib is optional, for
+# a simple peptide-length / mass histogram.
+cookiecutter
+matplotlib

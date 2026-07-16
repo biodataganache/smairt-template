@@ -1,0 +1,9 @@
+# Protein-protein interaction (PPI) network demo. cookiecutter generates the
+# SMAIRT project; networkx builds and analyzes the graph, numpy/pandas handle the
+# tables, and matplotlib draws the network and metric plots. No data download
+# needed: you start by generating a synthetic graph with planted hubs and modules.
+cookiecutter
+networkx
+numpy
+pandas
+matplotlib

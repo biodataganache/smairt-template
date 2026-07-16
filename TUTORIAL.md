@@ -2,6 +2,8 @@
 
 A comprehensive walkthrough of the SMAIRT framework using a real example: building a simple classifier and testing it across synthetic, benchmark, and real data.
 
+> **Looking for a domain-specific example?** Browse the [SMAIRT Demo Collection](demos/README.md) for guided research tracks across physics, biology, epidemiology, and more.
+
 ---
 
 ## Table of Contents

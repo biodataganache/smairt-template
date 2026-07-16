@@ -1,0 +1,21 @@
+# Protein language model (nano PLM) demo. cookiecutter generates the SMAIRT
+# project; numpy builds and inspects the synthetic protein corpus; torch (CPU
+# build) defines and trains the tiny masked-language model; matplotlib plots the
+# loss curve and the motif-vs-variable accuracy. No data download is needed for
+# Rungs 1-2: you generate synthetic protein-like sequences with a planted,
+# known-truth grammar first.
+#
+# NOTE: this track is heavier than the numpy-only demos because of torch. The CPU
+# wheel is all you need (no GPU/CUDA). Training a nano model on the synthetic
+# corpus takes minutes on a laptop CPU.
+#
+# OPTIONAL (Rung 3 only, real data): uncomment ONE of the lines below to embed a
+# small real protein set with a tiny pretrained ESM-2 model. This downloads a
+# ~30MB model the first time. Skip it if you only want the synthetic exercise.
+#   fair-esm
+#   transformers
+#   scikit-learn   # for the simple family-separation classifier / silhouette
+cookiecutter
+numpy
+torch
+matplotlib

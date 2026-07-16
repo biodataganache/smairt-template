@@ -1,0 +1,8 @@
+# Enzyme kinetics demo. cookiecutter generates the SMAIRT project; numpy/scipy do
+# the curve fitting (scipy.optimize.curve_fit) and matplotlib plots the
+# Michaelis-Menten curve. No data download needed: you generate synthetic
+# velocity-vs-substrate data with known Km and Vmax first.
+cookiecutter
+numpy
+scipy
+matplotlib

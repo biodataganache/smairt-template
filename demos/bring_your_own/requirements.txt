@@ -1,0 +1,7 @@
+# Bring-Your-Own demo. cookiecutter generates the SMAIRT project; the rest are
+# common starter libs for the synthetic-first quick-starts (add your own).
+cookiecutter
+numpy
+pandas
+matplotlib
+scikit-learn

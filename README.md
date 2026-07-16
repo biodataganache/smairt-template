@@ -74,6 +74,7 @@ See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
 - **[TUTORIAL.md](TUTORIAL.md)** — Full standard mode walkthrough
 - **[TUTORIAL_PAPER_DRIVEN.md](TUTORIAL_PAPER_DRIVEN.md)** — Paper-driven mode guide
 - **[TUTORIAL_HPC.md](TUTORIAL_HPC.md)** — HPC/SLURM submission guide
+- **[DEMOS](/demos)** - Set of demos showcasing SMAIRT usage in action
 
 ---
 
