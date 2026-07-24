@@ -17,7 +17,6 @@ Usage:
 """
 
 import sys
-import os
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
@@ -33,28 +32,45 @@ class TeeLogger:
     def __init__(self, log_path: Path):
         self.log_path = Path(log_path)
         self._original_stdout = None
+        self._original_stderr = None
         self._log_file = None
 
     def open(self) -> 'TeeLogger':
         """Start tee-logging."""
+        if self._log_file is not None:
+            raise RuntimeError("TeeLogger is already open")
+
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_file = open(self.log_path, "w")
         self._original_stdout = sys.stdout
-        self._log_file = open(self.log_path, "w")
+        self._original_stderr = sys.stderr
+        self._log_file = log_file
         sys.stdout = self
+        sys.stderr = self
         return self
 
     def close(self) -> None:
-        """Stop tee-logging and restore stdout."""
-        if self._original_stdout is not None:
+        """Stop tee-logging and restore stdout and stderr."""
+        if sys.stdout is self and self._original_stdout is not None:
             sys.stdout = self._original_stdout
-        if self._log_file is not None:
-            self._log_file.close()
-            self._log_file = None
+        if sys.stderr is self and self._original_stderr is not None:
+            sys.stderr = self._original_stderr
+
+        log_file = self._log_file
+        self._log_file = None
+        self._original_stdout = None
+        self._original_stderr = None
+        if log_file is not None:
+            log_file.close()
 
     def __enter__(self) -> 'TeeLogger':
         return self.open()
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        if exc_type is not None:
+            import traceback
+
+            traceback.print_exception(exc_type, exc_val, exc_tb, file=self)
         self.close()
 
     def write(self, message: str) -> None:

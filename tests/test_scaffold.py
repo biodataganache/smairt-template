@@ -112,6 +112,42 @@ class ScaffoldIntegrationTests(unittest.TestCase):
             self.assertEqual(len(logs), 1)
             self.assertIn("TODO: Implement experiment", logs[0].read_text())
 
+    def test_generated_experiment_script_logs_uncaught_traceback(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project = self.render_project(
+                Path(temp_dir), "standard", "Traceback Render Test"
+            )
+            script = project / "experiments" / "01_synthetic" / "failure.py"
+            script.write_text(
+                """import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from scripts.shared import TeeLogger
+
+with TeeLogger(PROJECT_ROOT / "results" / "logs" / "failure.log"):
+    print("before failure")
+    print("stderr detail", file=sys.stderr)
+    raise RuntimeError("intentional failure")
+"""
+            )
+
+            result = subprocess.run(
+                [sys.executable, str(script)],
+                cwd=project,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            log = (project / "results" / "logs" / "failure.log").read_text()
+            self.assertIn("before failure", log)
+            self.assertIn("stderr detail", log)
+            self.assertIn("Traceback (most recent call last):", log)
+            self.assertIn("RuntimeError: intentional failure", log)
+
     def test_paper_driven_lifecycle_generates_manifest(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             project = self.render_project(
