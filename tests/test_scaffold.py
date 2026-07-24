@@ -12,18 +12,25 @@ TEMPLATE_ROOT = Path(__file__).resolve().parents[1]
 
 class ScaffoldIntegrationTests(unittest.TestCase):
     def render_project(
-        self, output_dir, project_mode, project_name, workflow_mode="ide_native"
+        self,
+        output_dir,
+        project_mode,
+        project_name,
+        workflow_mode="ide_native",
+        **extra_context,
     ):
+        context = {
+            "project_name": project_name,
+            "project_mode": project_mode,
+            "workflow_mode": workflow_mode,
+            "create_git_repo": "no",
+        }
+        context.update(extra_context)
         cookiecutter(
             str(TEMPLATE_ROOT),
             no_input=True,
             output_dir=str(output_dir),
-            extra_context={
-                "project_name": project_name,
-                "project_mode": project_mode,
-                "workflow_mode": workflow_mode,
-                "create_git_repo": "no",
-            },
+            extra_context=context,
         )
         return output_dir / project_name.lower().replace(" ", "_")
 
@@ -84,6 +91,30 @@ class ScaffoldIntegrationTests(unittest.TestCase):
 
             self.assertNotIn(".DS_Store", staged)
             self.assertNotIn(".pyc", staged)
+
+    def test_each_license_choice_renders_a_license_file(self):
+        expected_markers = {
+            "MIT": "Permission is hereby granted",
+            "BSD-3-Clause": "Redistribution and use in source and binary forms",
+            "Apache-2.0": "https://www.apache.org/licenses/LICENSE-2.0",
+            "GPL-3.0": "GNU General Public License as published",
+            "proprietary": "No permission is granted",
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for index, (license_name, marker) in enumerate(expected_markers.items()):
+                project = self.render_project(
+                    Path(temp_dir),
+                    "standard",
+                    f"License Render Test {index}",
+                    license=license_name,
+                    author_name="Test Researcher",
+                )
+                content = (project / "LICENSE").read_text()
+                self.assertIn(marker, content)
+                self.assertIn("Test Researcher", content)
+                self.assertNotIn("{{", content)
+                self.assertNotIn("{%", content)
 
     def test_generated_experiment_script_writes_log(self):
         with tempfile.TemporaryDirectory() as temp_dir:
