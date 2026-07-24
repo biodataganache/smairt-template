@@ -233,14 +233,9 @@ For projects starting from reviewer feedback:
 - Template: paper/reviewer_feedback/response_draft.md
 ```
 
-## MCP connector pattern
+## Runtime integration
 
-For paper-driven projects, the MCP connector can expose:
-
-- Resource: `smairt://paper/outline` -> `paper/outline.md`
-- Resource: `smairt://paper/analysis_plan` -> `analysis/ANALYSIS_PLAN.md`
-- Resource: `smairt://paper/manifest` -> `FINAL_MANIFEST.md`
-- Prompt: `start_paper_driven_session` -> the starting prompt from SKILL.md
-- Prompt: `start_revision_session` -> the revision prompt from SKILL.md
-- Optional tool: `new_iteration` -> creates a new iteration directory
-- Optional tool: `finalize_iteration` -> copies accepted results to final/
+This skill is static instruction content, not an MCP server or API client. In a
+generated project, the assistant reads the outline, analysis plan, manifest, and
+prompt files directly. Zoo Code may provide user-configured Brave and Exa tools;
+SMAIRT supplies the reviewed evidence workflow around them.

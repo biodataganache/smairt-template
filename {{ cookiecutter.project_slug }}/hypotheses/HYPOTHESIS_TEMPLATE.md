@@ -7,6 +7,17 @@
 [Context that motivates this hypothesis. What prior results led here?
 Reference prior analysis files or scripts.]
 
+## Reviewed Evidence Basis
+
+List only researcher-approved local reference records. If the hypothesis is not
+literature-grounded, state that explicitly.
+
+| Reference ID | Relevant claim | Verified source location |
+|---|---|---|
+| `references/sources/author_year_short_title/reference.md` | [Claim informing this hypothesis] | [Page, section, figure, table, or data field] |
+
+**Evidence gaps or contradictions**: [Conflicting evidence, uncertainty, or missing sources]
+
 ## Hypothesis Statement
 
 **Prediction**: [Specific, testable prediction about what will happen]

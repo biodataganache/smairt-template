@@ -28,7 +28,7 @@ Use `smairt-paper-driven` instead of `smairt-research` when:
 Paper-driven mode follows this cycle per analysis section:
 
 ```text
-Paper Section → Hypothesis → Iteration (code + config) → Results → Decision (accept/revise) → repeat or finalize
+Paper Section → Reviewed Literature → Hypothesis → Iteration (code + config) → Results → Decision (accept/revise) → repeat or finalize
 ```
 
 ### The iteration loop
@@ -96,6 +96,13 @@ FINAL_MANIFEST.md               # Maps all paper elements to their source analys
 ```
 
 ## Required practices
+
+Before using prior work to motivate an analysis, claim novelty, or draft paper text:
+
+- Follow the generated project's `prompts/LITERATURE_RESEARCH.md` workflow.
+- Treat Brave and Exa results as candidates until the researcher approves them.
+- Never request or write provider API keys; those stay in Zoo Code's GUI.
+- Read approved `references/sources/*/reference.md` records and verify important claims.
 
 When creating analysis scripts:
 

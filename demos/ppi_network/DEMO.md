@@ -96,7 +96,7 @@ Full context, hypothesis, and metrics are in
    | workflow_mode | `1` (ide_native) |
    | initial_research_question | `Can graph methods recover the hubs and modules in a PPI network?` |
    | domain | `3` (computational_biology) |
-   | ai_tool | `1` (roo_zoo / Zoo Code) |
+   | ai_tool | `1` (zoo_code) |
    | include_example_project | `1` (no) |
    | starting_phase | `1` (synthetic) |
    | license | `1` (MIT) |

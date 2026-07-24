@@ -14,7 +14,7 @@ SMAIRT helps you move quickly from not knowing much to being at the frontier of 
 
 ## Overview
 
-SMAIRT is designed for researchers who use AI tools (VSCode Roo/Zoo, Cursor, Windsurf, ChatGPT, Claude) to accelerate their research. It provides:
+SMAIRT is designed for researchers who use AI tools (Zoo Code, Cursor, Windsurf, ChatGPT, Claude) to accelerate their research. It provides:
 
 - **Structure** — A proven directory layout for experiments, hypotheses, analysis, and results
 - **Workflow** — The scientific method in an iterative loop with clear documentation
@@ -43,7 +43,7 @@ For research that starts with a paper outline and real datasets. Perfect for mor
 
 ### IDE-Native (default)
 For AI-integrated IDEs where the AI has direct file access:
-- **VSCode with Roo/Zoo** (recommended)
+- **Zoo Code in VS Code** (recommended)
 - **Cursor**
 - **Windsurf**
 
@@ -154,6 +154,7 @@ my_smairt_project/
 │   ├── downloaded/
 │   └── real/
 ├── background/                 # Research context
+├── references/                 # Local, Git-ignored literature corpus
 ├── docs/                       # Framework documentation
 ├── hpc/                        # HPC job scripts
 └── paper_draft/                # Parallel narrative
@@ -207,12 +208,24 @@ Projects are initialized as git repositories by default (`create_git_repo: yes`)
 
 See `docs/BEST_PRACTICE_SINGLE.md` and `docs/BEST_PRACTICE_COLLABORATIVE.md` in generated projects.
 
-### MCP Skills Integration
-SMAIRT ships with two [MCP skills](skills/) that AI tool agents can load for structured guidance:
+### AI Skills Integration
+SMAIRT ships with two portable [AI skills](skills/) that compatible agents can load for structured guidance:
 - **`smairt-research`** — The full standard-mode workflow, audit trail conventions, and script patterns
 - **`smairt-paper-driven`** — Paper-driven iteration structure, analysis plans, and finalization steps
 
 Skills give AI assistants persistent context about SMAIRT conventions without requiring manual prompt priming each session.
+
+### Reviewed Literature Research
+
+Generated projects include `prompts/LITERATURE_RESEARCH.md` and Zoo Code's
+`/smairt-literature-search` command. The workflow uses Brave for broad discovery
+and Exa for semantic and research-paper-oriented discovery, then stops for human
+screening before creating local reference folders.
+
+Configure Brave and Exa, including their API keys, only in Zoo Code's GUI.
+SMAIRT does not implement their APIs, create MCP configuration, or store provider
+credentials. The generated `references/` corpus is ignored by Git and excluded
+from `compile_for_ai.py`.
 
 ### HPC Support
 Generated projects include an `hpc/` directory with SLURM templates, a cluster configuration file, and a job-monitoring script. See [TUTORIAL_HPC.md](TUTORIAL_HPC.md) for a walkthrough covering:
@@ -238,7 +251,7 @@ Generated projects include an `hpc/` directory with SLURM templates, a cluster c
 
 - Python 3.8+
 - [cookiecutter](https://cookiecutter.readthedocs.io/) (`pip install cookiecutter`)
-- An AI assistant (VSCode Roo/Zoo, Cursor, Windsurf, ChatGPT, Claude, etc.)
+- An AI assistant (Zoo Code, Cursor, Windsurf, ChatGPT, Claude, etc.)
 
 ---
 
@@ -273,7 +286,7 @@ After running experiments:
 | `project_name` | Human-readable project name | My SMAIRT Project |
 | `project_mode` | Standard or paper-driven | standard |
 | `workflow_mode` | IDE-native or browser-paste | ide_native |
-| `ai_tool` | Primary AI tool used | roo_zoo |
+| `ai_tool` | Primary AI tool used | zoo_code |
 | `domain` | Research domain | machine_learning |
 | `starting_phase` | Where to begin experiments | synthetic |
 | `create_git_repo` | Initialize git on creation | yes |

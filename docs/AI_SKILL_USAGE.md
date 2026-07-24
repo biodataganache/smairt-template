@@ -37,17 +37,12 @@ skills/smairt-research/
 
 The required entry point is `SKILL.md`. The `references/` folder is loaded only when the assistant needs extra workflow detail. The `agents/openai.yaml` file is optional UI metadata.
 
-## Use through MCP
+## Runtime Scope
 
-An MCP connector is useful when developers want the assistant to discover this workflow without manually pasting files. A minimal connector can expose:
-
-- `smairt://skill/SKILL.md`
-- `smairt://skill/workflow.md`
-- `start_smairt_session`
-- `continue_smairt_session`
-- optionally, a `compile_smairt_context` tool that runs `scripts/compile_for_ai.py` in a generated SMAIRT project
-
-MCP is a delivery layer here; the skill remains the source of truth.
+These are instruction packages, not MCP servers or API clients. SMAIRT does not
+configure external providers. In generated projects, Zoo Code supplies any
+enabled Brave and Exa tools while `prompts/LITERATURE_RESEARCH.md` defines the
+human-reviewed scientific workflow around them.
 
 ## PR path
 
@@ -64,5 +59,5 @@ The skill does not need to be added to a generated project by default unless the
 ```text
 I want to package SMAIRT as an AI skill. The skill entry point is `skills/smairt-research/SKILL.md`, with additional workflow detail in `skills/smairt-research/references/workflow.md`.
 
-Please wire this into our assistant runtime so it can be invoked when users ask for AI-assisted computational research, scientific-method experiment loops, synthetic-to-real-data progression, experiment logging, or context reload across AI chats. If using MCP, expose the skill files as read-only resources and add prompts for starting and continuing a SMAIRT session.
+Please wire this into our assistant runtime so it can be invoked when users ask for AI-assisted computational research, scientific-method experiment loops, synthetic-to-real-data progression, experiment logging, or context reload across AI chats.
 ```

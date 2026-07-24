@@ -147,14 +147,9 @@ Before generating code, always check `prompts/KNOWN_PATTERNS.md` for:
 
 After solving a non-trivial problem, recommend updating KNOWN_PATTERNS.md.
 
-## MCP connector pattern
+## Runtime integration
 
-The skill itself is static instruction content. An MCP connector can expose the workflow to an assistant as resources and prompts:
-
-- Resource: `smairt://skill/SKILL.md` -> contents of `skills/smairt-research/SKILL.md`
-- Resource: `smairt://skill/workflow.md` -> contents of this file
-- Prompt: `start_smairt_session` -> the starting prompt above
-- Prompt: `continue_smairt_session` -> the continuing prompt above
-- Optional tool: `compile_smairt_context` -> runs `scripts/compile_for_ai.py` and returns compiled context
-
-Keep MCP tools read-only by default. Only add write tools when the host application has clear user approval and workspace boundaries.
+This skill is static instruction content, not an MCP server or API client. In a
+generated project, the assistant reads the project prompt files directly. Zoo
+Code may provide user-configured Brave and Exa tools; SMAIRT supplies the
+human-reviewed research workflow rather than provider configuration.

@@ -75,7 +75,7 @@ def print_ide_native_message():
 ║   🧪 SMAIRT Project Created Successfully! 🧪                          ║
 ║                                                                       ║
 ║   Scientific Method with AI Research Template                         ║
-║   Workflow: IDE-Native (VSCode Roo/Zoo, Cursor, Windsurf)             ║
+║   Workflow: IDE-Native (Zoo Code, Cursor, Windsurf)                   ║
 ║                                                                       ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║                                                                       ║
@@ -91,10 +91,13 @@ def print_ide_native_message():
 ║   2. Define your research question:                                   ║
 ║      background/01_initial_question.md                                ║
 ║                                                                       ║
-║   3. Start experimenting:                                             ║
+║   3. Review literature when relevant:                                 ║
+║      /smairt-literature-search in Zoo Code                            ║
+║                                                                       ║
+║   4. Start experimenting:                                             ║
 ║      Ask your AI to create a hypothesis and first script              ║
 ║                                                                       ║
-║   4. Track your intellectual contributions:                           ║
+║   5. Track your intellectual contributions:                           ║
 ║      prompts/intellectual_contribution.md                             ║
 ║                                                                       ║
 ╠═══════════════════════════════════════════════════════════════════════╣
@@ -193,13 +196,16 @@ def print_paper_driven_message():
 ║   3. Review/update the analysis plan:                                 ║
 ║      analysis/ANALYSIS_PLAN.md                                        ║
 ║                                                                       ║
-║   4. Start your AI session with:                                      ║
+║   4. Review literature when relevant:                                 ║
+║      /smairt-literature-search in Zoo Code                            ║
+║                                                                       ║
+║   5. Start your AI session with:                                      ║
 ║      prompts/InitialPrompt_paper_driven.md                            ║
 ║                                                                       ║
-║   5. Create your first analysis:                                      ║
+║   6. Create your first analysis:                                      ║
 ║      python scripts/new_experiment.py --section 01 --name my_analysis ║
 ║                                                                       ║
-║   6. Track iterations:                                                ║
+║   7. Track iterations:                                                ║
 ║      python scripts/new_iteration.py --analysis 01_*/01_* --iter 02   ║
 ║                                                                       ║
 ╠═══════════════════════════════════════════════════════════════════════╣
@@ -215,13 +221,6 @@ def print_paper_driven_message():
 def main():
     """Main post-generation hook."""
 
-    # Initialize git repo if requested
-    if "{{ cookiecutter.create_git_repo }}" == "yes":
-        if init_git_repo():
-            print("✓ Git repository initialized")
-        else:
-            print("✗ Could not initialize git repository (is git installed?)")
-
     # Handle starting phase — remove directories for phases before the chosen start
     starting_phase = "{{ cookiecutter.starting_phase }}"
     if starting_phase != "synthetic":
@@ -231,6 +230,14 @@ def main():
     workflow_mode = "{{ cookiecutter.workflow_mode }}"
     if workflow_mode == "ide_native":
         remove_browser_paste_files()
+
+    # Initialize Git only after mode-specific cleanup. The generated .gitignore
+    # keeps the local references corpus and credentials out of the initial commit.
+    if "{{ cookiecutter.create_git_repo }}" == "yes":
+        if init_git_repo():
+            print("✓ Git repository initialized")
+        else:
+            print("✗ Could not initialize git repository (is git installed?)")
 
     # Print success message based on mode
     project_mode = "{{ cookiecutter.project_mode }}"

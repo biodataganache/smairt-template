@@ -16,14 +16,39 @@ Please read these files to understand the project:
 2. prompts/CODE_CONVENTIONS.md — Code formatting conventions
 3. prompts/KNOWN_PATTERNS.md — Reusable patterns and errors to avoid
 4. prompts/CONTEXT_INDEX.md — Index of what to read for different tasks
+5. background/01_initial_question.md — Authoritative question and scope
 
 Research Question: {{ cookiecutter.initial_research_question }}
+
+Before proposing an experiment, tell me whether the question would benefit from
+a reviewed literature search. If so, offer to follow
+prompts/LITERATURE_RESEARCH.md or run /smairt-literature-search.
 
 Then help me:
 1. Understand the current state of the project
 2. Identify what's been tried and what worked
 3. Plan the next experiment
 ```
+
+---
+
+## Reviewed Literature Search
+
+Use before defining a literature-grounded hypothesis, when entering a new topic,
+or when prior work may have changed:
+
+```
+Please follow prompts/LITERATURE_RESEARCH.md for this project.
+
+Read background/01_initial_question.md and the existing local reference records.
+First propose a Brave and Exa search strategy. Wait for my approval before broad
+searching, then present deduplicated candidates and wait for my source-selection
+decisions before creating any reference folders.
+
+Optional sub-question: [topic or leave blank]
+```
+
+In Zoo Code, the equivalent shortcut is `/smairt-literature-search [optional topic]`.
 
 ---
 
@@ -39,6 +64,7 @@ Please read:
 - prompts/KNOWN_PATTERNS.md (patterns & errors)
 - The most recent analysis file in analysis/
 - The most recent hypothesis file in hypotheses/
+- Relevant selected reference records in references/sources/
 
 Current state:
 - **Track:** [A/B/C/D/...]
@@ -205,6 +231,8 @@ SMAIRT conventions reminder:
 - Use TeeLogger from scripts/shared/logging for output
 - Check prompts/KNOWN_PATTERNS.md before writing code
 - Write hypothesis files BEFORE experiments
+- Use only researcher-approved references for literature-grounded claims
+- Record source locations for important external claims
 - Write analysis files AFTER interpreting results
 - Update KNOWN_PATTERNS.md when new errors are resolved
 - Evaluate results through the lens of the stated hypothesis

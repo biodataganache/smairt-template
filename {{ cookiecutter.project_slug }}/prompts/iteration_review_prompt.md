@@ -39,6 +39,8 @@ Please share:
 - [ ] NOTES.md is updated for this iteration
 - [ ] Key findings are documented
 - [ ] Any issues or surprises are noted
+- [ ] External comparisons use researcher-approved reference records
+- [ ] Important literature claims include a verified source location
 
 ## Decision Framework
 

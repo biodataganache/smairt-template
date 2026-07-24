@@ -105,7 +105,7 @@ Full context, hypothesis, and metrics are in
    | workflow_mode | `1` (ide_native) |
    | initial_research_question | `How does a SIRD outbreak evolve, and does it grow or fade as R0 predicts?` |
    | domain | number closest to `mathematics` (or `physics` if math isn't listed) |
-   | ai_tool | `1` (roo_zoo / Zoo Code) |
+   | ai_tool | `1` (zoo_code) |
    | include_example_project | `1` (no) |
    | starting_phase | `1` (synthetic) |
    | license | `1` (MIT) |

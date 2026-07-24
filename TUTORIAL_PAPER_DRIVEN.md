@@ -274,7 +274,7 @@ analysis/01_first_analysis/
 
 ### 6.1 Prime Your AI
 
-**IDE-Native (Roo/Zoo, Cursor, Windsurf):** Your AI can read project files directly. Start with:
+**IDE-Native (Zoo Code, Cursor, Windsurf):** Your AI can read project files directly. Start with:
 
 ```
 Please read prompts/AI_CONTEXT.md, prompts/CODE_CONVENTIONS.md, and prompts/KNOWN_PATTERNS.md.

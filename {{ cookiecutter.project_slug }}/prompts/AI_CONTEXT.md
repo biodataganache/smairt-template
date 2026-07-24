@@ -6,7 +6,7 @@ You are collaborating on a project that uses the SMAIRT (Scientific Method with 
 
 ## Your Environment
 
-You are operating within an AI-integrated IDE (VSCode with Roo/Zoo, Cursor, Windsurf, or similar). This means:
+You are operating within an AI-integrated IDE (Zoo Code, Cursor, Windsurf, or similar). This means:
 
 - **You have direct file access** — You can read any file in this project without the user pasting it
 - **You can execute commands** — Run scripts, check output, verify results
@@ -54,7 +54,7 @@ their question fully.
 We follow the scientific method in an iterative loop:
 
 ```
-Background → Hypothesis → Methods/Code → Results → Analysis → Future Directions → (repeat)
+Research Question → Literature Search + Human Screening → Selected References → Hypothesis → Methods/Code → Results → Analysis → New Literature Questions → (repeat)
 ```
 
 Each iteration produces:
@@ -62,6 +62,24 @@ Each iteration produces:
 2. An **experiment script** (`experiments/XX_phase/script_XX_description.py`)
 3. A **log file** (`results/logs/script_XX_*.log`)
 4. An **analysis file** (`analysis/ANALYSIS_XX.md`)
+
+When external literature informs an iteration, it also produces a reviewed
+evidence trail in local `references/searches/` and `references/sources/`. Search
+results are candidates, not evidence, until the researcher reviews them and an
+approved source record is created.
+
+### Literature and Credential Rules
+
+- Follow `prompts/LITERATURE_RESEARCH.md` for literature discovery and screening.
+- Use Brave and Exa only through tools the researcher configured in Zoo Code.
+- Never ask for, display, store, or write provider API keys.
+- Never create `.env`, credential, provider, or MCP configuration files.
+- Propose a search strategy before broad searching.
+- Present deduplicated candidates and stop for explicit researcher selection.
+- Create reference folders only for approved sources.
+- Verify important claims against selected sources and record precise locations.
+- Read relevant selected reference records before defining hypotheses, comparing
+  prior work, claiming novelty, preparing reports, or drafting paper text.
 
 ---
 
@@ -130,8 +148,9 @@ Note: You can always add earlier phases (synthetic, downloaded) later if you nee
 1. **Read `prompts/KNOWN_PATTERNS.md`** — Check for reusable patterns and known errors
 2. **Read `prompts/CODE_CONVENTIONS.md`** — Follow project coding standards
 3. **Check `scripts/shared/`** — Use shared utilities instead of reinventing
-4. **Read the relevant hypothesis file** — Understand what we're testing
-5. **Check recent analysis files** — Know what's been tried and what worked
+4. **Read relevant selected reference records** — Ground external claims in reviewed sources
+5. **Read the relevant hypothesis file** — Understand what we're testing
+6. **Check recent analysis files** — Know what's been tried and what worked
 
 ### When Generating Code
 
@@ -164,6 +183,7 @@ If a new error is encountered and resolved, update `prompts/KNOWN_PATTERNS.md` w
 
 ```
 prompts/           # AI context, conventions, known patterns, intellectual contribution
+references/        # Local, Git-ignored search records and researcher-selected sources
 plans/             # Planning documents for tracks and complex experiments
 background/        # Research question, literature, prior results
 hypotheses/        # Per-iteration hypothesis files (HYPOTHESIS_XX.md)
@@ -249,11 +269,11 @@ Do NOT flag routine decisions (file names, parameter tweaks, standard methodolog
 
 ## Important Caveat on Literature
 
-Be suspicious of your own knowledge about literature. You may be limited or outdated.
-
-- **Literature limitations:** LLMs can't do a deep dive on the literature. Be suspicious about what they bring from the literature—verify important claims independently.
-
-The human collaborator will verify important claims independently.
+Be suspicious of your own knowledge about literature. It may be limited or
+outdated. Use `prompts/LITERATURE_RESEARCH.md` to discover current sources, but
+do not equate search rank or snippets with scientific proof. The human selects
+which sources enter the corpus, and important claims must be checked against the
+source itself before use.
 
 ---
 

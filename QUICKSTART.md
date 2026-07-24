@@ -7,7 +7,7 @@ Get a SMAIRT project running in under 5 minutes.
 ## Prerequisites
 
 - Python 3.8+
-- An AI assistant (VSCode Roo/Zoo recommended, or Cursor, Windsurf, ChatGPT, Claude)
+- An AI assistant (Zoo Code recommended, or Cursor, Windsurf, ChatGPT, Claude)
 
 ---
 
@@ -28,7 +28,7 @@ cookiecutter gh:biodataganache/smairt-cookiecutter
 You'll be prompted for:
 - **Project name** — Your research project name
 - **Project mode** — `standard` (exploration) or `paper_driven` (paper-first)
-- **Workflow mode** — `ide_native` (recommended for Roo/Cursor) or `browser_paste`
+- **Workflow mode** — `ide_native` (recommended for Zoo Code/Cursor) or `browser_paste`
 - **AI tool** — Which AI tool you primarily use
 - **Research question** — What you're investigating
 - **Starting phase** — Where to begin: `synthetic`, `downloaded`, or `real`
@@ -37,7 +37,7 @@ You'll be prompted for:
 
 ## Step 3: Orient Your AI
 
-### IDE-Native (Roo/Zoo, Cursor, Windsurf)
+### IDE-Native (Zoo Code, Cursor, Windsurf)
 
 Open your project in VSCode and tell your AI:
 
@@ -47,6 +47,23 @@ Then read prompts/CONTEXT_INDEX.md to know what files to reference.
 ```
 
 That's it. Your AI now understands the workflow.
+
+### Optional: Configure Reviewed Literature Search in Zoo Code
+
+1. Open Zoo Code settings.
+2. Enable or configure Brave Search and enter its key only in Zoo's key field.
+3. Enable or configure Exa and enter its key only in Zoo's key field.
+4. Return to the generated SMAIRT project.
+5. Run `/smairt-literature-search` and confirm Zoo can access both tools.
+
+Never paste provider keys into chat or put them in `.env`, Markdown, scripts,
+logs, or project configuration. If a tool is unavailable, Zoo should explain
+the GUI setup without asking for the key.
+
+Brave and Exa discover candidates. SMAIRT records the search and requires the
+researcher to approve sources before Zoo creates local folders under
+`references/`. Researchers can then place papers, supplements, and data in those
+folders for long-term local grounding.
 
 ### Browser-Paste (ChatGPT, Claude web)
 
@@ -59,7 +76,22 @@ Use prompts from `prompts/SESSION_START.md` to start sessions.
 
 ---
 
-## Step 4: Write Your First Hypothesis
+## Step 4: Review Relevant Literature
+
+When prior work informs the question, ask the AI to read
+`prompts/LITERATURE_RESEARCH.md`. In Zoo Code, run:
+
+```text
+/smairt-literature-search [optional topic]
+```
+
+Approve the search strategy, review the deduplicated candidates, and select
+which sources should enter the local reference corpus. Search results are not
+treated as evidence until the researcher approves and verifies them.
+
+---
+
+## Step 5: Write Your First Hypothesis
 
 Create `hypotheses/HYPOTHESIS_01.md` (use the template in `hypotheses/HYPOTHESIS_TEMPLATE.md`):
 
@@ -76,7 +108,7 @@ Create `hypotheses/HYPOTHESIS_01.md` (use the template in `hypotheses/HYPOTHESIS
 
 ---
 
-## Step 5: Run Your First Experiment
+## Step 6: Run Your First Experiment
 
 Ask your AI to create a script that tests your hypothesis. It will:
 1. Follow naming conventions (`script_01_description.py`)
@@ -88,7 +120,7 @@ Run the script and let the AI interpret the results.
 
 ---
 
-## Step 6: Record Results
+## Step 7: Record Results
 
 After running an experiment:
 1. **AI reads the log file** and interprets results

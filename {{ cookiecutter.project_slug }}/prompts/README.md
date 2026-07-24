@@ -13,6 +13,7 @@ AI context files for this SMAIRT project. These files tell the AI how to behave,
 | `KNOWN_PATTERNS.md` | Reusable code, known errors, standards | Before writing code |
 | `CONTEXT_INDEX.md` | What files to read for different tasks | When starting a new task |
 | `SESSION_START.md` | Context-setting prompts | When context needs refreshing |
+| `LITERATURE_RESEARCH.md` | Human-reviewed Brave and Exa research workflow | Before literature-grounded work |
 | `00_priming_prompts.md` | Quick priming snippets | Mid-session reminders |
 | `intellectual_contribution.md` | Human contribution tracking | After making key decisions |
 | `compiled_for_ai.md` | Generated project snapshot | Cross-tool transfer only |
@@ -29,9 +30,13 @@ These files serve as persistent project memory. They accumulate knowledge across
 
 ---
 
-## For IDE-Native Workflow (Roo/Zoo, Cursor, Windsurf)
+## For IDE-Native Workflow (Zoo Code, Cursor, Windsurf)
 
 The AI reads these files directly. Point it to `AI_CONTEXT.md` on first encounter, then it knows to check `CONTEXT_INDEX.md` for task-specific guidance.
+
+In Zoo Code, `/smairt-literature-search` starts the reviewed literature workflow.
+Provider credentials stay only in Zoo's GUI and must never be written to project
+files or chat.
 
 ## For Browser-Paste Workflow (ChatGPT, Claude web)
 

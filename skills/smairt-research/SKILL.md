@@ -20,7 +20,7 @@ SMAIRT means Scientific Method with AI Research Template. Use this skill to help
 Every iteration follows:
 
 ```text
-Background -> Hypothesis -> Methods/Code -> Results -> Analysis -> Future Directions -> repeat
+Research Question -> Reviewed Literature -> Hypothesis -> Methods/Code -> Results -> Analysis -> Future Directions -> repeat
 ```
 
 Maintain the four-part scientific method structure:
@@ -58,6 +58,14 @@ Synthetic results are useful for fast iteration, but they are not strong evidenc
 Projects may start at any phase (configured by `starting_phase`). Not all projects need all three phases.
 
 ## Required project practices
+
+When external literature informs the work:
+
+- Follow the generated project's `prompts/LITERATURE_RESEARCH.md` workflow.
+- Treat Brave and Exa results as candidates until the researcher approves them.
+- Never request or write provider API keys; those stay in Zoo Code's GUI.
+- Read approved `references/sources/*/reference.md` records before using claims.
+- Record precise source locations and distinguish external claims from project findings.
 
 When creating or editing experiment code:
 
@@ -110,4 +118,4 @@ When joining an existing project:
 
 ## Reference
 
-Read `references/workflow.md` when you need the exact project structure, script template, context reload prompt, or integration notes for ChatGPT, Claude, and MCP.
+Read `references/workflow.md` when you need the exact project structure, script template, context reload prompt, or assistant integration notes.

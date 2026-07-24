@@ -28,7 +28,7 @@ AI excels at regression toward the mean—it can get you quickly to the frontier
 ### The Loop
 
 ```
-Background → Hypothesis → Methods/Code → Results → Analysis → Next Steps → (repeat)
+Research Question → Literature Search + Human Screening → Selected References → Hypothesis → Methods/Code → Results → Analysis → Next Questions → (repeat)
 ```
 
 ### The 4-Part Structure
@@ -55,9 +55,11 @@ The **next steps** from your analysis feed right back into the background for th
 1. Review the philosophy: `docs/SMAIRT_PHILOSOPHY.md`
 2. Review the 10 steps: `docs/12_STEPS.md`
 3. Define your question: `background/01_initial_question.md`
-4. Set up your AI session: `prompts/00_priming_prompts.md`
-5. Start experimenting: `experiments/01_synthetic/`
-6. Track your contributions: `prompts/intellectual_contribution.md`
+4. Review literature when relevant: `prompts/LITERATURE_RESEARCH.md`
+5. In Zoo Code, use `/smairt-literature-search` for the guided workflow
+6. Set up your AI session: `prompts/00_priming_prompts.md`
+7. Start experimenting: `experiments/01_synthetic/`
+8. Track your contributions: `prompts/intellectual_contribution.md`
 
 ---
 
@@ -68,6 +70,7 @@ The **next steps** from your analysis feed right back into the background for th
 ├── prompts/           # AI context, known patterns, code conventions
 ├── plans/             # AI-generated plans (git-tracked for review)
 ├── background/        # Research question, literature, prior results
+├── references/        # Local, Git-ignored searches and selected-source corpus
 ├── hypotheses/        # Hypothesis tracking (HYPOTHESIS_TEMPLATE.md)
 ├── experiments/       # Scripts organized by data phase
 │   ├── 01_synthetic/
@@ -109,7 +112,17 @@ Track reusable patterns and recurring errors in `prompts/KNOWN_PATTERNS.md`. Thi
 
 ### Feeding Back to AI
 
-For **IDE-native** workflows (Roo/Zoo, Cursor, Windsurf): AI reads project files directly—use `prompts/AI_CONTEXT.md` and `prompts/KNOWN_PATTERNS.md` as context.
+For **IDE-native** workflows (Zoo Code, Cursor, Windsurf): AI reads project files directly—use `prompts/AI_CONTEXT.md` and `prompts/KNOWN_PATTERNS.md` as context.
+
+### Reviewed Literature Workflow
+
+Brave and Exa are configured by the researcher in Zoo Code's GUI. SMAIRT never
+handles their API keys or creates provider configuration. Use
+`prompts/LITERATURE_RESEARCH.md` or `/smairt-literature-search` to propose a
+search strategy, record queries, screen candidates with the researcher, and
+create local reference folders only for approved sources. The complete
+`references/` corpus stays local and is excluded from Git and compiled AI
+context.
 
 For **browser-paste** workflows (ChatGPT, Claude web): Use `scripts/compile_for_ai.py` to generate a summary of the entire project state that you can paste into a new session.
 

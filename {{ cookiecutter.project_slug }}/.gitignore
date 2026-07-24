@@ -1,0 +1,10 @@
+# Credentials must stay in the provider UI, never in project files.
+.env
+.env.*
+
+# Local research corpus. This Jinja expression renders to references/ in a
+# generated project without hiding the scaffold from the template repository.
+{{ 'references/' }}
+
+# Explicit cross-tool exports may contain project context.
+prompts/compiled_for_ai.md

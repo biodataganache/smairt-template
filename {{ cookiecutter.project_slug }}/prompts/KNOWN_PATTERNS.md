@@ -18,7 +18,10 @@ This file is a **living reference** that records:
 2. **Before writing code**: Check standards and patterns for the operation you're implementing
 3. **Before submitting analysis**: Run through the pre-flight checklist
 4. **After each iteration**: If you encountered an error or wrote reusable code, add it here
-5. **When switching contexts**: API keys, paths, environment quirks go here
+5. **When switching contexts**: Non-secret paths, package versions, and environment quirks go here
+
+Never record API keys or other credentials in this file. Configure Brave and Exa
+only in Zoo Code's GUI; do not copy keys into chat or any project file.
 
 ---
 

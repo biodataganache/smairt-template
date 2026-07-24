@@ -14,6 +14,8 @@ Please read:
 - `prompts/KNOWN_PATTERNS.md` — Reusable patterns and errors to avoid
 - `paper/outline.md` — The paper structure we're working toward
 - `analysis/ANALYSIS_PLAN.md` — How analyses map to paper sections
+- `prompts/LITERATURE_RESEARCH.md` — Reviewed source discovery and screening
+- relevant `references/sources/*/reference.md` — Approved evidence for the paper
 
 ---
 
@@ -32,9 +34,10 @@ The paper-driven workflow:
 
 1. **Paper outline exists** — The structure we're writing toward
 2. **Data is available** — Real datasets ready for analysis
-3. **Analysis plan maps sections** — Each paper section has defined analyses
-4. **Iterative execution** — Each analysis goes through iterations until publication-ready
-5. **Final manifest** — Maps final results to paper elements
+3. **Literature is screened** — The researcher approves sources before they inform claims
+4. **Analysis plan maps sections** — Each paper section has defined analyses
+5. **Iterative execution** — Each analysis goes through iterations until publication-ready
+6. **Final manifest** — Maps final results to paper elements
 
 ---
 
@@ -46,6 +49,7 @@ The paper-driven workflow:
 4. **Shared library grows** — Reusable code goes to `scripts/shared/`
 5. **Patterns accumulate** — Update `KNOWN_PATTERNS.md` as you learn
 6. **Plans drive complex work** — Create plan docs before multi-step analyses
+7. **References are reviewed** — Read selected source records before claims, novelty statements, or paper drafting
 
 ---
 
@@ -57,6 +61,7 @@ Before starting, the AI should ask about:
 3. Are there existing results to build on?
 4. What are the computational constraints?
 5. Are there specific statistical methods required?
+6. Has the relevant literature been screened, or should we run `/smairt-literature-search` first?
 
 ---
 
@@ -90,7 +95,8 @@ scripts/
 ## Getting Started
 
 1. Review `paper/outline.md` and `analysis/ANALYSIS_PLAN.md`
-2. Identify the first analysis to tackle
-3. Create a hypothesis for it
-4. Write the experiment script
-5. Run, analyze, iterate
+2. Review selected reference records, or run the human-screened literature workflow
+3. Identify the first analysis to tackle
+4. Create an evidence-grounded hypothesis for it
+5. Write the experiment script
+6. Run, analyze, iterate

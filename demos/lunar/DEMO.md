@@ -97,7 +97,7 @@ Full context, hypothesis, and metrics are in
    | workflow_mode | `1` (ide_native) |
    | initial_research_question | `Can we find a TLI burn that yields a free-return?` |
    | domain | `4` (physics) |
-   | ai_tool | `1` (roo_zoo / Zoo Code) |
+   | ai_tool | `1` (zoo_code) |
    | include_example_project | `1` (no) |
    | starting_phase | `1` (synthetic) |
    | license | `1` (MIT) |

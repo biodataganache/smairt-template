@@ -8,12 +8,15 @@ Compiles the current project state into a single document for:
 - Onboarding (bringing a new team member's AI up to speed)
 - Context recovery (when conversation history is lost)
 
-In an IDE-native workflow (VSCode/Roo, Cursor, Windsurf), the AI reads
+In an IDE-native workflow (Zoo Code, Cursor, Windsurf), the AI reads
 files directly and does NOT need this for normal operation. Use this when:
 1. Switching to a browser-based AI tool (ChatGPT, Claude web)
 2. Creating an archival record of project state
 3. The project exceeds the AI's ability to read piecemeal
 4. Onboarding a collaborator
+
+The local references/ corpus is deliberately excluded. It may contain papers,
+supplements, datasets, and notes that must not be transferred implicitly.
 
 Output: prompts/compiled_for_ai.md
 """
@@ -287,8 +290,9 @@ def main():
     print("  2. Archival — snapshot the project state")
     print("  3. Onboarding — bring a collaborator's AI up to speed")
     print()
-    print("Note: In IDE-native AI (Roo/Zoo, Cursor), the AI reads files")
+    print("Note: In IDE-native AI (Zoo Code, Cursor), the AI reads files")
     print("directly and does NOT need this for normal operation.")
+    print("The local references/ corpus is intentionally excluded.")
     print()
     print("To copy to clipboard (Mac):  cat prompts/compiled_for_ai.md | pbcopy")
     print("To copy to clipboard (Linux): cat prompts/compiled_for_ai.md | xclip -selection clipboard")

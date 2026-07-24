@@ -78,7 +78,7 @@ answer so you can confirm your method works before trusting it on real data.
    | workflow_mode | `1` (ide_native) |
    | initial_research_question | your question |
    | domain | number closest to your field |
-   | ai_tool | `1` (roo_zoo / Zoo Code) |
+   | ai_tool | `1` (zoo_code) |
    | include_example_project | `1` (no) |
    | starting_phase | `1` (synthetic) or `3` (real) |
    | license | `1` (MIT) |

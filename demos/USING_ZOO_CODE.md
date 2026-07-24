@@ -32,6 +32,27 @@ or an institutional gateway. Pick whichever provider you have access to.
 6. You'll know it's ready when the chat box at the bottom of the panel is active
    and you can type into it.
 
+### Configure Brave and Exa for literature research
+
+Brave and Exa are optional Zoo tools used by SMAIRT's reviewed literature
+workflow. Configure them in Zoo's GUI:
+
+1. Open Zoo Code settings.
+2. Enable or configure Brave Search and enter the Brave key only in Zoo's key field.
+3. Enable or configure Exa and enter the Exa key only in Zoo's key field.
+4. Return to the generated SMAIRT project and run `/smairt-literature-search`.
+5. Confirm that Zoo can access both tools.
+
+Never paste either key into chat and never write a key into `.env`, Markdown,
+scripts, logs, or project configuration. SMAIRT does not configure these tools
+or handle their credentials.
+
+Brave supports broad web, institutional, standards, and current-information
+discovery. Exa supports semantic and research-paper-oriented discovery. The
+tools return candidates; the researcher decides which sources enter the local
+`references/` corpus. After approval, Zoo creates a source folder where the
+researcher can place the paper, supplemental files, and data.
+
 ### Choosing a model by difficulty
 
 - **Simple / beginner tasks:** a fast, lightweight reasoning model is usually
@@ -83,6 +104,11 @@ Please read these project files before doing any work:
 After reading them, summarize the research question, the SMAIRT workflow rules you
 will follow, and the smallest first experiment to run. Do not write code yet.
 ```
+
+If the question needs a current literature review, run
+`/smairt-literature-search` before defining the first hypothesis. Zoo must first
+propose a search strategy, then stop again for researcher selection after it
+presents deduplicated candidates.
 
 ### b) Ask for work (one step at a time)
 

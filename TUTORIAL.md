@@ -84,7 +84,7 @@ classification_noise_study/
 
 ### Prime Your AI
 
-**IDE-Native (Roo/Zoo, Cursor, Windsurf):** Your AI can read the project files directly. Start a session with a prompt from `prompts/SESSION_START.md`:
+**IDE-Native (Zoo Code, Cursor, Windsurf):** Your AI can read the project files directly. Start a session with a prompt from `prompts/SESSION_START.md`:
 
 ```
 Please read prompts/AI_CONTEXT.md, prompts/CODE_CONVENTIONS.md, and prompts/KNOWN_PATTERNS.md.

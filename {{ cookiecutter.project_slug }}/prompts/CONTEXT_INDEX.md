@@ -14,8 +14,24 @@ Read these files to understand the project from scratch:
 | 1 | `prompts/AI_CONTEXT.md` | Your role and the workflow |
 | 2 | `prompts/CODE_CONVENTIONS.md` | How to write code |
 | 3 | `prompts/KNOWN_PATTERNS.md` | Patterns to reuse, errors to avoid |
-| 4 | `background/` | Research question and context |
-| 5 | Most recent `analysis/ANALYSIS_*.md` | Current state of the project |
+| 4 | `background/01_initial_question.md` | Authoritative research question and scope |
+| 5 | Relevant `references/sources/*/reference.md` | Researcher-reviewed external evidence |
+| 6 | Most recent `analysis/ANALYSIS_*.md` | Current state of the project |
+
+---
+
+## Literature Search and Source Screening
+
+| File | Why |
+|------|-----|
+| `prompts/LITERATURE_RESEARCH.md` | Search, screening, and credential-safety protocol |
+| `background/01_initial_question.md` | Question, scope, terminology, and exclusions |
+| `references/searches/` | Exact queries, candidates, and researcher decisions |
+| `references/sources/*/reference.md` | Approved sources, verified claims, and local inventory |
+
+Use Zoo Code's `/smairt-literature-search` command or ask the assistant to read
+`prompts/LITERATURE_RESEARCH.md`. Stop for researcher review before creating any
+source folder.
 
 ---
 
@@ -27,6 +43,7 @@ Read these files to understand the project from scratch:
 | `prompts/KNOWN_PATTERNS.md` | Reusable patterns |
 | `scripts/shared/__init__.py` | Available shared utilities |
 | Relevant `hypotheses/HYPOTHESIS_XX.md` | What we're testing |
+| Relevant `references/sources/*/reference.md` | Reviewed evidence behind the rationale |
 | Most recent related script | Build on prior work |
 
 ---
@@ -38,6 +55,7 @@ Read these files to understand the project from scratch:
 | The log file in `results/logs/` | Raw output to interpret |
 | The script that generated it | Methodology context |
 | `hypotheses/HYPOTHESIS_XX.md` | What we predicted |
+| Relevant `references/sources/*/reference.md` | External claims and comparison points |
 | `analysis/ANALYSIS_TEMPLATE.md` | Template for writing analysis |
 | `prompts/intellectual_contribution.md` | Record user insights |
 
@@ -52,6 +70,7 @@ Read these files to understand the project from scratch:
 | Recent `analysis/ANALYSIS_*.md` | Evidence to synthesize |
 | `hypotheses/HYPOTHESIS_*.md` | Status of each tested hypothesis |
 | `prompts/intellectual_contribution.md` | Human contributions to credit |
+| Relevant `references/sources/*/reference.md` | Reviewed external evidence to synthesize |
 
 Suggest this whenever a coherent finding emerges, before a phase transition,
 before a handoff, or when the user asks for a project status summary.
@@ -99,6 +118,7 @@ before a handoff, or when the user asks for a project status summary.
 | Most recent `hypotheses/HYPOTHESIS_*.md` | Current hypothesis |
 | `prompts/KNOWN_PATTERNS.md` | Accumulated knowledge |
 | `plans/` (active plans) | Current direction |
+| Relevant `references/sources/*/reference.md` | Current reviewed evidence base |
 
 ---
 
@@ -117,6 +137,7 @@ When switching to a different AI tool:
 - `prompts/CODE_CONVENTIONS.md` — Coding standards
 - `prompts/KNOWN_PATTERNS.md` — Reusable patterns and known errors
 - `prompts/SESSION_START.md` — Context-setting prompts
+- `prompts/LITERATURE_RESEARCH.md` — Reviewed literature-search workflow
 - `prompts/intellectual_contribution.md` — Human contribution tracking
 - `prompts/CONTEXT_INDEX.md` — This file
 
@@ -125,6 +146,7 @@ When switching to a different AI tool:
 - `hypotheses/` — Per-iteration hypothesis files
 - `analysis/` — Per-iteration analysis files
 - `background/` — Research context and literature
+- `references/` — Local, Git-ignored searches and selected-source corpus
 
 ### Code
 - `experiments/01_synthetic/` — Phase 1 scripts

@@ -7,8 +7,8 @@ A concise reference for the Scientific Method with AI Research Template workflow
 ## Overview
 
 These 10 steps define how to work with AI in a research context, maintaining
-scientific rigor while moving quickly. Adapted for IDE-native AI tools (VSCode
-Roo/Zoo, Cursor, Windsurf) where the AI has direct file access.
+scientific rigor while moving quickly. Adapted for IDE-native AI tools (Zoo
+Code, Cursor, Windsurf) where the AI has direct file access.
 
 ---
 
@@ -29,11 +29,26 @@ Record in `prompts/intellectual_contribution.md`:
 
 ## Step 2: Write Hypotheses Before Experiments
 
-Before writing code, state what you expect to find and why.
+Before writing code, establish the evidence basis and state what you expect to
+find and why.
+
+When external literature is relevant:
+
+1. Read `background/01_initial_question.md`.
+2. Use `prompts/LITERATURE_RESEARCH.md` or Zoo Code's
+   `/smairt-literature-search` command.
+3. Propose the search strategy before running a broad Brave or Exa search.
+4. Record exact queries and deduplicated candidates in `references/searches/`.
+5. Stop for the researcher's selection decisions.
+6. Create `references/sources/` records only for approved sources.
+7. Verify important claims against the selected source itself.
+
+Brave and Exa are discovery tools. Search rank and snippets are not scientific
+proof. The researcher decides which sources enter the local evidence corpus.
 
 Create `hypotheses/HYPOTHESIS_XX.md` with:
 - A specific, testable prediction
-- The rationale (based on prior evidence)
+- The rationale (based on prior results and researcher-reviewed sources)
 - Success criteria (quantitative if possible)
 - Experimental design
 
@@ -153,7 +168,7 @@ The `setup_logging()` function from `scripts/shared/` handles this automatically
 `scripts/compile_for_ai.py` generates a single document containing the full
 project state. Use it when:
 
-- **Switching AI tools** — Moving from Roo to ChatGPT or vice versa
+- **Switching AI tools** — Moving from Zoo Code to a browser-based tool or vice versa
 - **Archival** — Creating a snapshot for future reference
 - **Onboarding** — Bringing a new team member's AI up to speed
 - **Context window limits** — When the project exceeds what the AI can read piecemeal
@@ -185,6 +200,7 @@ Every iteration follows this structure:
 - What's the question?
 - What do we know from prior work?
 - What gap are we addressing?
+- Which claims are grounded in researcher-approved source records?
 
 ### Part 2: Hypothesis
 - What do we predict will happen?
@@ -238,7 +254,7 @@ Write the report as an actual research report. Do not frame it as a demonstratio
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                                                         │
-│  Hypothesis → Script → Run → Log → Analysis → Next  ──→│
+│  Question → Reviewed Evidence → Hypothesis → Run → Analysis → Next  ──→│
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -253,10 +269,15 @@ Each cycle through this loop:
 
 ## A Note on Literature
 
-AI can help you quickly survey what's known, but:
-- **Be suspicious** of AI-generated literature claims
-- **Verify independently** any important references
-- **The human decides** what's truly novel vs. well-known
+AI can help survey current sources with Brave and Exa in Zoo Code, but:
+
+- Configure provider access only in Zoo's GUI; never put keys in project files.
+- Record searches and distinguish candidates from selected sources.
+- Verify important claims in the source, including a page, section, figure,
+  table, or data location.
+- Use only researcher-approved source records to ground hypotheses, prior-work
+  comparisons, novelty claims, reports, and paper text.
+- The human decides what is relevant, credible, and truly novel.
 
 ---
 

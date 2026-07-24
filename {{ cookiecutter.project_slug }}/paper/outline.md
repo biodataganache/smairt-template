@@ -22,7 +22,9 @@
 
 ## 2. Related Work
 
-[Review of relevant literature and how this work differs]
+[Review researcher-approved sources from `references/sources/`. Ground each
+important claim in a selected `reference.md` record and verify its source
+location before drafting. Do not cite raw search results.]
 
 ## 3. Methods
 
@@ -61,7 +63,8 @@
 
 ## References
 
-[To be populated]
+[Populate from researcher-approved records in `references/sources/`. The local
+reference corpus is ignored by Git and remains the working source of truth.]
 
 ---
 
