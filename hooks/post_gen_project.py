@@ -206,7 +206,8 @@ def print_paper_driven_message():
 ║      python scripts/new_experiment.py --section 01 --name my_analysis ║
 ║                                                                       ║
 ║   7. Track iterations:                                                ║
-║      python scripts/new_iteration.py --analysis 01_*/01_* --iter 02   ║
+║      python scripts/new_iteration.py --analysis 01_my_analysis \      ║
+║          --iteration 02                                               ║
 ║                                                                       ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║                                                                       ║

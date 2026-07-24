@@ -36,7 +36,7 @@ python scripts/generate_manifest.py
 
 Or update manually when finalizing an iteration:
 ```bash
-python scripts/finalize_iteration.py --analysis 01_section/01_analysis --iteration 02
+python scripts/finalize_iteration.py --analysis 01_first_analysis --iteration 02
 ```
 
 ---
@@ -45,7 +45,7 @@ python scripts/finalize_iteration.py --analysis 01_section/01_analysis --iterati
 
 ### [Paper Element Name]
 
-- **Source**: `analysis/[section]/[analysis]/final/`
+- **Source**: `analysis/[section]_[analysis]/final/`
 - **Iteration**: iter_XX
 - **Script**: `run_analysis_XX.py`
 - **Config**: `config_XX.yaml`

@@ -306,11 +306,16 @@ Configure your experiment scripts to write directly to `results/logs/` (recommen
 ```python
 # In your experiment script, use TeeLogger
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "shared"))
-from logging import TeeLogger
+from pathlib import Path
 
-# This writes to results/logs/ automatically — the audit trail stays intact
-# even when running on the cluster
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from scripts.shared import TeeLogger, setup_logging
+
+log_path = setup_logging("script_01_example", PROJECT_ROOT / "results" / "logs")
+with TeeLogger(log_path):
+    print("This output is displayed and logged")
 ```
 
 ### Option B: Copy HPC Logs After Completion

@@ -128,13 +128,13 @@ The `FINAL_MANIFEST.md` file maps each paper element to its source:
 
 ```markdown
 ## Figure 1
-- **Source**: `analysis/01_section/01_analysis/final/figures/`
+- **Source**: `analysis/01_first_analysis/final/figures/`
 - **Iteration**: iter_03
 - **Script**: `run_analysis_03.py`
 - **Generated**: YYYY-MM-DD
 
 ## Table 1
-- **Source**: `analysis/02_section/01_analysis/final/results/`
+- **Source**: `analysis/02_second_analysis/final/results/`
 - **Iteration**: iter_02
 - **Script**: `run_analysis_02.py`
 ```

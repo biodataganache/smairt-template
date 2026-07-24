@@ -12,9 +12,5 @@
     "include_example_project": ["no", "yes"],
     "starting_phase": ["synthetic", "downloaded", "real"],
     "license": ["MIT", "BSD-3-Clause", "Apache-2.0", "GPL-3.0", "proprietary"],
-    "create_git_repo": ["yes", "no"],
-    "_copy_without_render": [
-        "*.py",
-        "*.sh"
-    ]
+    "create_git_repo": ["yes", "no"]
 }

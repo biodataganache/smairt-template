@@ -3,7 +3,7 @@
 Finalize an iteration by copying results to the final/ directory.
 
 Usage:
-    python scripts/finalize_iteration.py --analysis 01_results/01_analysis --iteration 02
+    python scripts/finalize_iteration.py --analysis 01_first_analysis --iteration 02
 
 This:
 1. Copies results and figures from iter_XX to final/
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--analysis",
         required=True,
-        help="Path to analysis (e.g., 01_section/01_analysis)"
+        help="Analysis directory name (e.g., 01_first_analysis)"
     )
     parser.add_argument(
         "--iteration",

@@ -54,8 +54,12 @@ python scripts/new_script.py
 Provides automatic output capture. Import in any experiment script:
 
 ```python
-from scripts.shared.logging import TeeLogger
-logger = TeeLogger(log_dir="results/logs", script_name=__file__)
+from pathlib import Path
+from scripts.shared import TeeLogger, setup_logging
+
+log_path = setup_logging("script_01_example", Path("results/logs"))
+with TeeLogger(log_path):
+    print("This output is displayed and logged")
 ```
 
 All `print()` output is simultaneously displayed and saved to a timestamped log file.

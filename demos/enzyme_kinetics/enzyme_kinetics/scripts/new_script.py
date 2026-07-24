@@ -94,13 +94,13 @@ def create_script(phase_dir, script_num, description, hypothesis, iteration):
     script_name = f"script_{script_num:02d}_{description}"
     script_path = phase_dir / f"{script_name}.py"
 
-    template = f'''#!/usr/bin/env python
+    template = '''#!/usr/bin/env python
 """
-Script {script_num:02d}: {description.replace('_', ' ').title()}
+Script {script_number}: {title}
 Hypothesis: {hypothesis}
-Phase: {phase_dir.name}
+Phase: {phase}
 Iteration: {iteration}
-Created: {datetime.now().isoformat()}
+Created: {created}
 """
 
 import sys
@@ -110,50 +110,43 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.shared.logging import TeeLogger
+from scripts.shared import TeeLogger, setup_logging
 
 # === CONFIGURATION ===
 SCRIPT_NAME = "{script_name}"
+LOG_DIR = PROJECT_ROOT / "results" / "logs"
 
 # === MAIN CODE ===
 def main():
-    # TeeLogger automatically saves all output to results/logs/
-    logger = TeeLogger(log_dir=PROJECT_ROOT / "results" / "logs", script_name=SCRIPT_NAME)
+    log_path = setup_logging(SCRIPT_NAME, LOG_DIR)
 
-    print("=" * 60)
-    print(f"Script: {{SCRIPT_NAME}}")
-    print(f"Hypothesis: {hypothesis}")
-    print(f"Phase: {phase_dir.name} | Iteration: {iteration}")
-    print("=" * 60)
-    print()
+    with TeeLogger(log_path):
+        print("=" * 60)
+        print("Script: " + SCRIPT_NAME)
+        print("Hypothesis: {hypothesis}")
+        print("Phase: {phase} | Iteration: {iteration}")
+        print("=" * 60)
+        print()
 
-    # ========================================
-    # YOUR CODE HERE
-    # ========================================
+        # ========================================
+        # YOUR CODE HERE
+        # ========================================
 
-    print("TODO: Implement experiment")
+        print("TODO: Implement experiment")
 
-    # Example output format:
-    # print(f"Results:")
-    # print(f"  - Metric 1: {{value}}")
-    # print(f"  - Metric 2: {{value}}")
+        # ========================================
+        # END YOUR CODE
+        # ========================================
 
-    # ========================================
-    # END YOUR CODE
-    # ========================================
-
-    print()
-    print("=" * 60)
-    print("=== COMPLETE ===")
-    print(f"Log saved to: {{logger.log_path}}")
-    print("=" * 60)
-
-    logger.close()
-
+        print()
+        print("=" * 60)
+        print("=== COMPLETE ===")
+        print("Log saved to: " + str(log_path))
+        print("=" * 60)
 
 if __name__ == "__main__":
     main()
-'''
+'''.format(script_number=f"{script_num:02d}", title=description.replace('_', ' ').title(), hypothesis=hypothesis, phase=phase_dir.name, iteration=iteration, created=datetime.now().isoformat(), script_name=script_name)
 
     script_path.write_text(template)
     return script_path

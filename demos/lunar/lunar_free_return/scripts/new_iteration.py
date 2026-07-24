@@ -3,7 +3,7 @@
 Create a new iteration for an existing analysis.
 
 Usage:
-    python scripts/new_iteration.py --analysis 01_results/01_analysis --iteration 02
+    python scripts/new_iteration.py --analysis 01_first_analysis --iteration 02
 
 This creates:
     analysis/{analysis}/iterations/iter_{iteration}/
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--analysis",
         required=True,
-        help="Path to analysis (e.g., 01_section/01_analysis)"
+        help="Analysis directory name (e.g., 01_first_analysis)"
     )
     parser.add_argument(
         "--iteration",

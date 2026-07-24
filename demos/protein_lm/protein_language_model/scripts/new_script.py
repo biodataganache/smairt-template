@@ -110,21 +110,24 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.shared.logging import TeeLogger
+from scripts.shared import TeeLogger, setup_logging
 
 # === CONFIGURATION ===
 SCRIPT_NAME = "{script_name}"
+LOG_DIR = PROJECT_ROOT / "results" / "logs"
 
 # === MAIN CODE ===
 def main():
-    # TeeLogger automatically saves all output to results/logs/
-    logger = TeeLogger(log_dir=PROJECT_ROOT / "results" / "logs", script_name=SCRIPT_NAME)
+    log_path = setup_logging(SCRIPT_NAME, LOG_DIR)
+    logger = TeeLogger(log_path).open()
 
     print("=" * 60)
     print(f"Script: {{SCRIPT_NAME}}")
     print(f"Hypothesis: {hypothesis}")
     print(f"Phase: {phase_dir.name} | Iteration: {iteration}")
     print("=" * 60)
+
+    logger.close()
     print()
 
     # ========================================
@@ -147,9 +150,6 @@ def main():
     print("=== COMPLETE ===")
     print(f"Log saved to: {{logger.log_path}}")
     print("=" * 60)
-
-    logger.close()
-
 
 if __name__ == "__main__":
     main()
