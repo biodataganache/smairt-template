@@ -61,6 +61,30 @@ class ScaffoldIntegrationTests(unittest.TestCase):
             self.assert_rendered_sources(project)
             self.assertTrue((project / "prompts" / "session_log.md").exists())
 
+    def test_generated_gitignore_excludes_build_artifacts(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project = self.render_project(
+                Path(temp_dir), "standard", "Gitignore Render Test"
+            )
+            (project / ".DS_Store").write_bytes(b"metadata")
+            (project / "scripts" / "generated.pyc").write_bytes(b"bytecode")
+            cache_dir = project / "scripts" / "__pycache__"
+            cache_dir.mkdir(exist_ok=True)
+            (cache_dir / "generated.cpython-311.pyc").write_bytes(b"bytecode")
+
+            subprocess.run(["git", "init"], cwd=project, check=True, capture_output=True)
+            subprocess.run(["git", "add", "."], cwd=project, check=True)
+            staged = subprocess.run(
+                ["git", "diff", "--cached", "--name-only"],
+                cwd=project,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout
+
+            self.assertNotIn(".DS_Store", staged)
+            self.assertNotIn(".pyc", staged)
+
     def test_generated_experiment_script_writes_log(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             project = self.render_project(

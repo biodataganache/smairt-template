@@ -2,6 +2,11 @@
 .env
 .env.*
 
+# Generated Python and operating-system artifacts.
+__pycache__/
+*.py[cod]
+.DS_Store
+
 # Local research corpus. This Jinja expression renders to references/ in a
 # generated project without hiding the scaffold from the template repository.
 {{ 'references/' }}
