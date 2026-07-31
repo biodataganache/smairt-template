@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import re
 import sys
+import yaml
 from pathlib import Path
 from typing import Callable
 
@@ -17,7 +18,9 @@ from smairt import __version__
 from smairt.generator import GenerationError, generate_project, validate_destination
 from smairt.models import (
     Assistant,
+    CodeConvention,
     License,
+    PromptConvention,
     ProjectContract,
     ProjectIdentity,
     ProjectOptions,
@@ -30,17 +33,22 @@ from smairt.project import (
     apply_repairs,
     change_license,
     disable_capability,
+    detected_tools,
     enable_capability,
     launch_assistant,
     license_preview,
     load_contract,
     local_preferences,
+    managed_asset_paths,
+    managed_asset_previews,
+    managed_file_statuses,
     open_folder,
     prepare_assistant,
     project_check,
     recent_projects,
     record_recent,
     repair_previews,
+    regenerate_managed_assets,
     resolve_project,
     save_local_preferences,
     update_collaborator,
@@ -525,6 +533,7 @@ def open(
 def check(
     path: Path | None = typer.Argument(None, help="SMAIRT project directory, or the current project."),
     json_output: bool = typer.Option(False, "--json", help="Emit stable JSON diagnostics."),
+    verbose: bool = typer.Option(False, help="Explain diagnostics and show detected local tools."),
 ) -> None:
     """Read-only Project Check for structural and configuration issues."""
     root = _project_or_exit(path, remember=False)
@@ -540,10 +549,17 @@ def check(
         typer.echo("Project Check found structural issues:")
         for issue in issues:
             typer.echo(f"- [{issue.code}] {issue.message}")
+            if verbose:
+                typer.echo(f"  Artifact: {issue.path}")
+                typer.echo("  Diagnostic is read-only; researcher content is never changed by Project Check.")
             if issue.repair is not None:
                 typer.echo(f"  Safe repair available: {issue.repair}")
     else:
         typer.echo("Project Check passed: no structural or configuration issues found.")
+    if verbose and not json_output:
+        typer.echo("Detected local tools:")
+        for label, executable in detected_tools(root).items():
+            typer.echo(f"- {label}: {executable}")
     if issues:
         raise typer.Exit(code=1)
 
@@ -638,6 +654,12 @@ def settings(
     collaborator_email: str | None = typer.Option(None, help="Optional collaborator email."),
     experience: str | None = typer.Option(None, help="Local Standard or Advanced preference."),
     motion: bool | None = typer.Option(None, help="Local motion preference."),
+    prompt_convention: PromptConvention | None = typer.Option(
+        None, help="Prompt convention: plan-first or direct-task."
+    ),
+    code_convention: CodeConvention | None = typer.Option(
+        None, help="Code convention: typed-python or standard-python."
+    ),
     license: License | None = typer.Option(None, help="License to preview or change."),
     confirm_license: bool = typer.Option(False, help="Confirm the previewed license replacement."),
 ) -> None:
@@ -668,6 +690,8 @@ def settings(
             phase=phase,
             researcher=researcher,
             email=email,
+            prompt_convention=prompt_convention,
+            code_convention=code_convention,
         )
         preferences = local_preferences(root)
         if experience is not None:
@@ -692,6 +716,8 @@ def settings(
                 collaborator_role,
                 experience,
                 motion,
+                prompt_convention,
+                code_convention,
                 license,
             )
         ):
@@ -708,6 +734,59 @@ def settings(
         _command_error(error)
 
 
+@app.command("inspect")
+def inspect(
+    path: Path | None = typer.Argument(None, help="Project directory or current project."),
+    hashes: bool = typer.Option(False, help="Include expected managed-file SHA-256 hashes."),
+) -> None:
+    """Show the project contract, managed-file ownership, and local tool paths."""
+    root = _project_or_exit(path, remember=False)
+    try:
+        contract = load_contract(root)
+        typer.echo("Full project contract:")
+        typer.echo(yaml.safe_dump(contract.model_dump(mode="json", exclude_none=True), sort_keys=False), nl=False)
+        typer.echo("Managed files:")
+        for status in managed_file_statuses(root):
+            line = f"- {status['path']}: {status['status']}"
+            if hashes:
+                line += f" (expected SHA-256: {status['expected_hash']})"
+            typer.echo(line)
+        typer.echo("Detected local tools:")
+        for label, executable in detected_tools(root).items():
+            typer.echo(f"- {label}: {executable}")
+    except ProjectError as error:
+        _command_error(error)
+
+
+@app.command("regenerate")
+def regenerate(
+    path: Path | None = typer.Argument(None, help="Project directory or current project."),
+    select: list[str] = typer.Option([], "--select", help="Missing or unchanged managed asset path."),
+    confirm: bool = typer.Option(False, help="Write the previewed managed assets."),
+) -> None:
+    """Preview and restore only missing or unmodified managed guidance and templates."""
+    root = _project_or_exit(path)
+    try:
+        if not select:
+            typer.echo("Managed assets eligible for regeneration:")
+            for relative in managed_asset_paths(root):
+                typer.echo(f"- {relative}")
+            typer.echo("Select paths with --select PATH. Add --confirm only after reviewing the preview.")
+            return
+        preview = managed_asset_previews(root, select)
+    except ProjectError as error:
+        _command_error(error)
+        return
+    typer.echo("Regeneration preview (modified files are refused and preserved):")
+    for item in preview:
+        typer.echo(f"- {item['path']}: {item['status']}")
+    if not confirm:
+        typer.echo("No changes made. Re-run with the same --select values and --confirm to regenerate.")
+        return
+    regenerate_managed_assets(root, select)
+    typer.echo("Selected managed assets regenerated.")
+
+
 class Dashboard:
     def __init__(self, root: Path) -> None:
         self.root = root
@@ -719,14 +798,24 @@ class Dashboard:
     def run(self) -> None:
         while True:
             contract = load_contract(self.root)
-            self.console.rule(f"[bold cyan]SMAIRT Standard Mode: {contract.project.name}[/]")
+            advanced = local_preferences(self.root).get("experience") == "advanced"
+            mode = "Advanced" if advanced else "Standard"
+            self.console.rule(f"[bold cyan]SMAIRT {mode} Mode: {contract.project.name}[/]")
             self.console.print("1. Launch assistant or open folder")
             self.console.print("2. Project Settings")
             self.console.print("3. Paper Support")
             self.console.print("4. HPC Support")
             self.console.print("5. Project Check")
             self.console.print("6. Help")
-            self.console.print("7. Exit")
+            if advanced:
+                self.console.print("7. Inspect project contract")
+                self.console.print("8. Verbose Project Check")
+                self.console.print("9. Regenerate managed assets")
+                self.console.print("10. Customize prompt and code conventions")
+                self.console.print("11. Detected local tools")
+                self.console.print("12. Exit")
+            else:
+                self.console.print("7. Exit")
             action = self.session.prompt("Choose an action: ").strip()
             if action == "1":
                 self._assistant()
@@ -738,7 +827,17 @@ class Dashboard:
                 self._check()
             elif action == "6":
                 self.console.print("SMAIRT manages project utilities only. Conduct scientific work in your selected assistant.")
-            elif action in {"7", "exit", "q"}:
+            elif advanced and action == "7":
+                self._inspect()
+            elif advanced and action == "8":
+                self._check(verbose=True)
+            elif advanced and action == "9":
+                self._regenerate()
+            elif advanced and action == "10":
+                self._conventions()
+            elif advanced and action == "11":
+                self._tools()
+            elif action in ({"12", "exit", "q"} if advanced else {"7", "exit", "q"}):
                 return
             else:
                 self.console.print("Choose a listed action.", style="yellow")
@@ -760,16 +859,75 @@ class Dashboard:
         elif action == "disable":
             self.console.print(disable_capability(self.root, name))
 
-    def _check(self) -> None:
+    def _check(self, *, verbose: bool = False) -> None:
         issues = project_check(self.root)
         if not issues:
             self.console.print("Project Check passed: no structural or configuration issues found.")
+        else:
+            for issue in issues:
+                self.console.print(f"- [{issue.code}] {issue.message}")
+                if verbose:
+                    self.console.print(f"  Artifact: {issue.path}")
+                    self.console.print("  Diagnostic is read-only; researcher content is never changed by Project Check.")
+            repairable = [issue for issue in issues if issue.repair is not None]
+            if repairable:
+                self.console.print("Use `smairt repair` to preview and confirm any safe repair.")
+        if verbose:
+            self._tools()
+
+    def _inspect(self) -> None:
+        contract = load_contract(self.root)
+        self.console.print("Full project contract:")
+        self.console.print(yaml.safe_dump(contract.model_dump(mode="json", exclude_none=True), sort_keys=False))
+        self.console.print("Managed files:")
+        try:
+            for status in managed_file_statuses(self.root):
+                self.console.print(f"- {status['path']}: {status['status']}")
+        except ProjectError as error:
+            self.console.print(str(error), style="yellow")
+
+    def _tools(self) -> None:
+        self.console.print("Detected local tools:")
+        for label, executable in detected_tools(self.root).items():
+            self.console.print(f"- {label}: {executable}")
+
+    def _regenerate(self) -> None:
+        try:
+            available = managed_asset_paths(self.root)
+        except ProjectError as error:
+            self.console.print(str(error), style="yellow")
             return
-        for issue in issues:
-            self.console.print(f"- [{issue.code}] {issue.message}")
-        repairable = [issue for issue in issues if issue.repair is not None]
-        if repairable:
-            self.console.print("Use `smairt repair` to preview and confirm any safe repair.")
+        self.console.print("Managed assets:")
+        for relative in available:
+            self.console.print(f"- {relative}")
+        relative = self.session.prompt("Asset path to regenerate, or back: ").strip()
+        if relative in {"", "back"}:
+            return
+        try:
+            preview = managed_asset_previews(self.root, [relative])
+        except ProjectError as error:
+            self.console.print(str(error), style="yellow")
+            return
+        self.console.print(f"Preview: {preview[0]['path']} is {preview[0]['status']}.")
+        if self.session.prompt("Regenerate this managed asset [yes/no]: ").strip().lower() in {"yes", "y"}:
+            regenerate_managed_assets(self.root, [relative])
+            self.console.print("Managed asset regenerated.")
+        else:
+            self.console.print("No changes made.")
+
+    def _conventions(self) -> None:
+        prompt = self.session.prompt("Prompt convention [plan-first/direct-task, Enter to keep]: ").strip()
+        code = self.session.prompt("Code convention [typed-python/standard-python, Enter to keep]: ").strip()
+        try:
+            update_settings(
+                self.root,
+                prompt_convention=PromptConvention(prompt) if prompt else None,
+                code_convention=CodeConvention(code) if code else None,
+            )
+        except (ProjectError, ValueError):
+            self.console.print("Use only the listed prompt and code conventions.", style="yellow")
+        else:
+            self.console.print("Conventions updated.")
 
     def _settings(self) -> None:
         while True:

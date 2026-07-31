@@ -35,6 +35,23 @@ class CapabilityState(StrEnum):
     INACTIVE = "inactive"
 
 
+class PromptConvention(StrEnum):
+    PLAN_FIRST = "plan-first"
+    DIRECT_TASK = "direct-task"
+
+
+class CodeConvention(StrEnum):
+    TYPED_PYTHON = "typed-python"
+    STANDARD_PYTHON = "standard-python"
+
+
+class ConventionSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    prompt: PromptConvention | None = None
+    code: CodeConvention | None = None
+
+
 class ProjectIdentity(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -105,6 +122,7 @@ class ProjectContract(BaseModel):
     git_requested: bool
     git_initialized: bool
     capabilities: dict[str, Capability]
+    conventions: ConventionSettings = Field(default_factory=ConventionSettings)
 
     @classmethod
     def from_options(cls, options: ProjectOptions, git_initialized: bool) -> ProjectContract:

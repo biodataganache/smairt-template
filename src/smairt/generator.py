@@ -33,7 +33,7 @@ def generate_project(destination: Path, options: ProjectOptions) -> list[str]:
         _generate_into(temporary, options)
         _write_contract(temporary, options, git_initialized=False)
         create_management_assets(temporary, options.assistant, options.license, options.researcher)
-        _write_manifest(temporary)
+        _write_manifest(temporary, options)
         git_initialized = False
         if options.initialize_git:
             git_initialized = _initialize_git(temporary, messages)
@@ -156,16 +156,72 @@ def _stage_contract(root: Path, messages: list[str]) -> None:
 
 def _write_contract(root: Path, options: ProjectOptions, git_initialized: bool) -> None:
     contract = ProjectContract.from_options(options, git_initialized)
+    data = contract.model_dump(mode="json", exclude_none=True)
+    data.pop("conventions", None)
     (root / "smairt.yaml").write_text(
-        yaml.safe_dump(contract.model_dump(mode="json", exclude_none=True), sort_keys=False)
+        yaml.safe_dump(data, sort_keys=False)
     )
 
 
-def _write_manifest(root: Path) -> None:
+def _write_manifest(root: Path, options: ProjectOptions) -> None:
     managed: dict[str, str] = {}
     for path in sorted(root.rglob("*")):
         if path.is_file() and path.name != "smairt.yaml":
             managed[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
     manifest = root / MANIFEST_PATH
     manifest.parent.mkdir()
-    manifest.write_text(yaml.safe_dump({"version": 1, "files": managed}, sort_keys=True))
+    manifest.write_text(
+        yaml.safe_dump(
+            {"version": 1, "files": managed, "assets": _managed_assets(options)},
+            sort_keys=True,
+        )
+    )
+
+
+def _managed_assets(options: ProjectOptions) -> dict[str, str]:
+    templates = Path(__file__).parent / "assets" / "scaffold"
+    environment = Environment(
+        loader=FileSystemLoader(str(templates)),
+        undefined=StrictUndefined,
+        keep_trailing_newline=True,
+    )
+    context: dict[str, Any] = {"project": options.project, "researcher": options.researcher}
+    assets: dict[str, str] = {}
+    for path in templates.rglob("*"):
+        if path.is_file():
+            relative = path.relative_to(templates).as_posix()
+            assets[relative] = environment.get_template(relative).render(context)
+    assets["LICENSE"] = _license_text(options)
+    alias = _assistant_alias(options)
+    if alias is not None:
+        assets[alias] = "# SMAIRT AI Context\n\nRead `prompts/AI_CONTEXT.md` before working in this project.\n"
+    if options.paper:
+        assets.update(
+            {
+                "paper/README.md": "# Paper Workspace\n\nKeep publication-focused analyses in `paper/analysis/` so they remain separate from exploratory `analysis/` work.\n",
+                "paper/outline.md": "# Paper Outline\n",
+            }
+        )
+    if options.hpc:
+        assets.update(
+            {
+                "hpc/README.md": "# HPC Guidance\n\nAdapt `slurm_job.sh` to your cluster, then submit it with your cluster's documented scheduler command. SMAIRT does not submit or manage jobs.\n",
+                "hpc/slurm_job.sh": "#!/usr/bin/env bash\n"
+                f"#SBATCH --job-name={options.project.slug}\n"
+                "#SBATCH --output=results/logs/%x-%j.out\n\n"
+                "python experiments/03_real_data/run.py\n",
+            }
+        )
+    return assets
+
+
+def _license_text(options: ProjectOptions) -> str:
+    from smairt.project import _render_license
+
+    return _render_license(options.license, options.researcher.name)
+
+
+def _assistant_alias(options: ProjectOptions) -> str | None:
+    from smairt.project import ASSISTANT_ALIASES
+
+    return ASSISTANT_ALIASES.get(options.assistant)

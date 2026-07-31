@@ -18,7 +18,10 @@ from smairt.models import (
     Assistant,
     Capability,
     CapabilityState,
+    CodeConvention,
+    ConventionSettings,
     License,
+    PromptConvention,
     ProjectContract,
     Researcher,
     StartingPhase,
@@ -105,8 +108,11 @@ def load_contract(root: Path) -> ProjectContract:
 
 
 def save_contract(root: Path, contract: ProjectContract) -> None:
+    data = contract.model_dump(mode="json", exclude_none=True)
+    if not contract.conventions.model_dump(exclude_none=True):
+        data.pop("conventions", None)
     (root / CONTRACT_PATH).write_text(
-        yaml.safe_dump(contract.model_dump(mode="json", exclude_none=True), sort_keys=False)
+        yaml.safe_dump(data, sort_keys=False)
     )
 
 
@@ -249,7 +255,7 @@ def _write_if_missing_and_track(root: Path, path: Path, content: str) -> None:
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
-        _update_manifest_for(path, root)
+        _update_manifest_for(path, root, content)
 
 
 def update_settings(
@@ -263,6 +269,8 @@ def update_settings(
     phase: StartingPhase | None = None,
     researcher: str | None = None,
     email: str | None = None,
+    prompt_convention: PromptConvention | None = None,
+    code_convention: CodeConvention | None = None,
 ) -> None:
     contract = load_contract(root)
     project = contract.project.model_validate(
@@ -298,8 +306,17 @@ def update_settings(
     if question is not None and question == "":
         project = project.model_copy(update={"research_question": None})
         updates["project"] = project
+    conventions = contract.conventions.model_dump(exclude_none=True)
+    if prompt_convention is not None:
+        conventions["prompt"] = prompt_convention.value
+    if code_convention is not None:
+        conventions["code"] = code_convention.value
+    if conventions:
+        updates["conventions"] = ConventionSettings.model_validate(conventions)
     updated_contract = contract.model_copy(update=updates)
     save_contract(root, updated_contract)
+    if prompt_convention is not None or code_convention is not None:
+        _apply_convention_guidance(root, updated_contract)
     if assistant is not None:
         prepare_assistant(root)
 
@@ -375,7 +392,7 @@ def prepare_assistant(root: Path) -> str:
         return f"{alias.relative_to(root)} already points to the canonical SMAIRT AI context."
     alias.parent.mkdir(parents=True, exist_ok=True)
     alias.write_text(contents)
-    _update_manifest_for(alias, root)
+    _update_manifest_for(alias, root, contents)
     return f"Created {alias.relative_to(root)} as a pointer to prompts/AI_CONTEXT.md."
 
 
@@ -599,7 +616,7 @@ def apply_repairs(root: Path, identifiers: list[str]) -> list[CheckIssue]:
     return selected
 
 
-def _update_manifest_for(path: Path, root: Path) -> None:
+def _update_manifest_for(path: Path, root: Path, asset: str | None = None) -> None:
     manifest_path = root / MANIFEST_PATH
     try:
         manifest = yaml.safe_load(manifest_path.read_text())
@@ -607,8 +624,136 @@ def _update_manifest_for(path: Path, root: Path) -> None:
     except (OSError, KeyError, TypeError, yaml.YAMLError):
         return
     if isinstance(files, dict):
-        files[path.relative_to(root).as_posix()] = _hash_file(path)
+        relative = path.relative_to(root).as_posix()
+        files[relative] = _hash_file(path)
+        if asset is not None:
+            assets = manifest.setdefault("assets", {})
+            if isinstance(assets, dict):
+                assets[relative] = asset
         manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=True))
+
+
+def managed_file_statuses(root: Path) -> list[dict[str, str]]:
+    manifest = _managed_manifest(root)
+    files = manifest.get("files")
+    if not isinstance(files, dict):
+        raise ProjectError("Managed-file bookkeeping is missing or invalid.")
+    statuses: list[dict[str, str]] = []
+    for relative, expected_hash in sorted(files.items()):
+        if not isinstance(relative, str) or not isinstance(expected_hash, str):
+            continue
+        path = root / relative
+        status = "missing" if not path.is_file() else "unchanged" if _hash_file(path) == expected_hash else "modified"
+        statuses.append({"path": relative, "status": status, "expected_hash": expected_hash})
+    return statuses
+
+
+def managed_asset_previews(root: Path, paths: list[str]) -> list[dict[str, str]]:
+    manifest = _managed_manifest(root)
+    assets = manifest.get("assets")
+    if not isinstance(assets, dict):
+        raise ProjectError("Managed-file asset definitions are unavailable for this project.")
+    statuses = {item["path"]: item for item in managed_file_statuses(root)}
+    previews: list[dict[str, str]] = []
+    for relative in paths:
+        status = statuses.get(relative)
+        if status is None or relative not in assets or not isinstance(assets[relative], str):
+            raise ProjectError(f"No managed asset is available for regeneration: {relative}")
+        if status["status"] == "modified":
+            raise ProjectError(f"Managed file was modified and will be preserved: {relative}")
+        previews.append({"path": relative, "status": status["status"]})
+    return previews
+
+
+def regenerate_managed_assets(root: Path, paths: list[str]) -> list[dict[str, str]]:
+    previews = managed_asset_previews(root, paths)
+    assets = _managed_manifest(root)["assets"]
+    assert isinstance(assets, dict)
+    for preview in previews:
+        path = root / preview["path"]
+        content = assets[preview["path"]]
+        assert isinstance(content, str)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+        _update_manifest_for(path, root, content)
+    return previews
+
+
+def managed_asset_paths(root: Path) -> list[str]:
+    manifest = _managed_manifest(root)
+    assets = manifest.get("assets")
+    if not isinstance(assets, dict):
+        raise ProjectError("Managed-file asset definitions are unavailable for this project.")
+    return sorted(path for path, content in assets.items() if isinstance(path, str) and isinstance(content, str))
+
+
+def detected_tools(root: Path) -> dict[str, str]:
+    contract = load_contract(root)
+    command = ASSISTANT_COMMANDS.get(contract.assistant)
+    assistant_path = "not applicable" if command is None else shutil.which(command[0]) or "not found"
+    return {
+        "Python": sys.executable,
+        "Git": shutil.which("git") or "not found",
+        f"Selected assistant ({contract.assistant.value})": assistant_path,
+    }
+
+
+def _managed_manifest(root: Path) -> dict[str, Any]:
+    try:
+        manifest = yaml.safe_load((root / MANIFEST_PATH).read_text())
+    except (OSError, yaml.YAMLError) as error:
+        raise ProjectError("Managed-file bookkeeping is missing or invalid.") from error
+    if not isinstance(manifest, dict):
+        raise ProjectError("Managed-file bookkeeping is missing or invalid.")
+    return manifest
+
+
+def _apply_convention_guidance(root: Path, contract: ProjectContract) -> None:
+    guidance = {
+        "prompt": (
+            Path("prompts/AI_CONTEXT.md"),
+            {
+                PromptConvention.PLAN_FIRST.value: "\nProject prompt convention: create a plan before complex work.\n",
+                PromptConvention.DIRECT_TASK.value: "\nProject prompt convention: state the concrete task and constraints before work.\n",
+            },
+        ),
+        "code": (
+            Path("prompts/CODE_CONVENTIONS.md"),
+            {
+                CodeConvention.TYPED_PYTHON.value: "\nProject code convention: use type annotations for public functions and data boundaries.\n",
+                CodeConvention.STANDARD_PYTHON.value: "\nProject code convention: favor readable standard Python with documented inputs and outputs.\n",
+            },
+        ),
+    }
+    statuses = {item["path"]: item["status"] for item in managed_file_statuses(root)}
+    for name, value in contract.conventions.model_dump(exclude_none=True).items():
+        definition = guidance.get(name)
+        if definition is None:
+            continue
+        relative, choices = definition
+        addition = choices.get(value)
+        if addition is None or statuses.get(relative.as_posix()) != "unchanged":
+            continue
+        path = root / relative
+        base = _managed_asset_content(root, relative.as_posix())
+        if base is None:
+            continue
+        without_prior_convention = "\n".join(
+            line
+            for line in base.splitlines()
+            if not line.startswith(f"Project {name} convention:")
+        ).rstrip("\n")
+        content = without_prior_convention + addition
+        path.write_text(content)
+        _update_manifest_for(path, root, content)
+
+
+def _managed_asset_content(root: Path, relative: str) -> str | None:
+    assets = _managed_manifest(root).get("assets")
+    if not isinstance(assets, dict):
+        return None
+    content = assets.get(relative)
+    return content if isinstance(content, str) else None
 
 
 def _hash_file(path: Path) -> str:

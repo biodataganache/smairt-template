@@ -613,6 +613,179 @@ def test_recents_are_capped_and_hpc_deactivation_preserves_modified_templates(tm
     assert metadata["capabilities"]["hpc"] == {"state": "enabled"}
 
 
+def test_advanced_controls_are_local_safe_and_visible_from_installed_command(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "advanced-project"
+    assert create_project(destination).returncode == 0
+
+    configured = subprocess.run(
+        [
+            str(installed_smairt()),
+            "settings",
+            str(destination),
+            "--experience",
+            "advanced",
+            "--prompt-convention",
+            "plan-first",
+            "--code-convention",
+            "typed-python",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    inspection = subprocess.run(
+        [str(installed_smairt()), "inspect", str(destination), "--hashes"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    configured_prompt = (destination / "prompts" / "AI_CONTEXT.md").read_text()
+    configured_code = (destination / "prompts" / "CODE_CONVENTIONS.md").read_text()
+    (destination / "prompts" / "AI_CONTEXT.md").write_text("researcher-owned prompt\n")
+    verbose_check = subprocess.run(
+        [str(installed_smairt()), "check", str(destination), "--verbose"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    refused_regeneration = subprocess.run(
+        [
+            str(installed_smairt()),
+            "regenerate",
+            str(destination),
+            "--select",
+            "prompts/AI_CONTEXT.md",
+            "--confirm",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert subprocess.run(
+        [str(installed_smairt()), "paper", "enable", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+    ).returncode == 0
+    (destination / "paper" / "outline.md").unlink()
+    preview = subprocess.run(
+        [
+            str(installed_smairt()),
+            "regenerate",
+            str(destination),
+            "--select",
+            "paper/outline.md",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    restored = subprocess.run(
+        [
+            str(installed_smairt()),
+            "regenerate",
+            str(destination),
+            "--select",
+            "paper/outline.md",
+            "--confirm",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    dashboard = subprocess.run(
+        [str(installed_smairt())],
+        input="12\n",
+        check=False,
+        capture_output=True,
+        text=True,
+        cwd=destination,
+        env={**os.environ, "TERM": "dumb", "CI": "1"},
+    )
+
+    metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
+    assert configured.returncode == 0, configured.stderr
+    assert metadata["conventions"] == {
+        "prompt": "plan-first",
+        "code": "typed-python",
+    }
+    assert "Project prompt convention: create a plan before complex work." in configured_prompt
+    assert "Project code convention: use type annotations" in configured_code
+    assert "Full project contract:" in inspection.stdout
+    assert "Managed files:" in inspection.stdout
+    assert "expected SHA-256" in inspection.stdout
+    assert "Python:" in inspection.stdout
+    assert "Git:" in inspection.stdout
+    assert "Selected assistant (opencode):" in inspection.stdout
+    assert verbose_check.returncode == 1
+    assert "Artifact: prompts/AI_CONTEXT.md" in verbose_check.stdout
+    assert "Detected local tools:" in verbose_check.stdout
+    assert refused_regeneration.returncode == 1
+    assert "researcher-owned prompt" in (destination / "prompts" / "AI_CONTEXT.md").read_text()
+    assert preview.returncode == 0, preview.stderr
+    assert "No changes made" in preview.stdout
+    assert restored.returncode == 0, restored.stderr
+    assert (destination / "paper" / "outline.md").read_text() == "# Paper Outline\n"
+    assert dashboard.returncode == 0, dashboard.stderr
+    assert "SMAIRT Advanced Mode: Test Project" in dashboard.stdout
+    assert "Launch assistant or open folder" in dashboard.stdout
+    assert "Project Settings" in dashboard.stdout
+    assert "Paper Support" in dashboard.stdout
+    assert "HPC Support" in dashboard.stdout
+    assert "Project Check" in dashboard.stdout
+    assert "Inspect project contract" in dashboard.stdout
+    assert "Regenerate managed assets" in dashboard.stdout
+    assert "Detected local tools" in dashboard.stdout
+
+
+def test_advanced_mode_preference_is_local_to_each_project_checkout(tmp_path: Path) -> None:
+    advanced_project = tmp_path / "advanced"
+    standard_project = tmp_path / "standard"
+    assert create_project(advanced_project).returncode == 0
+    assert create_project(standard_project).returncode == 0
+
+    configured = subprocess.run(
+        [
+            str(installed_smairt()),
+            "settings",
+            str(advanced_project),
+            "--experience",
+            "advanced",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    advanced_dashboard = subprocess.run(
+        [str(installed_smairt())],
+        input="12\n",
+        check=False,
+        capture_output=True,
+        text=True,
+        cwd=advanced_project,
+        env={**os.environ, "TERM": "dumb", "CI": "1"},
+    )
+    standard_dashboard = subprocess.run(
+        [str(installed_smairt())],
+        input="7\n",
+        check=False,
+        capture_output=True,
+        text=True,
+        cwd=standard_project,
+        env={**os.environ, "TERM": "dumb", "CI": "1"},
+    )
+
+    assert configured.returncode == 0, configured.stderr
+    assert yaml.safe_load((advanced_project / ".smairt" / "preferences.yaml").read_text()) == {
+        "experience": "advanced"
+    }
+    assert not (standard_project / ".smairt" / "preferences.yaml").exists()
+    assert "SMAIRT Advanced Mode: Test Project" in advanced_dashboard.stdout
+    assert "SMAIRT Standard Mode: Test Project" in standard_dashboard.stdout
+
+
 def test_interactive_wizard_creates_a_project_from_a_real_input_stream(
     tmp_path: Path,
 ) -> None:
