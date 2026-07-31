@@ -1,20 +1,16 @@
 {
-    "project_name": "My SMAIRT Project",
-    "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_').replace('-', '_') }}",
-    "author_name": "Your Name",
-    "author_email": "your.email@example.com",
-    "description": "A brief description of your research question",
-    "project_mode": ["standard", "paper_driven"],
-    "workflow_mode": ["ide_native", "browser_paste"],
-    "initial_research_question": "What is the main question you are trying to answer?",
-    "domain": ["machine_learning", "data_science", "computational_biology", "physics", "chemistry", "engineering", "other"],
-    "ai_tool": ["roo_zoo", "cursor", "windsurf", "claude", "chatgpt", "other"],
-    "include_example_project": ["no", "yes"],
-    "starting_phase": ["synthetic", "downloaded", "real"],
-    "license": ["MIT", "BSD-3-Clause", "Apache-2.0", "GPL-3.0", "proprietary"],
-    "create_git_repo": ["yes", "no"],
-    "_copy_without_render": [
-        "*.py",
-        "*.sh"
-    ]
+  "_copy_without_render": ["*"],
+  "project_name": "My SMAIRT Project",
+  "project_slug": "my_smairt_project",
+  "author_name": "Your Name",
+  "author_email": "",
+  "description": "A brief description of the research project",
+  "initial_research_question": "",
+  "domain": "Not sure yet",
+  "assistant": ["opencode", "zoo-code", "claude-code", "codex", "pi", "cursor"],
+  "starting_phase": ["synthetic", "downloaded", "real"],
+  "license": ["MIT", "BSD-3-Clause", "Apache-2.0", "GPL-3.0", "proprietary"],
+  "paper": ["no", "yes"],
+  "hpc": ["no", "yes"],
+  "create_git_repo": ["no", "yes"]
 }

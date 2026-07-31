@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "smairt"
+version = "0.1.0"
+description = "Create readable SMAIRT research workspaces."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "PNNL Computational Biology" }]
+dependencies = [
+  "Jinja2>=3.1",
+  "pydantic>=2.0",
+  "PyYAML>=6.0",
+  "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+  "cookiecutter>=2.6",
+  "mypy>=1.13",
+  "pytest>=8.0",
+  "types-PyYAML>=6.0",
+]
+
+[project.scripts]
+smairt = "smairt.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/smairt"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/smairt", "README.md", "cookiecutter.json", "hooks"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.mypy]
+files = ["src", "tests"]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+show_error_codes = true
