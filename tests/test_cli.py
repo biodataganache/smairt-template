@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import pty
 import select
+import json
 import subprocess
 import sys
 import time
@@ -270,6 +271,7 @@ def create_project(
     phase: str = "synthetic",
     paper: bool = False,
     hpc: bool = False,
+    assistant: str = "opencode",
     initialize_git: bool = False,
     path: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
@@ -289,13 +291,20 @@ def create_project(
         "Not sure yet",
         "--phase",
         phase,
+        "--assistant",
+        assistant,
     ]
     command.append("--git" if initialize_git else "--no-git")
     if paper:
         command.append("--paper")
     if hpc:
         command.append("--hpc")
-    environment = None if path is None else {"PATH": path}
+    environment = {
+        **os.environ,
+        "XDG_DATA_HOME": str(destination.parent / ".smairt-test-data"),
+    }
+    if path is not None:
+        environment["PATH"] = path
     return subprocess.run(
         command, check=False, capture_output=True, text=True, env=environment
     )
@@ -303,6 +312,305 @@ def create_project(
 
 def paths(root: Path) -> set[str]:
     return {path.relative_to(root).as_posix() for path in root.rglob("*")}
+
+
+def test_project_management_commands_are_safe_and_idempotent(tmp_path: Path) -> None:
+    destination = tmp_path / "managed-project"
+
+    created = create_project(destination)
+    enabled = subprocess.run(
+        [str(installed_smairt()), "paper", "enable", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    paper_readme = destination / "paper" / "README.md"
+    paper_readme.write_text("researcher-owned paper guidance\n")
+    disabled = subprocess.run(
+        [str(installed_smairt()), "paper", "disable", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    reenabled = subprocess.run(
+        [str(installed_smairt()), "paper", "enable", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    enabled_again = subprocess.run(
+        [str(installed_smairt()), "paper", "enable", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    checked = subprocess.run(
+        [str(installed_smairt()), "check", str(destination), "--json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert created.returncode == 0, created.stderr
+    assert enabled.returncode == 0, enabled.stderr
+    assert "Paper support enabled" in enabled.stdout
+    assert disabled.returncode == 0, disabled.stderr
+    assert "Paper support deactivated" in disabled.stdout
+    assert reenabled.returncode == 0, reenabled.stderr
+    assert "Paper support enabled" in reenabled.stdout
+    assert enabled_again.returncode == 0, enabled_again.stderr
+    assert "already enabled" in enabled_again.stdout
+    assert paper_readme.read_text() == "researcher-owned paper guidance\n"
+    assert checked.returncode == 1, checked.stdout
+    assert json.loads(checked.stdout) == {
+        "issues": [
+            {
+                "code": "modified-managed-file",
+                "message": "Managed file was modified and will be preserved: paper/README.md",
+                "path": "paper/README.md",
+            }
+        ],
+        "ok": False,
+        "repairs": [],
+    }
+
+
+def test_settings_license_check_and_repair_are_guarded(tmp_path: Path) -> None:
+    destination = tmp_path / "configured-project"
+    assert create_project(destination).returncode == 0
+
+    settings = subprocess.run(
+        [
+            str(installed_smairt()),
+            "settings",
+            str(destination),
+            "--name",
+            "Renamed Project",
+            "--phase",
+            "real",
+            "--collaborator-role",
+            "analyst",
+            "--collaborator-name",
+            "Grace Analyst",
+            "--experience",
+            "advanced",
+            "--no-motion",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    preview = subprocess.run(
+        [str(installed_smairt()), "settings", str(destination), "--license", "Apache-2.0"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    confirmed = subprocess.run(
+        [
+            str(installed_smairt()),
+            "settings",
+            str(destination),
+            "--license",
+            "Apache-2.0",
+            "--confirm-license",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    (destination / "LICENSE").write_text("custom legal terms\n")
+    refused = subprocess.run(
+        [
+            str(installed_smairt()),
+            "settings",
+            str(destination),
+            "--license",
+            "MIT",
+            "--confirm-license",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    missing_directory = destination / "plans"
+    (missing_directory / "README.md").unlink()
+    missing_directory.rmdir()
+    check_before = subprocess.run(
+        [str(installed_smairt()), "check", str(destination), "--json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    preview_repair = subprocess.run(
+        [
+            str(installed_smairt()),
+            "repair",
+            str(destination),
+            "--select",
+            "create-directory:plans",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert preview_repair.returncode == 0
+    assert not missing_directory.exists()
+    assert "No changes made" in preview_repair.stdout
+    applied_repair = subprocess.run(
+        [
+            str(installed_smairt()),
+            "repair",
+            str(destination),
+            "--select",
+            "create-directory:plans",
+            "--confirm",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
+    preferences = yaml.safe_load((destination / ".smairt" / "preferences.yaml").read_text())
+    assert settings.returncode == 0, settings.stderr
+    assert metadata["project"]["name"] == "Renamed Project"
+    assert metadata["project"]["slug"] == "test_project"
+    assert metadata["starting_phase"] == "real"
+    assert metadata["people"]["analyst"] == {"name": "Grace Analyst"}
+    assert preferences == {"experience": "advanced", "motion": False}
+    assert preview.returncode == 0
+    assert "Preview:" in preview.stdout
+    assert "No license change made" in preview.stdout
+    assert confirmed.returncode == 0, confirmed.stderr
+    assert "License changed to Apache-2.0." in confirmed.stdout
+    assert refused.returncode == 1
+    assert "will not replace custom legal text" in refused.stderr
+    assert check_before.returncode == 1
+    assert "create-directory:plans" in json.loads(check_before.stdout)["repairs"]
+    assert applied_repair.returncode == 0
+    assert missing_directory.is_dir()
+
+
+def test_open_tracks_recents_and_home_cleans_stale_paths(tmp_path: Path) -> None:
+    data_home = tmp_path / "local-data"
+    destination = tmp_path / "opened-project"
+    assert create_project(destination).returncode == 0
+    environment = {**os.environ, "XDG_DATA_HOME": str(data_home), "TERM": "dumb", "CI": "1"}
+    opened = subprocess.run(
+        [str(installed_smairt()), "open", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    recents_path = data_home / "smairt" / "recent-projects.json"
+    stale_entries = [
+        {"path": str(tmp_path / "missing"), "opened_at": "2026-01-01T00:00:00+00:00"},
+        *json.loads(recents_path.read_text()),
+    ]
+    recents_path.write_text(json.dumps(stale_entries))
+    home = subprocess.run(
+        [str(installed_smairt())],
+        input="2\n\n5\n",
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+
+    assert opened.returncode == 0, opened.stderr
+    assert opened.stdout == f"Opened SMAIRT project: {destination}\n"
+    assert "SMAIRT Home" in home.stdout
+    recents = json.loads(recents_path.read_text())
+    assert recents == [{"path": str(destination), "opened_at": recents[0]["opened_at"]}]
+
+
+def test_assistant_aliases_and_dashboard_are_available_from_installed_command(tmp_path: Path) -> None:
+    expected_aliases = {
+        "claude-code": "CLAUDE.md",
+        "opencode": "AGENTS.md",
+        "codex": "AGENTS.md",
+        "pi": "AGENTS.md",
+        "cursor": ".cursor/rules/smairt.mdc",
+    }
+    for assistant, alias in expected_aliases.items():
+        destination = tmp_path / assistant
+        created = create_project(destination, assistant=assistant)
+
+        assert created.returncode == 0, created.stderr
+        assert (destination / alias).read_text() == (
+            "# SMAIRT AI Context\n\nRead `prompts/AI_CONTEXT.md` before working in this project.\n"
+        )
+
+    dashboard_project = tmp_path / "dashboard"
+    assert create_project(dashboard_project).returncode == 0
+    dashboard = subprocess.run(
+        [str(installed_smairt())],
+        input="2\n1\nDashboard Project\n11\n7\n",
+        check=False,
+        capture_output=True,
+        text=True,
+        cwd=dashboard_project,
+        env={**os.environ, "TERM": "dumb", "CI": "1"},
+    )
+
+    assert dashboard.returncode == 0, dashboard.stderr
+    assert "SMAIRT Standard Mode: Test Project" in dashboard.stdout
+    assert "Project Check" in dashboard.stdout
+    assert yaml.safe_load((dashboard_project / "smairt.yaml").read_text())["project"]["name"] == "Dashboard Project"
+
+
+def test_recents_are_capped_and_hpc_deactivation_preserves_modified_templates(tmp_path: Path) -> None:
+    data_home = tmp_path / "local-data"
+    environment = {**os.environ, "XDG_DATA_HOME": str(data_home)}
+    destinations: list[Path] = []
+    for number in range(11):
+        destination = tmp_path / f"project-{number}"
+        assert create_project(destination).returncode == 0
+        opened = subprocess.run(
+            [str(installed_smairt()), "open", str(destination)],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=environment,
+        )
+        assert opened.returncode == 0, opened.stderr
+        destinations.append(destination)
+    hpc_project = destinations[-1]
+    enabled = subprocess.run(
+        [str(installed_smairt()), "hpc", "enable", str(hpc_project)],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    template = hpc_project / "hpc" / "slurm_job.sh"
+    template.write_text("#!/usr/bin/env bash\n# researcher template\n")
+    disabled = subprocess.run(
+        [str(installed_smairt()), "hpc", "disable", str(hpc_project)],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    reenabled = subprocess.run(
+        [str(installed_smairt()), "hpc", "enable", str(hpc_project)],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+
+    recents = json.loads((data_home / "smairt" / "recent-projects.json").read_text())
+    metadata = yaml.safe_load((hpc_project / "smairt.yaml").read_text())
+    assert len(recents) == 10
+    assert str(destinations[0]) not in [entry["path"] for entry in recents]
+    assert enabled.returncode == 0, enabled.stderr
+    assert disabled.returncode == 0, disabled.stderr
+    assert reenabled.returncode == 0, reenabled.stderr
+    assert template.read_text() == "#!/usr/bin/env bash\n# researcher template\n"
+    assert metadata["capabilities"]["hpc"] == {"state": "enabled"}
 
 
 def test_interactive_wizard_creates_a_project_from_a_real_input_stream(

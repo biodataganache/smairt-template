@@ -48,6 +48,28 @@ Use `--git` to initialize Git and stage the generated files. SMAIRT never
 creates a commit. If Git is unavailable, project creation succeeds and reports
 the skipped initialization.
 
+## Manage A Project
+
+Run `smairt` from inside a project for the Standard Mode dashboard. It is a
+utility interface only: scientific work stays in the selected coding assistant.
+Use these scriptable commands when a terminal workflow is more convenient:
+
+```bash
+smairt open /path/to/project
+smairt check /path/to/project --json
+smairt paper enable /path/to/project
+smairt hpc disable /path/to/project
+```
+
+`smairt check` is read-only and exits `0` when no structural or configuration
+issues are found, or `1` otherwise. `smairt repair` lists only deterministic
+tool-owned repairs; select one with `--select` and add `--confirm` to apply it.
+Paper and HPC deactivation never deletes project files. `smairt settings`
+updates approved metadata, collaborators, current phase, or local dashboard
+preferences without changing the immutable project slug or folder. License
+changes always show a warning and preview, require `--confirm-license`, and
+refuse to replace modified `LICENSE` text.
+
 ## Generated Workspace
 
 Each project is ordinary, readable files:

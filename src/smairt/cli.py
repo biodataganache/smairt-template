@@ -15,9 +15,39 @@ from rich.console import Console
 
 from smairt import __version__
 from smairt.generator import GenerationError, generate_project, validate_destination
-from smairt.models import Assistant, License, ProjectIdentity, ProjectOptions, Researcher, StartingPhase
+from smairt.models import (
+    Assistant,
+    License,
+    ProjectContract,
+    ProjectIdentity,
+    ProjectOptions,
+    Researcher,
+    StartingPhase,
+)
+from smairt.project import (
+    LICENSE_EXPLANATIONS,
+    ProjectError,
+    apply_repairs,
+    change_license,
+    disable_capability,
+    enable_capability,
+    launch_assistant,
+    license_preview,
+    load_contract,
+    local_preferences,
+    open_folder,
+    prepare_assistant,
+    project_check,
+    recent_projects,
+    record_recent,
+    repair_previews,
+    resolve_project,
+    save_local_preferences,
+    update_collaborator,
+    update_settings,
+)
 
-app = typer.Typer(no_args_is_help=True)
+app = typer.Typer(no_args_is_help=False, invoke_without_command=True)
 
 _SKIP = ":skip"
 _BACK = ":back"
@@ -442,6 +472,7 @@ def version_callback(value: bool) -> None:
 
 @app.callback()
 def smairt(
+    ctx: typer.Context,
     version: bool = typer.Option(
         False,
         "--version",
@@ -451,6 +482,457 @@ def smairt(
     ),
 ) -> None:
     """Create and manage SMAIRT research workspaces."""
+    if ctx.invoked_subcommand is None:
+        _home()
+
+
+def _project_or_exit(path: Path | None, *, remember: bool = True) -> Path:
+    try:
+        root = resolve_project(path)
+    except ProjectError as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=1) from error
+    if remember:
+        record_recent(root)
+    return root
+
+
+def _command_error(error: ProjectError) -> None:
+    typer.echo(f"Error: {error}", err=True)
+    raise typer.Exit(code=1) from error
+
+
+@app.command()
+def open(
+    path: Path = typer.Argument(..., help="Existing SMAIRT project directory."),
+    launch: bool = typer.Option(False, help="Launch the project's selected assistant when available."),
+    folder: bool = typer.Option(False, help="Open the project folder in the file manager."),
+) -> None:
+    """Open a SMAIRT project and remember it locally."""
+    root = _project_or_exit(path)
+    if launch:
+        success, message = launch_assistant(root)
+        typer.echo(message)
+        if not success:
+            raise typer.Exit(code=1)
+    elif folder:
+        typer.echo(open_folder(root))
+    else:
+        typer.echo(f"Opened SMAIRT project: {root}")
+
+
+@app.command()
+def check(
+    path: Path | None = typer.Argument(None, help="SMAIRT project directory, or the current project."),
+    json_output: bool = typer.Option(False, "--json", help="Emit stable JSON diagnostics."),
+) -> None:
+    """Read-only Project Check for structural and configuration issues."""
+    root = _project_or_exit(path, remember=False)
+    issues = project_check(root)
+    payload = {
+        "issues": [issue.as_dict() for issue in issues],
+        "ok": not issues,
+        "repairs": [issue.repair for issue in issues if issue.repair is not None],
+    }
+    if json_output:
+        typer.echo(__import__("json").dumps(payload, sort_keys=True))
+    elif issues:
+        typer.echo("Project Check found structural issues:")
+        for issue in issues:
+            typer.echo(f"- [{issue.code}] {issue.message}")
+            if issue.repair is not None:
+                typer.echo(f"  Safe repair available: {issue.repair}")
+    else:
+        typer.echo("Project Check passed: no structural or configuration issues found.")
+    if issues:
+        raise typer.Exit(code=1)
+
+
+paper_app = typer.Typer(help="Enable or deactivate additive Paper support.")
+hpc_app = typer.Typer(help="Enable or deactivate additive HPC support.")
+app.add_typer(paper_app, name="paper")
+app.add_typer(hpc_app, name="hpc")
+
+
+def _capability_command(path: Path | None, name: str, enabled: bool) -> None:
+    root = _project_or_exit(path)
+    try:
+        message = enable_capability(root, name) if enabled else disable_capability(root, name)
+    except ProjectError as error:
+        _command_error(error)
+    typer.echo(message)
+
+
+@paper_app.command("enable")
+def paper_enable(path: Path | None = typer.Argument(None, help="Project directory or current project.")) -> None:
+    """Enable Paper guidance without touching existing work."""
+    _capability_command(path, "paper", True)
+
+
+@paper_app.command("disable")
+def paper_disable(path: Path | None = typer.Argument(None, help="Project directory or current project.")) -> None:
+    """Deactivate Paper guidance without deleting files."""
+    _capability_command(path, "paper", False)
+
+
+@hpc_app.command("enable")
+def hpc_enable(path: Path | None = typer.Argument(None, help="Project directory or current project.")) -> None:
+    """Enable HPC guidance without submitting jobs."""
+    _capability_command(path, "hpc", True)
+
+
+@hpc_app.command("disable")
+def hpc_disable(path: Path | None = typer.Argument(None, help="Project directory or current project.")) -> None:
+    """Deactivate HPC guidance without deleting files."""
+    _capability_command(path, "hpc", False)
+
+
+@app.command("repair")
+def repair(
+    path: Path | None = typer.Argument(None, help="Project directory or current project."),
+    select: list[str] = typer.Option([], "--select", help="Safe repair identifier to select."),
+    confirm: bool = typer.Option(False, help="Apply the previewed selected repairs."),
+) -> None:
+    """Preview and explicitly apply deterministic tool-owned structural repairs."""
+    root = _project_or_exit(path)
+    try:
+        if not select:
+            available = [issue for issue in project_check(root) if issue.repair is not None]
+            if not available:
+                typer.echo("No safe repairs are available.")
+                return
+            typer.echo("Safe repairs available:")
+            for issue in available:
+                assert issue.repair is not None
+                typer.echo(f"- {issue.repair}: {issue.message}")
+            typer.echo("Select repairs with --select REPAIR. Add --confirm only after reviewing the preview.")
+            return
+        preview = repair_previews(root, select)
+    except ProjectError as error:
+        _command_error(error)
+        return
+    typer.echo("Repair preview (only tool-owned structure will be created; no content is deleted):")
+    for issue in preview:
+        assert issue.repair is not None
+        typer.echo(f"- {issue.repair}: {issue.message}")
+    if not confirm:
+        typer.echo("No changes made. Re-run with the same --select values and --confirm to apply.")
+        return
+    apply_repairs(root, select)
+    typer.echo("Selected safe repairs applied.")
+
+
+@app.command("settings")
+def settings(
+    path: Path | None = typer.Argument(None, help="Project directory or current project."),
+    name: str | None = typer.Option(None, help="Human-readable project name."),
+    description: str | None = typer.Option(None, help="Project description."),
+    domain: str | None = typer.Option(None, help="Research domain."),
+    question: str | None = typer.Option(None, help="Research question."),
+    assistant: Assistant | None = typer.Option(None, help="Selected coding assistant."),
+    phase: StartingPhase | None = typer.Option(None, help="Current phase; directories are never deleted."),
+    researcher: str | None = typer.Option(None, help="Primary researcher name."),
+    email: str | None = typer.Option(None, help="Primary researcher email."),
+    collaborator_role: str | None = typer.Option(None, help="Collaborator role identifier."),
+    collaborator_name: str | None = typer.Option(None, help="Collaborator name."),
+    collaborator_email: str | None = typer.Option(None, help="Optional collaborator email."),
+    experience: str | None = typer.Option(None, help="Local Standard or Advanced preference."),
+    motion: bool | None = typer.Option(None, help="Local motion preference."),
+    license: License | None = typer.Option(None, help="License to preview or change."),
+    confirm_license: bool = typer.Option(False, help="Confirm the previewed license replacement."),
+) -> None:
+    """Show or safely update approved project settings; slug and folder stay immutable."""
+    root = _project_or_exit(path)
+    try:
+        if license is not None:
+            typer.echo("License changes can affect legal rights. This is not legal advice.")
+            typer.echo(f"{license.value}: {LICENSE_EXPLANATIONS[license]}")
+            typer.echo("Preview:")
+            typer.echo(license_preview(root, license), nl=False)
+            if not confirm_license:
+                typer.echo("No license change made. Re-run with --confirm-license to replace unmodified legal text.")
+                return
+            change_license(root, license)
+            typer.echo(f"License changed to {license.value}.")
+        if collaborator_role is not None or collaborator_name is not None or collaborator_email is not None:
+            if collaborator_role is None or collaborator_name is None:
+                raise ProjectError("--collaborator-role and --collaborator-name must be provided together.")
+            update_collaborator(root, collaborator_role, collaborator_name, collaborator_email)
+        update_settings(
+            root,
+            name=name,
+            description=description,
+            domain=domain,
+            question=question,
+            assistant=assistant,
+            phase=phase,
+            researcher=researcher,
+            email=email,
+        )
+        preferences = local_preferences(root)
+        if experience is not None:
+            if experience not in {"standard", "advanced"}:
+                raise ProjectError("Experience must be standard or advanced.")
+            preferences["experience"] = experience
+        if motion is not None:
+            preferences["motion"] = motion
+        if experience is not None or motion is not None:
+            save_local_preferences(root, preferences)
+        if all(
+            value is None
+            for value in (
+                name,
+                description,
+                domain,
+                question,
+                assistant,
+                phase,
+                researcher,
+                email,
+                collaborator_role,
+                experience,
+                motion,
+                license,
+            )
+        ):
+            contract = load_contract(root)
+            typer.echo(f"Project Settings: {contract.project.name}")
+            typer.echo(f"Slug (immutable): {contract.project.slug}")
+            typer.echo(f"Current phase: {contract.starting_phase.value}")
+            typer.echo(f"Assistant: {contract.assistant.value}")
+            typer.echo(f"License: {contract.license.value}")
+            typer.echo(f"Collaborators: {', '.join(contract.people)}")
+        elif license is None:
+            typer.echo("Project Settings updated. The project slug and folder were unchanged.")
+    except ProjectError as error:
+        _command_error(error)
+
+
+class Dashboard:
+    def __init__(self, root: Path) -> None:
+        self.root = root
+        self.console = Console(force_interactive=_interactive_motion_enabled())
+        self.session: PromptSession[str] = PromptSession(
+            input=create_input(sys.stdin), output=create_output(sys.stdout)
+        )
+
+    def run(self) -> None:
+        while True:
+            contract = load_contract(self.root)
+            self.console.rule(f"[bold cyan]SMAIRT Standard Mode: {contract.project.name}[/]")
+            self.console.print("1. Launch assistant or open folder")
+            self.console.print("2. Project Settings")
+            self.console.print("3. Paper Support")
+            self.console.print("4. HPC Support")
+            self.console.print("5. Project Check")
+            self.console.print("6. Help")
+            self.console.print("7. Exit")
+            action = self.session.prompt("Choose an action: ").strip()
+            if action == "1":
+                self._assistant()
+            elif action == "2":
+                self._settings()
+            elif action in {"3", "4"}:
+                self._capability("paper" if action == "3" else "hpc")
+            elif action == "5":
+                self._check()
+            elif action == "6":
+                self.console.print("SMAIRT manages project utilities only. Conduct scientific work in your selected assistant.")
+            elif action in {"7", "exit", "q"}:
+                return
+            else:
+                self.console.print("Choose a listed action.", style="yellow")
+
+    def _assistant(self) -> None:
+        message = prepare_assistant(self.root)
+        self.console.print(message)
+        action = self.session.prompt("Enter launch, folder, or back: ").strip().lower()
+        if action == "launch":
+            _, message = launch_assistant(self.root)
+            self.console.print(message)
+        elif action == "folder":
+            self.console.print(open_folder(self.root))
+
+    def _capability(self, name: str) -> None:
+        action = self.session.prompt(f"Enter enable, disable, or back for {_capability_label(name)}: ").strip().lower()
+        if action == "enable":
+            self.console.print(enable_capability(self.root, name))
+        elif action == "disable":
+            self.console.print(disable_capability(self.root, name))
+
+    def _check(self) -> None:
+        issues = project_check(self.root)
+        if not issues:
+            self.console.print("Project Check passed: no structural or configuration issues found.")
+            return
+        for issue in issues:
+            self.console.print(f"- [{issue.code}] {issue.message}")
+        repairable = [issue for issue in issues if issue.repair is not None]
+        if repairable:
+            self.console.print("Use `smairt repair` to preview and confirm any safe repair.")
+
+    def _settings(self) -> None:
+        while True:
+            self.console.print("Project Settings")
+            self.console.print("1. Project name")
+            self.console.print("2. Description")
+            self.console.print("3. Domain")
+            self.console.print("4. Research question")
+            self.console.print("5. Primary researcher")
+            self.console.print("6. Assistant")
+            self.console.print("7. Current phase")
+            self.console.print("8. Collaborator")
+            self.console.print("9. License")
+            self.console.print("10. Local experience and motion")
+            self.console.print("11. Back")
+            action = self.session.prompt("Choose a setting: ").strip()
+            contract = load_contract(self.root)
+            if action == "1":
+                update_settings(self.root, name=self._required("Project name"))
+            elif action == "2":
+                update_settings(self.root, description=self._required("Description"))
+            elif action == "3":
+                update_settings(self.root, domain=self._required("Domain"))
+            elif action == "4":
+                update_settings(self.root, question=self.session.prompt("Research question (blank clears it): ").strip())
+            elif action == "5":
+                update_settings(self.root, researcher=self._required("Primary researcher"))
+            elif action == "6":
+                self.console.print("Available: zoo-code, claude-code, opencode, codex, pi, cursor")
+                try:
+                    update_settings(self.root, assistant=Assistant(self._required("Assistant")))
+                except ValueError:
+                    self.console.print("Choose one of the listed assistants.", style="yellow")
+            elif action == "7":
+                self.console.print("Available: synthetic, downloaded, real. Existing directories are never deleted.")
+                try:
+                    update_settings(self.root, phase=StartingPhase(self._required("Current phase")))
+                except ValueError:
+                    self.console.print("Choose synthetic, downloaded, or real.", style="yellow")
+            elif action == "8":
+                role = self._required("Collaborator role")
+                try:
+                    update_collaborator(
+                        self.root,
+                        role,
+                        self._required("Collaborator name"),
+                        self.session.prompt("Collaborator email (blank omits it): ").strip() or None,
+                    )
+                except ProjectError as error:
+                    self.console.print(str(error), style="yellow")
+            elif action == "9":
+                self._license(contract)
+            elif action == "10":
+                self._preferences()
+            elif action in {"11", "back", "q"}:
+                return
+            else:
+                self.console.print("Choose a listed setting.", style="yellow")
+
+    def _required(self, label: str) -> str:
+        while True:
+            value = self.session.prompt(f"{label}: ").strip()
+            if value:
+                return value
+            self.console.print(f"{label} is required.", style="yellow")
+
+    def _license(self, contract: ProjectContract) -> None:
+        self.console.print("License changes can affect legal rights. This is not legal advice.")
+        for number, license in enumerate(License, start=1):
+            self.console.print(f"{number}. {license.value} - {LICENSE_EXPLANATIONS[license]}")
+        choice = self.session.prompt("Choose a license or press Enter to cancel: ").strip()
+        if not choice.isdigit() or not 1 <= int(choice) <= len(License):
+            return
+        selected = tuple(License)[int(choice) - 1]
+        self.console.print("Preview:")
+        self.console.out(license_preview(self.root, selected), end="")
+        confirmed = self.session.prompt("Replace unmodified legal text [yes/no]: ").strip().lower()
+        if confirmed not in {"yes", "y"}:
+            self.console.print("No license change made.")
+            return
+        try:
+            change_license(self.root, selected)
+        except ProjectError as error:
+            self.console.print(str(error), style="yellow")
+        else:
+            self.console.print(f"License changed to {selected.value}.")
+
+    def _preferences(self) -> None:
+        preferences = local_preferences(self.root)
+        experience = self.session.prompt("Experience [standard/advanced, Enter to keep]: ").strip().lower()
+        motion = self.session.prompt("Motion [yes/no, Enter to keep]: ").strip().lower()
+        if experience:
+            if experience not in {"standard", "advanced"}:
+                self.console.print("Experience must be standard or advanced.", style="yellow")
+                return
+            preferences["experience"] = experience
+        if motion:
+            if motion not in {"yes", "y", "no", "n"}:
+                self.console.print("Motion must be yes or no.", style="yellow")
+                return
+            preferences["motion"] = motion in {"yes", "y"}
+        save_local_preferences(self.root, preferences)
+
+
+def _capability_label(name: str) -> str:
+    return "Paper" if name == "paper" else "HPC"
+
+
+def _home() -> None:
+    try:
+        root = resolve_project()
+    except ProjectError:
+        root = None
+    if root is not None:
+        record_recent(root)
+        Dashboard(root).run()
+        return
+    session: PromptSession[str] = PromptSession(input=create_input(sys.stdin), output=create_output(sys.stdout))
+    console = Console(force_interactive=_interactive_motion_enabled())
+    while True:
+        console.rule("[bold cyan]SMAIRT Home[/]")
+        console.print("1. Create New Project")
+        console.print("2. Recent Projects")
+        console.print("3. Open Existing Project")
+        console.print("4. Help")
+        console.print("5. Exit")
+        action = session.prompt("Choose an action: ").strip()
+        if action == "1":
+            try:
+                destination, options = Wizard().run()
+                messages = generate_project(destination, options)
+            except (WizardCancelled, GenerationError, ValidationError, OSError) as error:
+                console.print(f"Project creation cancelled or failed: {error}", style="yellow")
+            else:
+                root = destination.resolve()
+                record_recent(root)
+                console.print(f"Created SMAIRT project at {root}")
+                for message in messages:
+                    console.print(message)
+                Dashboard(root).run()
+        elif action == "2":
+            recents = recent_projects()
+            if not recents:
+                console.print("No recent SMAIRT projects.")
+                continue
+            for index, entry in enumerate(recents, start=1):
+                console.print(f"{index}. {entry['path']}")
+            selection = session.prompt("Select a project number, or press Enter to go back: ").strip()
+            if selection.isdigit() and 1 <= int(selection) <= len(recents):
+                root = _project_or_exit(Path(recents[int(selection) - 1]["path"]))
+                Dashboard(root).run()
+        elif action == "3":
+            try:
+                root = _project_or_exit(Path(session.prompt("Project folder: ").strip()))
+            except (ProjectError, typer.Exit):
+                continue
+            Dashboard(root).run()
+        elif action == "4":
+            console.print("SMAIRT creates and safely manages workspace utilities. It does not conduct scientific work.")
+        elif action in {"5", "exit", "q"}:
+            return
+        else:
+            console.print("Choose a listed action.", style="yellow")
 
 
 @app.command()
@@ -527,6 +1009,7 @@ def new(
         typer.echo(f"{prefix}: {error}", err=True)
         raise typer.Exit(code=1) from error
     typer.echo(f"Created SMAIRT project at {destination.resolve()}")
+    record_recent(destination.resolve())
     for message in messages:
         typer.echo(message)
 

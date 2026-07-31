@@ -12,6 +12,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from smairt.models import ProjectContract, ProjectOptions, StartingPhase
+from smairt.project import create_management_assets
 
 MANIFEST_PATH = Path(".smairt") / "managed-files.yaml"
 
@@ -31,6 +32,7 @@ def generate_project(destination: Path, options: ProjectOptions) -> list[str]:
     try:
         _generate_into(temporary, options)
         _write_contract(temporary, options, git_initialized=False)
+        create_management_assets(temporary, options.assistant, options.license, options.researcher)
         _write_manifest(temporary)
         git_initialized = False
         if options.initialize_git:
