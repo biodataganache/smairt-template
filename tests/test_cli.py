@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import os
+import pty
+import select
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import yaml
@@ -299,3 +303,193 @@ def create_project(
 
 def paths(root: Path) -> set[str]:
     return {path.relative_to(root).as_posix() for path in root.rglob("*")}
+
+
+def test_interactive_wizard_creates_a_project_from_a_real_input_stream(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "guided-project"
+
+    result = run_interactive_new(
+        "\n".join(
+            [
+                str(destination),
+                "Guided Protein Study",
+                "guided_protein_study",
+                "A project created through the guided setup.",
+                "1",
+                ":skip",
+                "Ada Researcher",
+                ":skip",
+                "paper,hpc",
+                "",
+                "3",
+                "",
+                "yes",
+                "no",
+                "create",
+            ]
+        )
+        + "\n"
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Step 1 of 15" in result.stdout
+    assert "Step 15 of 15" in result.stdout
+    assert "Final review" in result.stdout
+    assert "Created SMAIRT project at" in result.stdout
+    assert "Creating your SMAIRT project" not in result.stdout
+    metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
+    assert metadata["project"] == {
+        "name": "Guided Protein Study",
+        "slug": "guided_protein_study",
+        "description": "A project created through the guided setup.",
+        "domain": "Computational biology",
+    }
+    assert metadata["assistant"] == "opencode"
+    assert metadata["starting_phase"] == "synthetic"
+    assert metadata["license"] == "MIT"
+    assert metadata["git_requested"] is False
+    assert metadata["capabilities"] == {
+        "paper": {"state": "enabled"},
+        "hpc": {"state": "enabled"},
+    }
+
+
+def test_interactive_wizard_keeps_answers_when_going_back_and_edits_review_answers(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "edited-project"
+
+    result = run_interactive_new(
+        "\n".join(
+            [
+                str(destination),
+                "Original Name",
+                "original_name",
+                ":back",
+                "Original Name",
+                "original_name",
+                "A retained description.",
+                "5",
+                ":skip",
+                "Grace Researcher",
+                ":skip",
+                "",
+                "",
+                "3",
+                "",
+                "yes",
+                "no",
+                "2",
+                "Edited Name",
+                "create",
+            ]
+        )
+        + "\n"
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Back: your earlier answers are kept." in result.stdout
+    metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
+    assert metadata["project"]["name"] == "Edited Name"
+    assert metadata["project"]["slug"] == "original_name"
+    assert metadata["project"]["description"] == "A retained description."
+
+
+def test_interactive_wizard_validates_destination_before_final_review(tmp_path: Path) -> None:
+    destination = tmp_path / "occupied"
+    destination.mkdir()
+    preserved = destination / "notes.txt"
+    preserved.write_text("keep this")
+
+    result = run_interactive_new(f"{destination}\n:cancel\n")
+
+    assert result.returncode == 1
+    assert "Destination is not empty" in result.stdout
+    assert preserved.read_text() == "keep this"
+    assert not (destination / "smairt.yaml").exists()
+
+
+def test_interactive_wizard_cancellation_at_review_writes_no_project(tmp_path: Path) -> None:
+    destination = tmp_path / "cancelled-project"
+
+    result = run_interactive_new(wizard_answers(destination, review_action="cancel"))
+
+    assert result.returncode == 1
+    assert "Project creation cancelled. No files were written." in result.stdout
+    assert not destination.exists()
+
+
+def test_interactive_wizard_reports_generation_failure_without_exposing_a_project(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / ("a" * 248)
+
+    result = run_interactive_new(wizard_answers(destination))
+
+    assert result.returncode == 1
+    assert "Could not create the project:" in result.stdout
+    assert not destination.exists()
+
+
+def wizard_answers(destination: Path, *, review_action: str = "create") -> str:
+    return "\n".join(
+        [
+            str(destination),
+            "Test Project",
+            "test_project",
+            "A test project.",
+            "5",
+            ":skip",
+            "Test Researcher",
+            ":skip",
+            "",
+            "",
+            "3",
+            "",
+            "yes",
+            "no",
+            review_action,
+        ]
+    ) + "\n"
+
+
+def run_interactive_new(input_text: str) -> subprocess.CompletedProcess[str]:
+    command = [str(installed_smairt()), "new"]
+    master, slave = pty.openpty()
+    process = subprocess.Popen(
+        command,
+        stdin=slave,
+        stdout=slave,
+        stderr=slave,
+        text=False,
+        env={**os.environ, "TERM": "dumb", "CI": "1"},
+    )
+    os.close(slave)
+    output = bytearray()
+    sent = False
+    deadline = time.monotonic() + 10
+    while process.poll() is None and time.monotonic() < deadline:
+        readable, _, _ = select.select([master], [], [], 0.1)
+        if readable:
+            try:
+                output.extend(os.read(master, 4096))
+            except OSError:
+                break
+        if not sent and b"Destination" in output:
+            os.write(master, input_text.encode())
+            sent = True
+    if process.poll() is None:
+        process.kill()
+        raise AssertionError(f"interactive command timed out: {output.decode()}")
+    while True:
+        try:
+            chunk = os.read(master, 4096)
+        except OSError:
+            break
+        if not chunk:
+            break
+        output.extend(chunk)
+    os.close(master)
+    return subprocess.CompletedProcess(command, process.wait(), output.decode(), "")
