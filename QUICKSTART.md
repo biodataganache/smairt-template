@@ -1,137 +1,83 @@
-# SMAIRT Quick Start Guide
+# SMAIRT Quick Start
 
-Get a SMAIRT project running in under 5 minutes.
+SMAIRT V0.1 creates a local research workspace for a coding assistant. It is
+supported on macOS, Linux, and WSL with Python 3.11 or newer. Native Windows is
+deferred; use WSL.
 
----
+## 1. Install From This Repository
 
-## Prerequisites
-
-- Python 3.8+
-- An AI assistant (VSCode Roo/Zoo recommended, or Cursor, Windsurf, ChatGPT, Claude)
-
----
-
-## Step 1: Install Cookiecutter
+This is a repository-local preview, not a PyPI installation. Clone the
+canonical PNNL repository and install the checkout as a tool:
 
 ```bash
-pip install cookiecutter
+git clone https://github.com/PNNL-CompBio/smairt-template.git
+cd smairt-template
+uv tool install .
+smairt --version
 ```
 
----
+If `uv` is unavailable, use `pipx install .` from the checkout instead.
 
-## Step 2: Generate Your Project
+## 2. Create A Project
+
+Launch the guided wizard:
 
 ```bash
-cookiecutter gh:biodataganache/smairt-cookiecutter
+smairt new
 ```
 
-You'll be prompted for:
-- **Project name** — Your research project name
-- **Project mode** — `standard` (exploration) or `paper_driven` (paper-first)
-- **Workflow mode** — `ide_native` (recommended for Roo/Cursor) or `browser_paste`
-- **AI tool** — Which AI tool you primarily use
-- **Research question** — What you're investigating
-- **Starting phase** — Where to begin: `synthetic`, `downloaded`, or `real`
+For automation, provide all required values:
 
----
-
-## Step 3: Orient Your AI
-
-### IDE-Native (Roo/Zoo, Cursor, Windsurf)
-
-Open your project in VSCode and tell your AI:
-
-```
-Please read prompts/AI_CONTEXT.md to understand this project.
-Then read prompts/CONTEXT_INDEX.md to know what files to reference.
+```bash
+smairt new ./classification_noise_study \
+  --name "Classification Noise Study" \
+  --slug classification_noise_study \
+  --description "Test classification boundaries under varying noise." \
+  --researcher "Your Name" \
+  --domain "Computational biology" \
+  --phase synthetic \
+  --assistant opencode \
+  --no-git
 ```
 
-That's it. Your AI now understands the workflow.
+Choose `--paper` to add a paper workspace and `--hpc` to add editable SLURM
+guidance. The latter does not submit or manage jobs. Use `--git` when you want
+the generated files staged in a new Git repository; SMAIRT never makes a
+commit.
 
-### Browser-Paste (ChatGPT, Claude web)
+## 3. Start The Research Workflow
 
-Give your AI these 3 files:
-1. `prompts/AI_CONTEXT.md` — Its role and workflow
-2. `prompts/CODE_CONVENTIONS.md` — How to write code
-3. `prompts/KNOWN_PATTERNS.md` — Patterns to reuse, errors to avoid
+Open the project in the selected coding assistant. Ask it to read
+`prompts/AI_CONTEXT.md`, then work through a traceable chain:
 
-Use prompts from `prompts/SESSION_START.md` to start sessions.
+1. Write a hypothesis in `hypotheses/`.
+2. Create an experiment in the selected `experiments/` phase directory.
+3. Record raw command output in `results/logs/`.
+4. Interpret the result in `analysis/`.
+5. Create a plan in `plans/` before complex work.
 
----
+SMAIRT does not perform science or validate conclusions. The researcher owns
+the question, the evidence, and the interpretation.
 
-## Step 4: Write Your First Hypothesis
+## 4. Check And Manage
 
-Create `hypotheses/HYPOTHESIS_01.md` (use the template in `hypotheses/HYPOTHESIS_TEMPLATE.md`):
+Run the dashboard from the project root with `smairt`, or use stable commands:
 
-```markdown
-# Hypothesis 01 — [Your prediction]
-
-## Status: PENDING
-
-## Hypothesis Statement
-**Prediction**: [What you expect to happen]
-**Rationale**: [Why you expect this]
-**Success criteria**: [How to tell if it worked]
+```bash
+smairt check . --json
+smairt paper enable .
+smairt hpc enable .
+smairt settings . --experience advanced --no-motion
 ```
 
----
+Project Check is read-only. If it reports a deterministic structural repair,
+review it first with `smairt repair .`, then apply only the chosen repair with
+`smairt repair . --select REPAIR --confirm`.
 
-## Step 5: Run Your First Experiment
+## Legacy Automation
 
-Ask your AI to create a script that tests your hypothesis. It will:
-1. Follow naming conventions (`script_01_description.py`)
-2. Use `TeeLogger` for dual console/file output
-3. Place it in the appropriate phase directory
-4. Include the hypothesis reference in the docstring
-
-Run the script and let the AI interpret the results.
-
----
-
-## Step 6: Record Results
-
-After running an experiment:
-1. **AI reads the log file** and interprets results
-2. **AI writes analysis** to `analysis/ANALYSIS_01.md`
-3. **AI suggests next hypothesis** based on findings
-4. **You update** `prompts/intellectual_contribution.md` with your key decisions
-5. **Update** `prompts/KNOWN_PATTERNS.md` if new patterns or errors were discovered
-
----
-
-## Step 7: Iterate
-
-```
-Hypothesis_01 → script_01 → ANALYSIS_01 → Hypothesis_02 → script_02 → ...
-```
-
-As the project grows:
-- Fork into tracks (A, B, C...) for parallel investigations
-- Create plans before complex multi-step work
-- Extract repeated code to `scripts/shared/`
-- Keep `KNOWN_PATTERNS.md` current
-
----
-
-## What's Next?
-
-- Read `docs/12_STEPS.md` for the full methodology
-- Read `docs/SMAIRT_PHILOSOPHY.md` for the "why"
-- Check `prompts/SESSION_START.md` for situation-specific prompts
-- See `TUTORIAL.md` for a complete walkthrough
-
----
-
-## Quick Reference
-
-| Task | Action |
-|------|--------|
-| Start new project | `cookiecutter gh:biodataganache/smairt-cookiecutter` |
-| Orient AI | Point to `prompts/AI_CONTEXT.md` |
-| New hypothesis | Create `hypotheses/HYPOTHESIS_XX.md` |
-| New experiment | Ask AI to create script following conventions |
-| Record results | AI writes `analysis/ANALYSIS_XX.md` |
-| Track patterns | Update `prompts/KNOWN_PATTERNS.md` |
-| Plan complex work | Create `plans/PLAN_description.md` |
-| Cross-tool transfer | Run `python scripts/compile_for_ai.py` |
-| Track contributions | Update `prompts/intellectual_contribution.md` |
+Cookiecutter remains available only for existing automation. It generates the
+same canonical workspace through the installed package; see
+[`legacy/cookiecutter/README.md`](legacy/cookiecutter/README.md). Do not use a
+GitHub shorthand, browser-paste workflow, or an old Cookiecutter repository
+name for new projects.

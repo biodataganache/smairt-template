@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import json
 import os
 import pty
 import select
-import json
 import subprocess
 import sys
 import time
@@ -305,9 +305,7 @@ def create_project(
     }
     if path is not None:
         environment["PATH"] = path
-    return subprocess.run(
-        command, check=False, capture_output=True, text=True, env=environment
-    )
+    return subprocess.run(command, check=False, capture_output=True, text=True, env=environment)
 
 
 def paths(root: Path) -> set[str]:
@@ -526,7 +524,9 @@ def test_open_tracks_recents_and_home_cleans_stale_paths(tmp_path: Path) -> None
     assert recents == [{"path": str(destination), "opened_at": recents[0]["opened_at"]}]
 
 
-def test_assistant_aliases_and_dashboard_are_available_from_installed_command(tmp_path: Path) -> None:
+def test_assistant_aliases_and_dashboard_are_available_from_installed_command(
+    tmp_path: Path,
+) -> None:
     expected_aliases = {
         "claude-code": "CLAUDE.md",
         "opencode": "AGENTS.md",
@@ -558,10 +558,15 @@ def test_assistant_aliases_and_dashboard_are_available_from_installed_command(tm
     assert dashboard.returncode == 0, dashboard.stderr
     assert "SMAIRT Standard Mode: Test Project" in dashboard.stdout
     assert "Project Check" in dashboard.stdout
-    assert yaml.safe_load((dashboard_project / "smairt.yaml").read_text())["project"]["name"] == "Dashboard Project"
+    assert (
+        yaml.safe_load((dashboard_project / "smairt.yaml").read_text())["project"]["name"]
+        == "Dashboard Project"
+    )
 
 
-def test_recents_are_capped_and_hpc_deactivation_preserves_modified_templates(tmp_path: Path) -> None:
+def test_recents_are_capped_and_hpc_deactivation_preserves_modified_templates(
+    tmp_path: Path,
+) -> None:
     data_home = tmp_path / "local-data"
     environment = {**os.environ, "XDG_DATA_HOME": str(data_home)}
     destinations: list[Path] = []
@@ -663,12 +668,15 @@ def test_advanced_controls_are_local_safe_and_visible_from_installed_command(
         capture_output=True,
         text=True,
     )
-    assert subprocess.run(
-        [str(installed_smairt()), "paper", "enable", str(destination)],
-        check=False,
-        capture_output=True,
-        text=True,
-    ).returncode == 0
+    assert (
+        subprocess.run(
+            [str(installed_smairt()), "paper", "enable", str(destination)],
+            check=False,
+            capture_output=True,
+            text=True,
+        ).returncode
+        == 0
+    )
     (destination / "paper" / "outline.md").unlink()
     preview = subprocess.run(
         [
@@ -915,25 +923,28 @@ def test_interactive_wizard_reports_generation_failure_without_exposing_a_projec
 
 
 def wizard_answers(destination: Path, *, review_action: str = "create") -> str:
-    return "\n".join(
-        [
-            str(destination),
-            "Test Project",
-            "test_project",
-            "A test project.",
-            "5",
-            ":skip",
-            "Test Researcher",
-            ":skip",
-            "",
-            "",
-            "3",
-            "",
-            "yes",
-            "no",
-            review_action,
-        ]
-    ) + "\n"
+    return (
+        "\n".join(
+            [
+                str(destination),
+                "Test Project",
+                "test_project",
+                "A test project.",
+                "5",
+                ":skip",
+                "Test Researcher",
+                ":skip",
+                "",
+                "",
+                "3",
+                "",
+                "yes",
+                "no",
+                review_action,
+            ]
+        )
+        + "\n"
+    )
 
 
 def run_interactive_new(input_text: str) -> subprocess.CompletedProcess[str]:

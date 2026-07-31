@@ -1,67 +1,46 @@
-# Contributing to SMAIRT Cookiecutter
+# Contributing To SMAIRT
 
-Thank you for your interest in contributing to SMAIRT! This document provides guidelines for contributing to the project.
-
-Note that if you want to *use* the SMAIRT template for your own project please see the main README.
-
-## Ways to Contribute
-
-### Reporting Issues
-
-- **Bug Reports**: If you find a bug, please create an issue using the Bug Report template
-- **Feature Requests**: Have an idea for improvement? Use the Feature Request template
-- **Questions**: Not sure about something? Use the Question template
-
-### Code Contributions
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/your-feature-name`
-3. **Make your changes**
-4. **Test your changes**: Generate a project using the template and verify it works
-5. **Commit your changes**: Use clear, descriptive commit messages
-6. **Push to your fork**: `git push origin feature/your-feature-name`
-7. **Open a Pull Request**: Describe your changes and link any related issues
-
-### Documentation Improvements
-
-Documentation improvements are always welcome! This includes:
-- Fixing typos or unclear explanations
-- Adding examples
-- Improving the README
-- Enhancing the generated project documentation
+SMAIRT V0.1 is an installable research-workspace generator. The supported
+development platforms are macOS, Linux, and WSL with Python 3.11 through 3.13.
+Native Windows support is deferred.
 
 ## Development Setup
 
 ```bash
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/smairt-cookiecutter.git
-cd smairt-cookiecutter
-
-# Install cookiecutter for testing
-pip install cookiecutter
-
-# Test the template locally
-cookiecutter . --no-input
+git clone https://github.com/PNNL-CompBio/smairt-template.git
+cd smairt-template
+uv sync --all-extras --locked
 ```
 
-## Testing Changes
+Use a feature branch, make focused changes, and open a pull request against the
+canonical PNNL repository. Do not claim that the preview is published on PyPI.
 
-Before submitting a PR, please test your changes:
+## Required Checks
 
-1. Generate a new project from the template
-2. Verify the project structure is correct
-3. Check that all placeholder variables are properly substituted
-4. Test any hooks (pre/post generation scripts)
+Run the same gates used by CI before opening a pull request:
 
-## Code Style
+```bash
+uv run ruff format --check .
+uv run ruff check .
+uv run mypy src tests
+uv run pytest tests/test_cli.py tests/test_legacy.py
+uv run pytest
+uv build
+uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0-py3-none-any.whl --workspace .smoke/wheel
+uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0.tar.gz --workspace .smoke/sdist
+```
 
-- Use clear, descriptive names
-- Add comments for complex logic
-- Follow existing patterns in the codebase
-- Keep the template structure intuitive
+The focused suites exercise the installed command and legacy Cookiecutter seam.
+The artifact smoke tests install the wheel and source distribution into clean
+environments, create a representative project, and run Project Check.
 
-## Questions?
+## Documentation And Compatibility
 
-If you have questions about contributing, feel free to open an issue with the Question template.
-
-Thank you for helping improve SMAIRT!
+- Document `smairt new` as the normal onboarding path.
+- Keep `uv tool install .` as the repository-preview installation command;
+  document `pipx install .` as the fallback.
+- Treat Cookiecutter as legacy compatibility only. Its local command and
+  equivalence guarantee are documented in `legacy/cookiecutter/README.md`.
+- Keep generated-project guidance aligned with actual `smairt` commands and
+  assets. Do not introduce browser-paste, removed helper-script, or stale
+  Cookiecutter repository instructions.

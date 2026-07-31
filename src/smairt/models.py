@@ -137,16 +137,12 @@ class ProjectContract(BaseModel):
             capabilities={
                 "paper": Capability(
                     state=(
-                        CapabilityState.ENABLED
-                        if options.paper
-                        else CapabilityState.NEVER_ENABLED
+                        CapabilityState.ENABLED if options.paper else CapabilityState.NEVER_ENABLED
                     )
                 ),
                 "hpc": Capability(
                     state=(
-                        CapabilityState.ENABLED
-                        if options.hpc
-                        else CapabilityState.NEVER_ENABLED
+                        CapabilityState.ENABLED if options.hpc else CapabilityState.NEVER_ENABLED
                     )
                 ),
             },

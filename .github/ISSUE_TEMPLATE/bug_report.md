@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug or issue with the SMAIRT cookiecutter template
+about: Report a bug or issue with SMAIRT Toolkit
 title: '[BUG] '
 labels: bug
 assignees: ''
@@ -10,7 +10,7 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 ## Steps to Reproduce
-1. Run `cookiecutter ...`
+1. Run `smairt ...` (or the legacy Cookiecutter command, if applicable)
 2. Enter these values: ...
 3. See error
 
@@ -21,9 +21,10 @@ What you expected to happen.
 What actually happened.
 
 ## Environment
-- OS: [e.g., macOS 14.0, Ubuntu 22.04, Windows 11]
+- OS: [e.g., macOS 14.0, Ubuntu 22.04, WSL]
 - Python version: [e.g., 3.11.5]
-- Cookiecutter version: [e.g., 2.4.0]
+- SMAIRT version: [e.g., 0.1.0]
+- Installation route: [`uv tool install .`, `pipx install .`, or legacy Cookiecutter]
 
 ## Error Output
 ```

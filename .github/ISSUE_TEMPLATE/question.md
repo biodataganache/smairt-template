@@ -18,6 +18,6 @@ Describe any steps you've already taken to find an answer.
 ## Related Documentation
 Have you checked the following?
 - [ ] README.md
-- [ ] docs/SMAIRT_PHILOSOPHY.md
-- [ ] docs/12_STEPS.md
-- [ ] docs/BEST_PRACTICE_SINGLE.md or BEST_PRACTICE_COLLABORATIVE.md
+- [ ] QUICKSTART.md
+- [ ] `smairt --help`
+- [ ] `smairt check --help`

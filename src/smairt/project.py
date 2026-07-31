@@ -21,8 +21,8 @@ from smairt.models import (
     CodeConvention,
     ConventionSettings,
     License,
-    PromptConvention,
     ProjectContract,
+    PromptConvention,
     Researcher,
     StartingPhase,
 )
@@ -40,9 +40,9 @@ REQUIRED_DIRECTORIES = (
     "prompts",
 )
 LICENSE_TEXT = {
-    License.MIT: "MIT License\n\nCopyright (c) {year} {holder}\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n",
-    License.BSD_3_CLAUSE: "BSD 3-Clause License\n\nCopyright (c) {year}, {holder}\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n3. Neither the name of the copyright holder nor the names of its contributors\n   may be used to endorse or promote products derived from this software\n   without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES.\n",
-    License.APACHE_2_0: "Apache License\nVersion 2.0, January 2004\nhttp://www.apache.org/licenses/\n\nCopyright {year} {holder}\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n",
+    License.MIT: 'MIT License\n\nCopyright (c) {year} {holder}\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the "Software"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n',
+    License.BSD_3_CLAUSE: 'BSD 3-Clause License\n\nCopyright (c) {year}, {holder}\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n3. Neither the name of the copyright holder nor the names of its contributors\n   may be used to endorse or promote products derived from this software\n   without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES.\n',
+    License.APACHE_2_0: 'Apache License\nVersion 2.0, January 2004\nhttp://www.apache.org/licenses/\n\nCopyright {year} {holder}\n\nLicensed under the Apache License, Version 2.0 (the "License");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an "AS IS" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n',
     License.GPL_3_0: "GNU GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007\n\nCopyright (C) {year} {holder}\n\nThis program is free software: you can redistribute it and/or modify\nit under the terms of the GNU General Public License as published by\nthe Free Software Foundation, either version 3 of the License, or\n(at your option) any later version.\n\nThis program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\nGNU General Public License for more details.\n",
     License.PROPRIETARY: "All rights reserved.\n\nCopyright (c) {year} {holder}\n\nNo permission is granted to use, copy, modify, distribute, or sublicense this\nproject except with the prior written permission of the copyright holder.\n",
 }
@@ -111,9 +111,7 @@ def save_contract(root: Path, contract: ProjectContract) -> None:
     data = contract.model_dump(mode="json", exclude_none=True)
     if not contract.conventions.model_dump(exclude_none=True):
         data.pop("conventions", None)
-    (root / CONTRACT_PATH).write_text(
-        yaml.safe_dump(data, sort_keys=False)
-    )
+    (root / CONTRACT_PATH).write_text(yaml.safe_dump(data, sort_keys=False))
 
 
 def record_recent(root: Path) -> None:
@@ -385,7 +383,9 @@ def prepare_assistant(root: Path) -> str:
             "Open the project folder and consult Zoo Code's current official documentation."
         )
     alias = root / alias_path
-    contents = "# SMAIRT AI Context\n\nRead `prompts/AI_CONTEXT.md` before working in this project.\n"
+    contents = (
+        "# SMAIRT AI Context\n\nRead `prompts/AI_CONTEXT.md` before working in this project.\n"
+    )
     if alias.exists():
         if alias.read_text() != contents:
             return f"{alias.relative_to(root)} is researcher-modified and was left unchanged."
@@ -545,7 +545,9 @@ def _managed_file_issues(root: Path) -> list[CheckIssue]:
             continue
         path = root / relative
         if not path.is_file():
-            issues.append(CheckIssue("missing-managed-file", relative, f"Managed file is missing: {relative}"))
+            issues.append(
+                CheckIssue("missing-managed-file", relative, f"Managed file is missing: {relative}")
+            )
         elif _hash_file(path) != expected_hash:
             issues.append(
                 CheckIssue(
@@ -643,7 +645,13 @@ def managed_file_statuses(root: Path) -> list[dict[str, str]]:
         if not isinstance(relative, str) or not isinstance(expected_hash, str):
             continue
         path = root / relative
-        status = "missing" if not path.is_file() else "unchanged" if _hash_file(path) == expected_hash else "modified"
+        status = (
+            "missing"
+            if not path.is_file()
+            else "unchanged"
+            if _hash_file(path) == expected_hash
+            else "modified"
+        )
         statuses.append({"path": relative, "status": status, "expected_hash": expected_hash})
     return statuses
 
@@ -684,13 +692,19 @@ def managed_asset_paths(root: Path) -> list[str]:
     assets = manifest.get("assets")
     if not isinstance(assets, dict):
         raise ProjectError("Managed-file asset definitions are unavailable for this project.")
-    return sorted(path for path, content in assets.items() if isinstance(path, str) and isinstance(content, str))
+    return sorted(
+        path
+        for path, content in assets.items()
+        if isinstance(path, str) and isinstance(content, str)
+    )
 
 
 def detected_tools(root: Path) -> dict[str, str]:
     contract = load_contract(root)
     command = ASSISTANT_COMMANDS.get(contract.assistant)
-    assistant_path = "not applicable" if command is None else shutil.which(command[0]) or "not found"
+    assistant_path = (
+        "not applicable" if command is None else shutil.which(command[0]) or "not found"
+    )
     return {
         "Python": sys.executable,
         "Git": shutil.which("git") or "not found",
@@ -739,9 +753,7 @@ def _apply_convention_guidance(root: Path, contract: ProjectContract) -> None:
         if base is None:
             continue
         without_prior_convention = "\n".join(
-            line
-            for line in base.splitlines()
-            if not line.startswith(f"Project {name} convention:")
+            line for line in base.splitlines() if not line.startswith(f"Project {name} convention:")
         ).rstrip("\n")
         content = without_prior_convention + addition
         path.write_text(content)
@@ -773,4 +785,6 @@ def create_management_assets(
     if alias_path is not None:
         alias = root / alias_path
         alias.parent.mkdir(parents=True, exist_ok=True)
-        alias.write_text("# SMAIRT AI Context\n\nRead `prompts/AI_CONTEXT.md` before working in this project.\n")
+        alias.write_text(
+            "# SMAIRT AI Context\n\nRead `prompts/AI_CONTEXT.md` before working in this project.\n"
+        )

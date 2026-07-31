@@ -137,7 +137,9 @@ def _initialize_git(root: Path, messages: list[str]) -> bool:
     except subprocess.CalledProcessError as error:
         messages.append(f"Git initialization failed: {error.stderr.strip()}")
         return False
-    messages.append("Git repository initialized and files staged. Run `git commit -m 'Initial SMAIRT project'` when ready.")
+    messages.append(
+        "Git repository initialized and files staged. Run `git commit -m 'Initial SMAIRT project'` when ready."
+    )
     return True
 
 
@@ -158,16 +160,16 @@ def _write_contract(root: Path, options: ProjectOptions, git_initialized: bool) 
     contract = ProjectContract.from_options(options, git_initialized)
     data = contract.model_dump(mode="json", exclude_none=True)
     data.pop("conventions", None)
-    (root / "smairt.yaml").write_text(
-        yaml.safe_dump(data, sort_keys=False)
-    )
+    (root / "smairt.yaml").write_text(yaml.safe_dump(data, sort_keys=False))
 
 
 def _write_manifest(root: Path, options: ProjectOptions) -> None:
     managed: dict[str, str] = {}
     for path in sorted(root.rglob("*")):
         if path.is_file() and path.name != "smairt.yaml":
-            managed[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
+            managed[path.relative_to(root).as_posix()] = hashlib.sha256(
+                path.read_bytes()
+            ).hexdigest()
     manifest = root / MANIFEST_PATH
     manifest.parent.mkdir()
     manifest.write_text(
@@ -194,7 +196,9 @@ def _managed_assets(options: ProjectOptions) -> dict[str, str]:
     assets["LICENSE"] = _license_text(options)
     alias = _assistant_alias(options)
     if alias is not None:
-        assets[alias] = "# SMAIRT AI Context\n\nRead `prompts/AI_CONTEXT.md` before working in this project.\n"
+        assets[alias] = (
+            "# SMAIRT AI Context\n\nRead `prompts/AI_CONTEXT.md` before working in this project.\n"
+        )
     if options.paper:
         assets.update(
             {

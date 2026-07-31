@@ -6,7 +6,6 @@ from pathlib import Path
 
 import yaml
 
-
 REPOSITORY_ROOT = Path(__file__).parents[1]
 
 

@@ -213,6 +213,7 @@ cython_debug/
 
 # Ruff stuff:
 .ruff_cache/
+.smoke/
 
 # PyPI configuration file
 .pypirc

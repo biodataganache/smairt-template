@@ -10,6 +10,20 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "PNNL Computational Biology" }]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+]
 dependencies = [
   "Jinja2>=3.1",
   "pydantic>=2.0",
@@ -25,6 +39,7 @@ dev = [
   "cookiecutter>=2.6",
   "mypy>=1.13",
   "pytest>=8.0",
+  "ruff>=0.9",
   "types-PyYAML>=6.0",
 ]
 
@@ -35,11 +50,30 @@ smairt = "smairt.cli:main"
 packages = ["src/smairt"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/smairt", "README.md", "cookiecutter.json", "hooks"]
+include = [
+  "/src/smairt",
+  "/tests",
+  "/scripts/smoke_install.py",
+  "/README.md",
+  "/LICENSE",
+  "/cookiecutter.json",
+  "/hooks",
+  "/{{ cookiecutter.project_slug }}",
+  "/legacy/cookiecutter",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+include = ["src/**/*.py", "tests/**/*.py", "scripts/**/*.py", "hooks/*.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]
 
 [tool.mypy]
 files = ["src", "tests"]

@@ -3,15 +3,15 @@ from __future__ import annotations
 import os
 import re
 import sys
-import yaml
 from pathlib import Path
 from typing import Callable
 
 import typer
-from pydantic import ValidationError
+import yaml
 from prompt_toolkit import PromptSession
 from prompt_toolkit.input.defaults import create_input
 from prompt_toolkit.output.defaults import create_output
+from pydantic import ValidationError
 from rich.console import Console
 
 from smairt import __version__
@@ -20,10 +20,10 @@ from smairt.models import (
     Assistant,
     CodeConvention,
     License,
-    PromptConvention,
     ProjectContract,
     ProjectIdentity,
     ProjectOptions,
+    PromptConvention,
     Researcher,
     StartingPhase,
 )
@@ -32,8 +32,8 @@ from smairt.project import (
     ProjectError,
     apply_repairs,
     change_license,
-    disable_capability,
     detected_tools,
+    disable_capability,
     enable_capability,
     launch_assistant,
     license_preview,
@@ -47,8 +47,8 @@ from smairt.project import (
     project_check,
     recent_projects,
     record_recent,
-    repair_previews,
     regenerate_managed_assets,
+    repair_previews,
     resolve_project,
     save_local_preferences,
     update_collaborator,
@@ -150,7 +150,9 @@ class Wizard:
             if answer:
                 self.answers[key] = answer
                 return answer
-            self.console.print("Please enter a value, or use :skip for this optional question.", style="yellow")
+            self.console.print(
+                "Please enter a value, or use :skip for this optional question.", style="yellow"
+            )
 
     def _choose(
         self,
@@ -272,9 +274,7 @@ class Wizard:
         )
         self.console.print("Type paper, hpc, paper,hpc, or press Enter to skip.")
         while True:
-            answer = self.session.prompt(
-                "Optional capabilities [Enter to skip]: "
-            ).strip().lower()
+            answer = self.session.prompt("Optional capabilities [Enter to skip]: ").strip().lower()
             if answer == _CANCEL:
                 raise WizardCancelled
             if answer == _BACK:
@@ -430,7 +430,14 @@ class Wizard:
 
     def _review_value(self, index: int) -> str:
         keys = (
-            "destination", "name", "slug", "description", "domain", "question", "researcher", "email",
+            "destination",
+            "name",
+            "slug",
+            "description",
+            "domain",
+            "question",
+            "researcher",
+            "email",
         )
         if index <= len(keys):
             value = str(self.answers.get(keys[index - 1], ""))
@@ -513,7 +520,9 @@ def _command_error(error: ProjectError) -> None:
 @app.command()
 def open(
     path: Path = typer.Argument(..., help="Existing SMAIRT project directory."),
-    launch: bool = typer.Option(False, help="Launch the project's selected assistant when available."),
+    launch: bool = typer.Option(
+        False, help="Launch the project's selected assistant when available."
+    ),
     folder: bool = typer.Option(False, help="Open the project folder in the file manager."),
 ) -> None:
     """Open a SMAIRT project and remember it locally."""
@@ -531,7 +540,9 @@ def open(
 
 @app.command()
 def check(
-    path: Path | None = typer.Argument(None, help="SMAIRT project directory, or the current project."),
+    path: Path | None = typer.Argument(
+        None, help="SMAIRT project directory, or the current project."
+    ),
     json_output: bool = typer.Option(False, "--json", help="Emit stable JSON diagnostics."),
     verbose: bool = typer.Option(False, help="Explain diagnostics and show detected local tools."),
 ) -> None:
@@ -551,7 +562,9 @@ def check(
             typer.echo(f"- [{issue.code}] {issue.message}")
             if verbose:
                 typer.echo(f"  Artifact: {issue.path}")
-                typer.echo("  Diagnostic is read-only; researcher content is never changed by Project Check.")
+                typer.echo(
+                    "  Diagnostic is read-only; researcher content is never changed by Project Check."
+                )
             if issue.repair is not None:
                 typer.echo(f"  Safe repair available: {issue.repair}")
     else:
@@ -580,25 +593,33 @@ def _capability_command(path: Path | None, name: str, enabled: bool) -> None:
 
 
 @paper_app.command("enable")
-def paper_enable(path: Path | None = typer.Argument(None, help="Project directory or current project.")) -> None:
+def paper_enable(
+    path: Path | None = typer.Argument(None, help="Project directory or current project."),
+) -> None:
     """Enable Paper guidance without touching existing work."""
     _capability_command(path, "paper", True)
 
 
 @paper_app.command("disable")
-def paper_disable(path: Path | None = typer.Argument(None, help="Project directory or current project.")) -> None:
+def paper_disable(
+    path: Path | None = typer.Argument(None, help="Project directory or current project."),
+) -> None:
     """Deactivate Paper guidance without deleting files."""
     _capability_command(path, "paper", False)
 
 
 @hpc_app.command("enable")
-def hpc_enable(path: Path | None = typer.Argument(None, help="Project directory or current project.")) -> None:
+def hpc_enable(
+    path: Path | None = typer.Argument(None, help="Project directory or current project."),
+) -> None:
     """Enable HPC guidance without submitting jobs."""
     _capability_command(path, "hpc", True)
 
 
 @hpc_app.command("disable")
-def hpc_disable(path: Path | None = typer.Argument(None, help="Project directory or current project.")) -> None:
+def hpc_disable(
+    path: Path | None = typer.Argument(None, help="Project directory or current project."),
+) -> None:
     """Deactivate HPC guidance without deleting files."""
     _capability_command(path, "hpc", False)
 
@@ -621,7 +642,9 @@ def repair(
             for issue in available:
                 assert issue.repair is not None
                 typer.echo(f"- {issue.repair}: {issue.message}")
-            typer.echo("Select repairs with --select REPAIR. Add --confirm only after reviewing the preview.")
+            typer.echo(
+                "Select repairs with --select REPAIR. Add --confirm only after reviewing the preview."
+            )
             return
         preview = repair_previews(root, select)
     except ProjectError as error:
@@ -646,7 +669,9 @@ def settings(
     domain: str | None = typer.Option(None, help="Research domain."),
     question: str | None = typer.Option(None, help="Research question."),
     assistant: Assistant | None = typer.Option(None, help="Selected coding assistant."),
-    phase: StartingPhase | None = typer.Option(None, help="Current phase; directories are never deleted."),
+    phase: StartingPhase | None = typer.Option(
+        None, help="Current phase; directories are never deleted."
+    ),
     researcher: str | None = typer.Option(None, help="Primary researcher name."),
     email: str | None = typer.Option(None, help="Primary researcher email."),
     collaborator_role: str | None = typer.Option(None, help="Collaborator role identifier."),
@@ -672,13 +697,21 @@ def settings(
             typer.echo("Preview:")
             typer.echo(license_preview(root, license), nl=False)
             if not confirm_license:
-                typer.echo("No license change made. Re-run with --confirm-license to replace unmodified legal text.")
+                typer.echo(
+                    "No license change made. Re-run with --confirm-license to replace unmodified legal text."
+                )
                 return
             change_license(root, license)
             typer.echo(f"License changed to {license.value}.")
-        if collaborator_role is not None or collaborator_name is not None or collaborator_email is not None:
+        if (
+            collaborator_role is not None
+            or collaborator_name is not None
+            or collaborator_email is not None
+        ):
             if collaborator_role is None or collaborator_name is None:
-                raise ProjectError("--collaborator-role and --collaborator-name must be provided together.")
+                raise ProjectError(
+                    "--collaborator-role and --collaborator-name must be provided together."
+                )
             update_collaborator(root, collaborator_role, collaborator_name, collaborator_email)
         update_settings(
             root,
@@ -744,7 +777,10 @@ def inspect(
     try:
         contract = load_contract(root)
         typer.echo("Full project contract:")
-        typer.echo(yaml.safe_dump(contract.model_dump(mode="json", exclude_none=True), sort_keys=False), nl=False)
+        typer.echo(
+            yaml.safe_dump(contract.model_dump(mode="json", exclude_none=True), sort_keys=False),
+            nl=False,
+        )
         typer.echo("Managed files:")
         for status in managed_file_statuses(root):
             line = f"- {status['path']}: {status['status']}"
@@ -761,7 +797,9 @@ def inspect(
 @app.command("regenerate")
 def regenerate(
     path: Path | None = typer.Argument(None, help="Project directory or current project."),
-    select: list[str] = typer.Option([], "--select", help="Missing or unchanged managed asset path."),
+    select: list[str] = typer.Option(
+        [], "--select", help="Missing or unchanged managed asset path."
+    ),
     confirm: bool = typer.Option(False, help="Write the previewed managed assets."),
 ) -> None:
     """Preview and restore only missing or unmodified managed guidance and templates."""
@@ -771,7 +809,9 @@ def regenerate(
             typer.echo("Managed assets eligible for regeneration:")
             for relative in managed_asset_paths(root):
                 typer.echo(f"- {relative}")
-            typer.echo("Select paths with --select PATH. Add --confirm only after reviewing the preview.")
+            typer.echo(
+                "Select paths with --select PATH. Add --confirm only after reviewing the preview."
+            )
             return
         preview = managed_asset_previews(root, select)
     except ProjectError as error:
@@ -781,7 +821,9 @@ def regenerate(
     for item in preview:
         typer.echo(f"- {item['path']}: {item['status']}")
     if not confirm:
-        typer.echo("No changes made. Re-run with the same --select values and --confirm to regenerate.")
+        typer.echo(
+            "No changes made. Re-run with the same --select values and --confirm to regenerate."
+        )
         return
     regenerate_managed_assets(root, select)
     typer.echo("Selected managed assets regenerated.")
@@ -826,7 +868,9 @@ class Dashboard:
             elif action == "5":
                 self._check()
             elif action == "6":
-                self.console.print("SMAIRT manages project utilities only. Conduct scientific work in your selected assistant.")
+                self.console.print(
+                    "SMAIRT manages project utilities only. Conduct scientific work in your selected assistant."
+                )
             elif advanced and action == "7":
                 self._inspect()
             elif advanced and action == "8":
@@ -853,7 +897,11 @@ class Dashboard:
             self.console.print(open_folder(self.root))
 
     def _capability(self, name: str) -> None:
-        action = self.session.prompt(f"Enter enable, disable, or back for {_capability_label(name)}: ").strip().lower()
+        action = (
+            self.session.prompt(f"Enter enable, disable, or back for {_capability_label(name)}: ")
+            .strip()
+            .lower()
+        )
         if action == "enable":
             self.console.print(enable_capability(self.root, name))
         elif action == "disable":
@@ -868,7 +916,9 @@ class Dashboard:
                 self.console.print(f"- [{issue.code}] {issue.message}")
                 if verbose:
                     self.console.print(f"  Artifact: {issue.path}")
-                    self.console.print("  Diagnostic is read-only; researcher content is never changed by Project Check.")
+                    self.console.print(
+                        "  Diagnostic is read-only; researcher content is never changed by Project Check."
+                    )
             repairable = [issue for issue in issues if issue.repair is not None]
             if repairable:
                 self.console.print("Use `smairt repair` to preview and confirm any safe repair.")
@@ -878,7 +928,9 @@ class Dashboard:
     def _inspect(self) -> None:
         contract = load_contract(self.root)
         self.console.print("Full project contract:")
-        self.console.print(yaml.safe_dump(contract.model_dump(mode="json", exclude_none=True), sort_keys=False))
+        self.console.print(
+            yaml.safe_dump(contract.model_dump(mode="json", exclude_none=True), sort_keys=False)
+        )
         self.console.print("Managed files:")
         try:
             for status in managed_file_statuses(self.root):
@@ -909,15 +961,22 @@ class Dashboard:
             self.console.print(str(error), style="yellow")
             return
         self.console.print(f"Preview: {preview[0]['path']} is {preview[0]['status']}.")
-        if self.session.prompt("Regenerate this managed asset [yes/no]: ").strip().lower() in {"yes", "y"}:
+        if self.session.prompt("Regenerate this managed asset [yes/no]: ").strip().lower() in {
+            "yes",
+            "y",
+        }:
             regenerate_managed_assets(self.root, [relative])
             self.console.print("Managed asset regenerated.")
         else:
             self.console.print("No changes made.")
 
     def _conventions(self) -> None:
-        prompt = self.session.prompt("Prompt convention [plan-first/direct-task, Enter to keep]: ").strip()
-        code = self.session.prompt("Code convention [typed-python/standard-python, Enter to keep]: ").strip()
+        prompt = self.session.prompt(
+            "Prompt convention [plan-first/direct-task, Enter to keep]: "
+        ).strip()
+        code = self.session.prompt(
+            "Code convention [typed-python/standard-python, Enter to keep]: "
+        ).strip()
         try:
             update_settings(
                 self.root,
@@ -952,7 +1011,10 @@ class Dashboard:
             elif action == "3":
                 update_settings(self.root, domain=self._required("Domain"))
             elif action == "4":
-                update_settings(self.root, question=self.session.prompt("Research question (blank clears it): ").strip())
+                update_settings(
+                    self.root,
+                    question=self.session.prompt("Research question (blank clears it): ").strip(),
+                )
             elif action == "5":
                 update_settings(self.root, researcher=self._required("Primary researcher"))
             elif action == "6":
@@ -962,7 +1024,9 @@ class Dashboard:
                 except ValueError:
                     self.console.print("Choose one of the listed assistants.", style="yellow")
             elif action == "7":
-                self.console.print("Available: synthetic, downloaded, real. Existing directories are never deleted.")
+                self.console.print(
+                    "Available: synthetic, downloaded, real. Existing directories are never deleted."
+                )
                 try:
                     update_settings(self.root, phase=StartingPhase(self._required("Current phase")))
                 except ValueError:
@@ -974,7 +1038,8 @@ class Dashboard:
                         self.root,
                         role,
                         self._required("Collaborator name"),
-                        self.session.prompt("Collaborator email (blank omits it): ").strip() or None,
+                        self.session.prompt("Collaborator email (blank omits it): ").strip()
+                        or None,
                     )
                 except ProjectError as error:
                     self.console.print(str(error), style="yellow")
@@ -1017,7 +1082,9 @@ class Dashboard:
 
     def _preferences(self) -> None:
         preferences = local_preferences(self.root)
-        experience = self.session.prompt("Experience [standard/advanced, Enter to keep]: ").strip().lower()
+        experience = (
+            self.session.prompt("Experience [standard/advanced, Enter to keep]: ").strip().lower()
+        )
         motion = self.session.prompt("Motion [yes/no, Enter to keep]: ").strip().lower()
         if experience:
             if experience not in {"standard", "advanced"}:
@@ -1045,7 +1112,9 @@ def _home() -> None:
         record_recent(root)
         Dashboard(root).run()
         return
-    session: PromptSession[str] = PromptSession(input=create_input(sys.stdin), output=create_output(sys.stdout))
+    session: PromptSession[str] = PromptSession(
+        input=create_input(sys.stdin), output=create_output(sys.stdout)
+    )
     console = Console(force_interactive=_interactive_motion_enabled())
     while True:
         console.rule("[bold cyan]SMAIRT Home[/]")
@@ -1075,7 +1144,9 @@ def _home() -> None:
                 continue
             for index, entry in enumerate(recents, start=1):
                 console.print(f"{index}. {entry['path']}")
-            selection = session.prompt("Select a project number, or press Enter to go back: ").strip()
+            selection = session.prompt(
+                "Select a project number, or press Enter to go back: "
+            ).strip()
             if selection.isdigit() and 1 <= int(selection) <= len(recents):
                 root = _project_or_exit(Path(recents[int(selection) - 1]["path"]))
                 Dashboard(root).run()
@@ -1086,7 +1157,9 @@ def _home() -> None:
                 continue
             Dashboard(root).run()
         elif action == "4":
-            console.print("SMAIRT creates and safely manages workspace utilities. It does not conduct scientific work.")
+            console.print(
+                "SMAIRT creates and safely manages workspace utilities. It does not conduct scientific work."
+            )
         elif action in {"5", "exit", "q"}:
             return
         else:
@@ -1108,7 +1181,9 @@ def new(
     email: str | None = typer.Option(None, help="Optional researcher email."),
     paper: bool = typer.Option(False, help="Include additive Paper support."),
     hpc: bool = typer.Option(False, help="Include additive HPC guidance."),
-    initialize_git: bool = typer.Option(False, "--git/--no-git", help="Initialize and stage Git files."),
+    initialize_git: bool = typer.Option(
+        False, "--git/--no-git", help="Initialize and stage Git files."
+    ),
 ) -> None:
     """Create a SMAIRT project interactively or with complete noninteractive flags."""
     wizard_mode = destination is None
@@ -1120,11 +1195,7 @@ def new(
             typer.echo("Project creation cancelled. No files were written.")
             raise typer.Exit(code=1)
     if not wizard_mode and (
-        name is None
-        or slug is None
-        or description is None
-        or researcher is None
-        or domain is None
+        name is None or slug is None or description is None or researcher is None or domain is None
     ):
         typer.echo(
             "Error: --name, --slug, --description, --researcher, and --domain are required with a destination.",

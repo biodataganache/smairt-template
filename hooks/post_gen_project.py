@@ -3,7 +3,14 @@
 from pathlib import Path
 
 from smairt.generator import GenerationError, generate_project
-from smairt.models import Assistant, License, ProjectIdentity, ProjectOptions, Researcher, StartingPhase
+from smairt.models import (
+    Assistant,
+    License,
+    ProjectIdentity,
+    ProjectOptions,
+    Researcher,
+    StartingPhase,
+)
 
 
 def main() -> None:
@@ -39,6 +46,7 @@ def main() -> None:
     print("Legacy Cookiecutter compatibility path. Prefer `smairt new` for new projects.")
     print(f"Created SMAIRT project at {root}")
     import shutil
+
     shutil.rmtree(staging)
 
 

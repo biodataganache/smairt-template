@@ -1,23 +1,42 @@
 # SMAIRT: Scientific Method with AI Research Toolkit
 
-SMAIRT creates readable, hypothesis-driven scientific research workspaces for
-coding assistants. The installed `smairt` command is the recommended project
-creation path.
+SMAIRT V0.1 creates readable, hypothesis-driven scientific research workspaces
+for coding assistants. The installed `smairt` command is the supported project
+creation path. It supports macOS, Linux, and Windows through WSL; native
+Windows support is deferred.
 
-## Install
+## Install The Preview
 
-SMAIRT requires Python 3.11 or newer. Install it as an isolated tool:
+This repository provides a local/repository preview, not a PyPI release. On
+macOS, Linux, or WSL with Python 3.11 through 3.13, clone the repository and
+install the current checkout as an isolated tool:
 
 ```bash
-uv tool install smairt
+git clone https://github.com/PNNL-CompBio/smairt-template.git
+cd smairt-template
+uv tool install .
 smairt --version
 ```
 
-`pipx install smairt` is an equivalent alternative.
+`pipx` is the fallback when `uv` is unavailable:
+
+```bash
+pipx install .
+smairt --version
+```
+
+Use `uv tool install --force .` or `pipx reinstall smairt` after updating your
+checkout. Native Windows is not supported in V0.1; use WSL instead.
 
 ## Create A Project
 
-`smairt new` is non-interactive so every choice can be scripted and tested:
+Run the guided wizard:
+
+```bash
+smairt new
+```
+
+Or use the complete noninteractive form for scripts and automation:
 
 ```bash
 smairt new ./my_smairt_project \
@@ -32,7 +51,7 @@ smairt new ./my_smairt_project \
   --no-git
 ```
 
-The starting phase controls the initial data and experiment directories:
+The starting phase selects the initial data and experiment directories:
 
 | Phase | Directories created |
 | --- | --- |
@@ -40,35 +59,43 @@ The starting phase controls the initial data and experiment directories:
 | `downloaded` | Downloaded/benchmark and real |
 | `real` | Real only |
 
-Use `--paper` to add a paper workspace. Its analyses are under
-`paper/analysis/`, separate from exploratory `analysis/`. Use `--hpc` to add
-HPC guidance and a SLURM template. The tool does not submit or manage jobs.
+Add `--paper` for publication-focused guidance under `paper/analysis/`, kept
+separate from exploratory `analysis/`. Add `--hpc` for an editable SLURM
+template and HPC guidance. SMAIRT does not submit or manage cluster jobs.
 
-Use `--git` to initialize Git and stage the generated files. SMAIRT never
-creates a commit. If Git is unavailable, project creation succeeds and reports
-the skipped initialization.
+Add `--git` to initialize Git and stage generated files. SMAIRT never commits;
+if Git is unavailable, generation succeeds and reports that initialization was
+skipped.
 
 ## Manage A Project
 
-Run `smairt` from inside a project for the Standard Mode dashboard. It is a
-utility interface only: scientific work stays in the selected coding assistant.
-Use these scriptable commands when a terminal workflow is more convenient:
+Run `smairt` inside a project for the Standard Mode dashboard. Set the local
+experience preference to `advanced` with `smairt settings` to expose Advanced
+Mode controls. The dashboard manages workspace utilities only; scientific work
+stays with the selected coding assistant.
+
+Stable scriptable commands include:
 
 ```bash
 smairt open /path/to/project
 smairt check /path/to/project --json
+smairt repair /path/to/project
 smairt paper enable /path/to/project
 smairt hpc disable /path/to/project
+smairt settings /path/to/project --experience advanced --no-motion
 ```
 
-`smairt check` is read-only and exits `0` when no structural or configuration
-issues are found, or `1` otherwise. `smairt repair` lists only deterministic
-tool-owned repairs; select one with `--select` and add `--confirm` to apply it.
-Paper and HPC deactivation never deletes project files. `smairt settings`
-updates approved metadata, collaborators, current phase, or local dashboard
-preferences without changing the immutable project slug or folder. License
-changes always show a warning and preview, require `--confirm-license`, and
-refuse to replace modified `LICENSE` text.
+Project Check is read-only. It exits `0` when no structural or configuration
+issues are found and `1` otherwise. `smairt repair` previews only deterministic
+tool-owned repairs; pass `--select REPAIR --confirm` to apply a reviewed repair.
+Paper and HPC deactivation never deletes project files. Motion is enabled only
+for interactive terminals and can be disabled locally with `--no-motion`; it is
+suppressed for tests, redirected output, JSON, and CI.
+
+`smairt settings` updates approved metadata, collaborators, current phase,
+assistant, project conventions, or local dashboard preferences without
+changing the immutable project slug or folder. License changes show a preview,
+require `--confirm-license`, and refuse to replace modified `LICENSE` text.
 
 ## Generated Workspace
 
@@ -77,7 +104,7 @@ Each project is ordinary, readable files:
 ```text
 my_smairt_project/
 |-- smairt.yaml            # Tracked, versioned project contract
-|-- .smairt/               # Ignored local managed-file hashes
+|-- .smairt/               # Ignored local preferences and managed-file hashes
 |-- background/
 |-- hypotheses/
 |-- plans/
@@ -91,42 +118,43 @@ my_smairt_project/
 `-- hpc/                   # Present only with --hpc
 ```
 
-`smairt.yaml` records the schema and scaffold versions, identity, optional
-research question and email, domain, researcher, assistant, starting phase,
-license, Git state, and Paper/HPC capability state. `.smairt/managed-files.yaml`
-contains hashes for generator-managed files and is excluded by the project's
-`.gitignore`.
-
-Generation occurs in a temporary sibling directory and is exposed only after
-the complete project is rendered. Existing destinations are rejected.
+Start a coding-assistant session by reading `prompts/AI_CONTEXT.md`. Record raw
+command output in `results/logs/` before interpreting it in `analysis/`.
+Researchers remain responsible for scientific judgment, validation, and
+conclusions.
 
 ## Legacy Cookiecutter
 
-Cookiecutter remains a clearly secondary compatibility path for existing
-automation. Install `smairt` first, then run Cookiecutter from this repository:
+Cookiecutter is a compatibility path for existing automation, not normal
+onboarding. Its post-generation hook delegates to the installed `smairt`
+package, so both routes produce the same canonical scaffold. See
+[`legacy/cookiecutter/README.md`](legacy/cookiecutter/README.md) for the
+repository-local command and constraints. New projects should use `smairt new`.
 
-```bash
-cookiecutter /path/to/smairt-template-smairt-toolkit
-```
+## V0.1 Limits
 
-The Cookiecutter hook delegates generation to the same packaged canonical
-assets used by `smairt new`; there is no second scaffold to maintain. New
-projects should use `smairt new`.
-
-## Research Workflow
-
-SMAIRT supports a traceable chain from hypothesis to experiment to raw log to
-analysis. Start a session by sharing `prompts/AI_CONTEXT.md` with your coding
-assistant. Record raw command output in `results/logs/` before interpreting it
-in `analysis/`. Researchers retain responsibility for scientific judgment,
-validation, and conclusions.
+- Existing folders without `smairt.yaml` are not adopted or migrated.
+- Project Check diagnoses structure and configuration; it does not inspect
+  scientific correctness or modify researcher-authored content.
+- Repairs and regeneration are limited to deterministic, tool-owned assets.
+- HPC support supplies guidance and a template, not scheduler integration.
+- Native Windows support and removing the legacy adapter are deferred.
 
 ## Development
 
-The package uses Hatchling, Typer, Pydantic, PyYAML, and Jinja2. Run the focused
-public-seam suite and strict type checking with:
+Install development dependencies and run all release gates locally:
 
 ```bash
-uv run --extra dev pytest tests
-uv run --extra dev mypy src tests
+uv sync --all-extras --locked
+uv run ruff format --check .
+uv run ruff check .
+uv run mypy src tests
+uv run pytest tests/test_cli.py tests/test_legacy.py
+uv run pytest
+uv build
+uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0-py3-none-any.whl --workspace .smoke/wheel
+uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0.tar.gz --workspace .smoke/sdist
 ```
+
+GitHub Actions runs these gates on Ubuntu and macOS with Python 3.11, 3.12, and
+3.13.
