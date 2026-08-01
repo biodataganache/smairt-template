@@ -11,8 +11,9 @@
 | Analysis/decision | `analysis/ANALYSIS_XX.md` | Interpretation, limitations, decision |
 | Study report | Project report artifact | Supported conclusions and provenance |
 
-The generated starting phase determines which data and experiment directories
-exist. Use the project's actual structure rather than inventing missing phases.
+Every generated project contains all data and experiment phase directories. The
+starting phase records provenance; the current phase identifies the active focus.
+Projects do not need to traverse every phase when that would not answer the question.
 
 ## Joining A Project
 

@@ -1,0 +1,22 @@
+schema_version: 1
+scaffold_version: 0.2.0
+project:
+  name: Golden Paper Study
+  slug: golden_paper_study
+  description: A normalized real-data Paper golden project.
+  domain: Bioinformatics
+people:
+  researcher:
+    name: Grace Paper
+assistant: claude-code
+starting_phase: real
+current_phase: real
+license_year: <YEAR>
+license: MIT
+git_requested: false
+git_initialized: false
+capabilities:
+  paper:
+    state: enabled
+  hpc:
+    state: never_enabled

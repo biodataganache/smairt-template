@@ -1,0 +1,22 @@
+schema_version: 1
+scaffold_version: 0.2.0
+project:
+  name: Golden Synthetic Study
+  slug: golden_synthetic_study
+  description: A normalized synthetic-phase golden project.
+  domain: Computational biology
+people:
+  researcher:
+    name: Ada Synthetic
+assistant: opencode
+starting_phase: synthetic
+current_phase: synthetic
+license_year: <YEAR>
+license: MIT
+git_requested: false
+git_initialized: false
+capabilities:
+  paper:
+    state: never_enabled
+  hpc:
+    state: never_enabled

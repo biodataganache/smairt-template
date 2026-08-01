@@ -26,8 +26,8 @@ uv run mypy src tests
 uv run pytest tests/test_cli.py
 uv run pytest
 uv build
-uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0-py3-none-any.whl --workspace .smoke/wheel
-uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0.tar.gz --workspace .smoke/sdist
+uv run python scripts/smoke_install.py --artifact dist/smairt-0.2.0-py3-none-any.whl --workspace .smoke/wheel
+uv run python scripts/smoke_install.py --artifact dist/smairt-0.2.0.tar.gz --workspace .smoke/sdist
 ```
 
 The focused suite exercises the installed command seam.

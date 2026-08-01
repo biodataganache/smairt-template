@@ -124,7 +124,7 @@ demo-specific prompts for each step):
    `analysis/ANALYSIS_01.md`. Was the hypothesis supported? Surprising?
 6. **Next:** note the next thing to try, and repeat.
 
-After a run, paste the output into the comment block at the bottom of the script
+After a run, review the complete tracked output in `results/logs/`
 (Zoo Code can do this for you). That is the SMAIRT "breadcrumb trail".
 
 ---

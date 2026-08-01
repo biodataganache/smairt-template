@@ -26,7 +26,7 @@ def test_installed_command_reports_its_version() -> None:
     )
 
     assert result.returncode == 0
-    assert result.stdout.strip() == "smairt 0.1.0"
+    assert result.stdout.strip() == "smairt 0.2.0"
 
 
 def test_invalid_slug_exits_cleanly_without_creating_a_project(tmp_path: Path) -> None:
@@ -129,7 +129,7 @@ def test_installed_command_creates_a_project_with_a_versioned_contract(
     metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
     assert metadata == {
         "schema_version": 1,
-        "scaffold_version": "0.1.0",
+        "scaffold_version": "0.2.0",
         "project": {
             "name": "Protein Study",
             "slug": "protein_study",
@@ -557,6 +557,36 @@ def test_project_management_commands_are_safe_and_idempotent(tmp_path: Path) -> 
         "ok": False,
         "repairs": [],
     }
+
+
+def test_researcher_work_and_editable_starters_are_not_modified_file_failures(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "ownership"
+    assert create_project(destination, paper=True).returncode == 0
+    (destination / "analysis" / "BREADCRUMB_TRAIL.md").write_text("research decisions\n")
+    (destination / "analysis" / "ANALYSIS_PLAN.md").write_text("research plan\n")
+    (destination / "FINAL_MANIFEST.md").write_text("claim evidence\n")
+    (destination / ".gitignore").write_text("custom ignores\n")
+
+    checked = subprocess.run(
+        [str(installed_smairt()), "check", str(destination), "--json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    inspected = subprocess.run(
+        [str(installed_smairt()), "inspect", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert checked.returncode == 0, checked.stdout
+    assert json.loads(checked.stdout) == {"issues": [], "ok": True, "repairs": []}
+    assert "analysis/ANALYSIS_PLAN.md: modified" in inspected.stdout
+    assert "analysis/BREADCRUMB_TRAIL.md" not in inspected.stdout
+    assert "FINAL_MANIFEST.md" not in inspected.stdout
 
 
 def test_settings_license_check_and_repair_are_guarded(tmp_path: Path) -> None:

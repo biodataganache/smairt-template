@@ -128,7 +128,7 @@ This is the rough shape many good first scripts follow:
 3. **Run one core calculation**.
 4. **Print a compact summary** of what happened.
 5. **Save any figure or table** needed for later review.
-6. **Leave the pasted-output block at the bottom** after running it.
+6. **Preserve the complete tracked log** under `results/logs/` after running it.
 
 You do not need a perfect software package in iteration 1. You need a clean,
 reviewable scientific step.

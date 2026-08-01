@@ -6,6 +6,8 @@ import tarfile
 from pathlib import Path
 from zipfile import ZipFile
 
+from smairt import __version__
+
 REPOSITORY_ROOT = Path(__file__).parents[1]
 
 
@@ -38,9 +40,12 @@ def test_built_wheel_and_sdist_install_into_clean_environments_and_create_projec
             member.name.split("/", 1)[1] for member in archive.getmembers() if "/" in member.name
         }
     assert "smairt/assets/scaffold/prompts/AI_CONTEXT.md" in wheel_files
+    assert "smairt/assets/scaffold-blueprint.yaml" in wheel_files
     assert "smairt/assets/scaffold/scripts/new_script.py" in wheel_files
+    assert "smairt/assets/scaffold/scripts/generate_manifest.py" in wheel_files
+    assert "smairt/assets/scaffold/scripts/monitor_template.py" in wheel_files
     assert "smairt/assets/scaffold/scripts/shared/logging.py" in wheel_files
-    assert "smairt-0.1.0.dist-info/METADATA" in wheel_files
+    assert f"smairt-{__version__}.dist-info/METADATA" in wheel_files
     assert any(path.endswith(".dist-info/licenses/LICENSE") for path in wheel_files)
     assert {
         "LICENSE",

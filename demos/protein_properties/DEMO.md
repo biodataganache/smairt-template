@@ -126,7 +126,7 @@ Full context, hypothesis, and metrics are in
    3. background/01_initial_question.md
 
    Follow the SMAIRT workflow described there: numbered scripts, output to console
-   + results/logs/, and a pasted-output comment block at the end of each script.
+   + results/logs/; use the tracked raw log as the execution record.
    Don't write any code yet. First summarize the question and propose a first
    hypothesis and an experiment to test it.
    ```
@@ -222,7 +222,7 @@ files hold the context.
    background/01_initial_question.md) after my previous AI session got stuck.
    Please read AI_CONTEXT.md and CODE_CONVENTIONS.md and follow the SMAIRT
    workflow. To get back up to speed, read my existing files:
-   - experiments/ (my numbered scripts so far, with output pasted at the bottom)
+   - experiments/ (my numbered scripts so far)
    - results/logs/ (run outputs)
    - analysis/ANALYSIS_01.md (what I concluded so far)
    Summarize where the project stands and what the next step is. Don't rewrite

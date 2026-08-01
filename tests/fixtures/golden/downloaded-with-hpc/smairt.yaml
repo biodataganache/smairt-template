@@ -1,0 +1,22 @@
+schema_version: 1
+scaffold_version: 0.2.0
+project:
+  name: Golden HPC Study
+  slug: golden_hpc_study
+  description: A normalized downloaded-data HPC golden project.
+  domain: Data science
+people:
+  researcher:
+    name: Katherine Cluster
+assistant: opencode
+starting_phase: downloaded
+current_phase: downloaded
+license_year: <YEAR>
+license: MIT
+git_requested: false
+git_initialized: false
+capabilities:
+  paper:
+    state: never_enabled
+  hpc:
+    state: enabled

@@ -28,7 +28,12 @@ from smairt.models import (
     Researcher,
     StartingPhase,
 )
-from smairt.scaffold import ASSISTANT_POINTERS, materialize_template_assets, render_template_assets
+from smairt.scaffold import (
+    ASSISTANT_POINTERS,
+    asset_ownership,
+    materialize_template_assets,
+    render_template_assets,
+)
 
 CONTRACT_PATH = Path("smairt.yaml")
 LOCAL_PREFERENCES_PATH = Path(".smairt") / "preferences.yaml"
@@ -585,7 +590,7 @@ def phase_directories(phase: StartingPhase) -> tuple[str, ...]:
 def _managed_file_issues(root: Path, contract: ProjectContract) -> list[CheckIssue]:
     assets = managed_asset_contents(root)
     issues: list[CheckIssue] = []
-    user_editable = {".gitignore", "paper/outline.md"}
+    ownership = asset_ownership(contract)
     for relative, expected in sorted(assets.items()):
         path = root / relative
         if not path.is_file():
@@ -604,7 +609,7 @@ def _managed_file_issues(root: Path, contract: ProjectContract) -> list[CheckIss
                     f"restore-capability:{capability}" if capability is not None else None,
                 )
             )
-        elif path.read_text() != expected and relative not in user_editable:
+        elif path.read_text() != expected and ownership[relative] == "tool-guidance":
             issues.append(
                 CheckIssue(
                     "modified-managed-file",
@@ -739,7 +744,12 @@ def detected_tools(root: Path) -> dict[str, str]:
 def managed_asset_contents(root: Path, *, include_inactive: bool = False) -> dict[str, str]:
     contract = load_contract(root)
     assets = render_template_assets(contract, include_inactive=include_inactive)
-    assets.pop(".gitignore", None)
+    ownership = asset_ownership(contract, include_inactive=include_inactive)
+    assets = {
+        relative: content
+        for relative, content in assets.items()
+        if ownership[relative] != "researcher-work"
+    }
     assets["LICENSE"] = _render_license(
         contract.license, contract.people["researcher"].name, contract.license_year
     )

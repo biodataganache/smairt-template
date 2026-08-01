@@ -57,28 +57,25 @@ answer so you can confirm your method works before trusting it on real data.
 
 2. **Generate a fresh SMAIRT project** (run from this folder, venv active):
    ```bash
+   smairt new
    ```
-   see `Is it okay to delete and re-download it? [y/n] (y):`. Press
-   **Enter**. Then answer the prompts. Press **Enter** to accept a default, or
-   type the value/number shown. For the **Select** prompts, type the **number**
-   (not the word). **Suggested answers (adapt to your problem):**
+   Answer the guided questions one at a time, review the choices, and confirm
+   creation. Suggested choices (adapt them to your problem):
 
    | Prompt | Suggested answer |
    |--------|------------------|
-   | project_name | your project name |
-   | project_slug | press Enter (auto) |
-   | author_name | your name |
-   | author_email | your email (or Enter) |
-   | description | one line about your project |
-   | project_mode | `1` (standard) |
-   | workflow_mode | `1` (ide_native) |
-   | initial_research_question | your question |
-   | domain | number closest to your field |
-   | ai_tool | `1` (roo_zoo / Zoo Code) |
-   | include_example_project | `1` (no) |
-   | starting_phase | `1` (synthetic) or `3` (real) |
-   | license | `1` (MIT) |
-   | create_git_repo | `1` (yes) |
+   | Project name | your project name |
+   | Slug | accept or edit the generated slug |
+   | Researcher | your name |
+   | Email | optional |
+   | Description | one line about your project |
+   | Research question | your worksheet question |
+   | Domain | closest field or Not sure yet |
+   | Assistant | Zoo Code or your preferred supported assistant |
+   | Starting phase | synthetic, downloaded, or real |
+   | Optional capabilities | Paper or HPC only when needed |
+   | License | MIT or another reviewed choice |
+   | Git | yes when available |
 
    This creates a folder named after your project_slug.
 
@@ -127,12 +124,12 @@ answer so you can confirm your method works before trusting it on real data.
    A general-purpose first prompt:
 
    ```text
-   Create `script_01` in the first experiment folder for my chosen starting phase.
+   Create `script_01` in the experiment folder matching the current phase.
    If I am starting synthetic-first, use `experiments/01_synthetic/`. If I am
    starting real-data-first, use `experiments/03_real_data/`. If I don't have data
    yet, generate synthetic data with a known, controllable structure so we can
    confirm the method works before using real data. Print results to console and
-   `results/logs/`, and leave the output comment block at the end.
+   capture the complete execution record in `results/logs/`.
    ```
    Then review the proposed code, approve and run it, interpret the result
    yourself, log it in `analysis/ANALYSIS_01.md`, and decide the next step. See
@@ -182,7 +179,7 @@ files hold the context.
    after my previous AI session got stuck. Please read AI_CONTEXT.md and
    CODE_CONVENTIONS.md and follow the SMAIRT workflow. To catch up, read my
    existing files:
-   - experiments/ (numbered scripts, with output pasted at the bottom)
+   - experiments/ (numbered scripts)
    - results/logs/ (run outputs)
    - analysis/ANALYSIS_01.md (conclusions so far)
    Summarize where the project stands and the next step. Don't rewrite working

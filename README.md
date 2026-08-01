@@ -52,17 +52,18 @@ smairt new ./my_smairt_project \
   --no-git
 ```
 
-The starting phase selects the initial data and experiment directories:
+The starting phase records provenance and initializes the current phase. Every project
+contains all three phase workspaces:
 
-| Phase | Directories created |
+| Phase | Meaning |
 | --- | --- |
-| `synthetic` | Synthetic, downloaded/benchmark, and real |
-| `downloaded` | Downloaded/benchmark and real |
-| `real` | Real only |
+| `synthetic` | Work begins by testing assumptions with controlled data. |
+| `downloaded` | Work begins with public or benchmark data. |
+| `real` | Work begins directly with target data. |
 
-Add `--paper` for publication-focused guidance under `paper/analysis/`, kept
-separate from exploratory `analysis/`. Add `--hpc` for an editable SLURM
-template and HPC guidance. SMAIRT does not submit or manage cluster jobs.
+Add `--paper` for a publication overlay linked to the standard scientific audit trail.
+Add `--hpc` for editable cluster configuration, SLURM templates, and HPC guidance.
+SMAIRT does not submit or manage cluster jobs.
 
 Add `--git` to initialize Git and stage generated files. SMAIRT never commits;
 if Git is unavailable, generation succeeds and reports that initialization was
@@ -109,13 +110,13 @@ my_smairt_project/
 |-- background/
 |-- hypotheses/
 |-- plans/
-|-- analysis/              # Exploratory analyses
-|-- experiments/           # Directories selected by starting phase
-|-- data/                  # Directories selected by starting phase
+|-- analysis/              # Plans, interpretations, and report template
+|-- experiments/           # All synthetic, downloaded, and real phase folders
+|-- data/                  # All phase folders; data files ignored by default
 |-- results/logs/          # Canonical raw run records
 |-- results/figures/
 |-- prompts/AI_CONTEXT.md  # Tool-neutral workflow guidance
-|-- paper/analysis/        # Present only with --paper
+|-- paper/                 # Publication overlay present only with --paper
 `-- hpc/                   # Present only with --hpc
 ```
 
@@ -151,8 +152,8 @@ uv run mypy src tests
 uv run pytest tests/test_cli.py
 uv run pytest
 uv build
-uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0-py3-none-any.whl --workspace .smoke/wheel
-uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0.tar.gz --workspace .smoke/sdist
+uv run python scripts/smoke_install.py --artifact dist/smairt-0.2.0-py3-none-any.whl --workspace .smoke/wheel
+uv run python scripts/smoke_install.py --artifact dist/smairt-0.2.0.tar.gz --workspace .smoke/sdist
 ```
 
 GitHub Actions runs these gates on Ubuntu and macOS with Python 3.11, 3.12, and

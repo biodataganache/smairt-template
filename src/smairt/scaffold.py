@@ -92,6 +92,13 @@ def asset_path(asset: ScaffoldAsset, contract: object) -> str:
     return asset.path
 
 
+def asset_ownership(contract: object, *, include_inactive: bool = False) -> dict[str, str]:
+    return {
+        asset_path(asset, contract): asset.ownership
+        for asset in active_assets(contract, include_inactive=include_inactive)
+    }
+
+
 def render_template_assets(contract: object, *, include_inactive: bool = False) -> dict[str, str]:
     templates = Path(__file__).parent / "assets" / "scaffold"
     environment = Environment(
