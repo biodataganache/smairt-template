@@ -24,8 +24,8 @@ class GenerationError(Exception):
 
 def generate_project(destination: Path, options: ProjectOptions) -> list[str]:
     """Render a complete project into a temporary sibling then rename it into place."""
-    destination = destination.resolve()
     validate_destination(destination)
+    destination = destination.resolve()
     temporary = Path(
         tempfile.mkdtemp(prefix=f".{destination.name}.smairt-", dir=destination.parent)
     )
@@ -48,7 +48,7 @@ def generate_project(destination: Path, options: ProjectOptions) -> list[str]:
 
 
 def validate_destination(destination: Path) -> None:
-    if destination.exists():
+    if destination.is_symlink() or destination.exists():
         if destination.is_dir() and not any(destination.iterdir()):
             raise GenerationError(f"Destination already exists: {destination}")
         raise GenerationError(f"Destination is not empty: {destination}")

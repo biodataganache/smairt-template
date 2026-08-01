@@ -54,6 +54,7 @@ from smairt.project import (
     update_collaborator,
     update_settings,
 )
+from smairt.terminal import BackRequested, SelectionCancelled, navigation_bindings, select_choice
 
 app = typer.Typer(no_args_is_help=False, invoke_without_command=True)
 
@@ -70,10 +71,12 @@ class WizardCancelled(Exception):
 class Wizard:
     def __init__(self) -> None:
         motion = _interactive_motion_enabled()
+        self.visual = motion
         self.console = Console(force_interactive=motion, force_terminal=motion)
         self.session: PromptSession[str] = PromptSession(
             input=create_input(sys.stdin),
             output=create_output(sys.stdout),
+            key_bindings=navigation_bindings() if motion else None,
         )
         self.answers: dict[str, str | bool] = {
             "phase": StartingPhase.SYNTHETIC.value,
@@ -85,8 +88,8 @@ class Wizard:
             "git": False,
         }
         self.steps: tuple[tuple[str, Callable[[], None]], ...] = (
-            ("Destination", self._destination),
             ("Project name", self._name),
+            ("Location", self._location),
             ("Project slug", self._slug),
             ("Description", self._description),
             ("Domain", self._domain),
@@ -116,6 +119,8 @@ class Wizard:
                     index -= 1
                     self.console.print("Back: your earlier answers are kept.")
                 continue
+            except SelectionCancelled as error:
+                raise WizardCancelled from error
             index += 1
         return Path(str(self.answers["destination"])).expanduser(), self._options()
 
@@ -164,14 +169,29 @@ class Wizard:
         choices: tuple[tuple[str, str, str, str], ...],
         default: str,
     ) -> str:
+        current = str(self.answers.get(key, default))
+        values = {value for _, _, value, _ in choices}
+        if current not in values:
+            current = "custom" if key == "domain" and self.answers.get("custom_domain") else default
+        if self.visual:
+            try:
+                selection = select_choice(
+                    prompt,
+                    [
+                        (value, f"{label} - {explanation}")
+                        for _, label, value, explanation in choices
+                    ],
+                    current,
+                )
+            except SelectionCancelled as error:
+                raise WizardCancelled from error
+            self.answers[key] = selection
+            return selection
         self.console.print("Recommended choices are marked.")
         for number, label, value, explanation in choices:
             recommended = " [recommended]" if value == default else ""
             self.console.print(f"  {number}. {label}{recommended} - {explanation}")
         mapping = {number: value for number, _, value, _ in choices}
-        current = str(self.answers.get(key, default))
-        if current not in mapping.values():
-            current = "custom" if key == "domain" and self.answers.get("custom_domain") else default
         while True:
             answer = self.session.prompt(f"{prompt} [Enter for {default}]: ").strip()
             if answer == _CANCEL:
@@ -186,19 +206,60 @@ class Wizard:
                 return selection
             self.console.print("Choose one of the listed numbers.", style="yellow")
 
-    def _destination(self) -> None:
+    def _location(self) -> None:
+        mode = self._choose(
+            "Where should this project live",
+            key="location_mode",
+            default="workspace",
+            choices=(
+                (
+                    "1",
+                    "Create in this workspace",
+                    "workspace",
+                    f"Create a new child folder under {Path.cwd()}.",
+                ),
+                (
+                    "2",
+                    "Choose another location",
+                    "other",
+                    "Choose an existing parent directory.",
+                ),
+            ),
+        )
+        if mode == "workspace":
+            parent = Path.cwd()
+        else:
+            parent_text = self._ask(
+                "Parent directory",
+                key="other_parent",
+                default=str(Path.home() / "Documents"),
+            )
+            parent = Path(parent_text).expanduser()
+        default_folder = _slugify(str(self.answers["name"])).replace("_", "-")
         while True:
-            text = self._ask("Where should the new project folder be created", key="destination")
+            folder = self._ask("Project folder", key="folder", default=default_folder)
+            if Path(folder).name != folder or folder in {".", ".."}:
+                self.console.print("Project folder must be one folder name.", style="yellow")
+                continue
+            destination = parent / folder
             try:
-                validate_destination(Path(text).expanduser().resolve())
+                validate_destination(destination.expanduser())
             except GenerationError as error:
                 self.console.print(f"That location is not safe: {error}", style="yellow")
             else:
-                self.answers["destination"] = str(Path(text).expanduser())
+                self.answers["destination"] = str(destination.expanduser())
+                self.console.print(f"Will create: {destination.expanduser()}")
                 return
 
     def _name(self) -> None:
-        self._ask("What is the human-readable project name", key="name")
+        previous_name = str(self.answers.get("name", ""))
+        previous_default = _slugify(previous_name).replace("_", "-")
+        name = self._ask("What is the human-readable project name", key="name")
+        if self.answers.get("folder") == previous_default:
+            folder = _slugify(name).replace("_", "-")
+            self.answers["folder"] = folder
+            destination = Path(str(self.answers["destination"]))
+            self.answers["destination"] = str(destination.parent / folder)
 
     def _slug(self) -> None:
         default = _slugify(str(self.answers.get("name", "project")))
@@ -276,6 +337,32 @@ class Wizard:
         self.console.print(
             "Paper and HPC support are optional and both start off for a focused workspace."
         )
+        if self.visual:
+            current = (
+                "paper,hpc"
+                if self.answers["paper"] and self.answers["hpc"]
+                else "paper"
+                if self.answers["paper"]
+                else "hpc"
+                if self.answers["hpc"]
+                else "off"
+            )
+            try:
+                requested = select_choice(
+                    "Optional capabilities",
+                    [
+                        ("off", "Focused workspace (no optional capabilities)"),
+                        ("paper", "Paper support"),
+                        ("hpc", "HPC support"),
+                        ("paper,hpc", "Paper and HPC support"),
+                    ],
+                    current,
+                )
+            except SelectionCancelled as error:
+                raise WizardCancelled from error
+            self.answers["paper"] = "paper" in requested
+            self.answers["hpc"] = "hpc" in requested
+            return
         self.console.print("Type paper, hpc, paper,hpc, or press Enter to skip.")
         while True:
             answer = self.session.prompt("Optional capabilities [Enter to skip]: ").strip().lower()
@@ -378,6 +465,19 @@ class Wizard:
         self.console.print(
             f"{self.answers['license']} controls how others may use this project. This is not legal advice."
         )
+        if self.visual:
+            try:
+                confirmed = select_choice(
+                    "Confirm this license",
+                    [("yes", "Yes, confirm"), ("no", "No, choose another license")],
+                    "yes" if self.answers["license_confirmation"] else "no",
+                )
+            except SelectionCancelled as error:
+                raise WizardCancelled from error
+            if confirmed == "yes":
+                self.answers["license_confirmation"] = str(self.answers["license"])
+                return
+            raise BackRequested
         while True:
             answer = self.session.prompt("Confirm this license [yes/no]: ").strip().lower()
             if answer == _CANCEL:
@@ -395,6 +495,17 @@ class Wizard:
         self.console.print(
             "Git is recommended for history, but it is optional. SMAIRT will stage files and never commit."
         )
+        if self.visual:
+            try:
+                requested = select_choice(
+                    "Initialize Git",
+                    [(False, "No"), (True, "Yes, initialize and stage files")],
+                    bool(self.answers["git"]),
+                )
+            except SelectionCancelled as error:
+                raise WizardCancelled from error
+            self.answers["git"] = requested
+            return
         while True:
             answer = self.session.prompt("Initialize Git [yes/no, Enter for no]: ").strip().lower()
             if answer == _CANCEL:
@@ -410,32 +521,63 @@ class Wizard:
             self.console.print("Please answer yes or no.", style="yellow")
 
     def _review(self) -> None:
-        self.console.print("[bold]Final review[/]")
-        for index, (title, _) in enumerate(self.steps[:-1], start=1):
-            self.console.print(f"  {index}. {title}: {self._review_value(index)}")
+        if self.visual:
+            self._visual_review()
+            return
+        self._print_review()
         self.console.print(
-            "Enter a number to edit it, create to write the project, or cancel to leave without files."
+            f"  {_WIZARD_STEPS}. Create project\n"
+            f"  {_WIZARD_STEPS + 1}. Back\n"
+            f"  {_WIZARD_STEPS + 2}. Cancel without creating files"
         )
         while True:
             answer = self.session.prompt("Review action: ").strip().lower()
-            if answer in {"cancel", _CANCEL}:
+            if answer in {str(_WIZARD_STEPS + 2), "cancel", _CANCEL}:
                 raise WizardCancelled
-            if answer in {"create", "c"}:
-                if self.answers["license_confirmation"] != self.answers["license"]:
-                    self.console.print(
-                        "Confirm the final selected license before creating the project.",
-                        style="yellow",
-                    )
-                    self._confirm_license()
+            if answer in {str(_WIZARD_STEPS), "create", "c"}:
+                self._ensure_license_confirmed()
                 return
+            if answer in {str(_WIZARD_STEPS + 1), "back", _BACK}:
+                raise BackRequested
             if answer.isdigit() and 1 <= int(answer) < _WIZARD_STEPS:
                 self._edit(int(answer) - 1)
                 self._screen(_WIZARD_STEPS - 1, "Final review")
-                self.console.print("[bold]Final review[/]")
-                for index, (title, _) in enumerate(self.steps[:-1], start=1):
-                    self.console.print(f"  {index}. {title}: {self._review_value(index)}")
+                self._print_review()
                 continue
-            self.console.print("Enter a listed number, create, or cancel.", style="yellow")
+            self.console.print("Choose one of the listed actions.", style="yellow")
+
+    def _visual_review(self) -> None:
+        while True:
+            choices = [("create", "Create project")]
+            choices.extend(
+                (f"edit:{index}", f"{title}: {self._review_value(index + 1)}")
+                for index, (title, _) in enumerate(self.steps[:-1])
+            )
+            choices.append(("cancel", "Cancel without creating files"))
+            try:
+                action = select_choice("Final review", choices, "create")
+            except SelectionCancelled as error:
+                raise WizardCancelled from error
+            if action == "create":
+                self._ensure_license_confirmed()
+                return
+            if action == "cancel":
+                raise WizardCancelled
+            self._edit(int(action.removeprefix("edit:")))
+            self._screen(_WIZARD_STEPS - 1, "Final review")
+
+    def _print_review(self) -> None:
+        self.console.print("[bold]Final review[/]")
+        for index, (title, _) in enumerate(self.steps[:-1], start=1):
+            self.console.print(f"  {index}. {title}: {self._review_value(index)}")
+
+    def _ensure_license_confirmed(self) -> None:
+        if self.answers["license_confirmation"] != self.answers["license"]:
+            self.console.print(
+                "Confirm the final selected license before creating the project.",
+                style="yellow",
+            )
+            self._confirm_license()
 
     def _edit(self, index: int) -> None:
         title, step = self.steps[index]
@@ -444,8 +586,8 @@ class Wizard:
 
     def _review_value(self, index: int) -> str:
         keys = (
-            "destination",
             "name",
+            "destination",
             "slug",
             "description",
             "domain",
@@ -487,10 +629,6 @@ class Wizard:
             paper=bool(self.answers["paper"]),
             hpc=bool(self.answers["hpc"]),
         )
-
-
-class BackRequested(Exception):
-    """Raised to move to the preceding wizard screen."""
 
 
 def version_callback(value: bool) -> None:

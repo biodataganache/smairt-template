@@ -393,6 +393,17 @@ def test_existing_destination_is_never_overwritten_or_partially_exposed(
     assert not list(tmp_path.glob(".occupied.smairt-*"))
 
 
+def test_dangling_symlink_destination_is_never_replaced(tmp_path: Path) -> None:
+    destination = tmp_path / "dangling"
+    destination.symlink_to(tmp_path / "missing-target", target_is_directory=True)
+
+    result = create_project(destination)
+
+    assert result.returncode == 1
+    assert "Destination is not empty" in result.stderr
+    assert destination.is_symlink()
+
+
 def test_optional_email_is_omitted_and_scaffold_uses_log_first_guidance(
     tmp_path: Path,
 ) -> None:
@@ -1192,8 +1203,10 @@ def test_interactive_wizard_creates_a_project_from_a_real_input_stream(
     result = run_interactive_new(
         "\n".join(
             [
-                str(destination),
                 "Guided Protein Study",
+                "2",
+                str(destination.parent),
+                destination.name,
                 "guided_protein_study",
                 "A project created through the guided setup.",
                 "1",
@@ -1236,6 +1249,75 @@ def test_interactive_wizard_creates_a_project_from_a_real_input_stream(
     }
 
 
+def test_interactive_wizard_creates_a_new_child_under_a_selected_parent(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "parent-based-study"
+
+    result = run_interactive_new(
+        "\n".join(
+            [
+                "Parent Based Study",
+                "2",
+                str(tmp_path),
+                "",
+                "parent_based_study",
+                "A project created under a selected parent.",
+                "5",
+                ":skip",
+                "Ada Researcher",
+                ":skip",
+                "",
+                "",
+                "3",
+                "",
+                "yes",
+                "no",
+                "create",
+            ]
+        )
+        + "\n"
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Will create:" in result.stdout
+    assert (destination / "smairt.yaml").is_file()
+
+
+def test_interactive_wizard_creates_a_new_child_in_the_current_workspace(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "workspace-study"
+
+    result = run_interactive_new(
+        "\n".join(
+            [
+                "Workspace Study",
+                "",
+                "",
+                "workspace_study",
+                "A project created in the current workspace.",
+                "5",
+                ":skip",
+                "Ada Researcher",
+                ":skip",
+                "",
+                "",
+                "3",
+                "",
+                "yes",
+                "no",
+                "create",
+            ]
+        )
+        + "\n",
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (destination / "smairt.yaml").is_file()
+
+
 def test_interactive_wizard_keeps_answers_when_going_back_and_edits_review_answers(
     tmp_path: Path,
 ) -> None:
@@ -1244,12 +1326,13 @@ def test_interactive_wizard_keeps_answers_when_going_back_and_edits_review_answe
     result = run_interactive_new(
         "\n".join(
             [
-                str(destination),
                 "Original Name",
+                "2",
+                str(destination.parent),
+                destination.name,
                 "original_name",
                 ":back",
-                "Original Name",
-                "original_name",
+                "",
                 "A retained description.",
                 "5",
                 ":skip",
@@ -1261,7 +1344,7 @@ def test_interactive_wizard_keeps_answers_when_going_back_and_edits_review_answe
                 "",
                 "yes",
                 "no",
-                "2",
+                "1",
                 "Edited Name",
                 "create",
             ]
@@ -1322,12 +1405,39 @@ def test_interactive_wizard_validates_destination_before_final_review(tmp_path: 
     preserved = destination / "notes.txt"
     preserved.write_text("keep this")
 
-    result = run_interactive_new(f"{destination}\n:cancel\n")
+    result = run_interactive_new(
+        f"Occupied Study\n2\n{destination.parent}\n{destination.name}\n:cancel\n"
+    )
 
     assert result.returncode == 1
     assert "Destination is not empty" in result.stdout
     assert preserved.read_text() == "keep this"
     assert not (destination / "smairt.yaml").exists()
+
+
+def test_interactive_wizard_treats_a_symlinked_directory_as_the_parent(
+    tmp_path: Path,
+) -> None:
+    real_parent = tmp_path / "real-parent"
+    real_parent.mkdir()
+    parent_link = tmp_path / "documents"
+    parent_link.symlink_to(real_parent, target_is_directory=True)
+    destination = real_parent / "symlink-study"
+
+    result = run_interactive_new(wizard_answers(parent_link / destination.name))
+
+    assert result.returncode == 0, result.stderr
+    assert (destination / "smairt.yaml").is_file()
+
+
+def test_interactive_wizard_rejects_a_missing_selected_parent(tmp_path: Path) -> None:
+    missing_parent = tmp_path / "missing"
+
+    result = run_interactive_new(f"Missing Parent Study\n2\n{missing_parent}\nstudy\n:cancel\n")
+
+    assert result.returncode == 1
+    assert "Destination parent does not exist" in result.stdout
+    assert not missing_parent.exists()
 
 
 def test_interactive_wizard_cancellation_at_review_writes_no_project(tmp_path: Path) -> None:
@@ -1356,8 +1466,10 @@ def wizard_answers(destination: Path, *, review_action: str = "create") -> str:
     return (
         "\n".join(
             [
-                str(destination),
                 "Test Project",
+                "2",
+                str(destination.parent),
+                destination.name,
                 "test_project",
                 "A test project.",
                 "5",
@@ -1377,7 +1489,9 @@ def wizard_answers(destination: Path, *, review_action: str = "create") -> str:
     )
 
 
-def run_interactive_new(input_text: str) -> subprocess.CompletedProcess[str]:
+def run_interactive_new(
+    input_text: str, *, cwd: Path | None = None
+) -> subprocess.CompletedProcess[str]:
     command = [str(installed_smairt()), "new"]
     master, slave = pty.openpty()
     process = subprocess.Popen(
@@ -1386,6 +1500,7 @@ def run_interactive_new(input_text: str) -> subprocess.CompletedProcess[str]:
         stdout=slave,
         stderr=slave,
         text=False,
+        cwd=cwd,
         env={**os.environ, "TERM": "dumb", "CI": "1"},
     )
     os.close(slave)
@@ -1399,7 +1514,7 @@ def run_interactive_new(input_text: str) -> subprocess.CompletedProcess[str]:
                 output.extend(os.read(master, 4096))
             except OSError:
                 break
-        if not sent and b"Destination" in output:
+        if not sent and b"Project name" in output:
             os.write(master, input_text.encode())
             sent = True
     if process.poll() is None:
