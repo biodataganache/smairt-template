@@ -1,8 +1,7 @@
-# Protein properties demo. cookiecutter generates the SMAIRT project; numpy/
+# Protein properties demo. Numpy/
 # pandas handle the per-residue calculations and tables, scikit-learn the simple
 # classifier, and matplotlib the plots. No data download needed: you start by
 # computing properties for known sequences and checking them analytically.
-cookiecutter
 numpy
 pandas
 scikit-learn

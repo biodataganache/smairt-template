@@ -44,8 +44,6 @@ answer so you can confirm your method works before trusting it on real data.
    source .venv/bin/activate     # Windows PowerShell: .venv\Scripts\Activate.ps1
    pip install -r requirements.txt
    ```
-   Installs `cookiecutter` (used in Step 2) plus common starter libs
-   (numpy, pandas, matplotlib, scikit-learn). `command not found: cookiecutter`
    later means this step was skipped or your venv isn't active.
 
    Windows users: if PowerShell blocks activation, run
@@ -59,9 +57,7 @@ answer so you can confirm your method works before trusting it on real data.
 
 2. **Generate a fresh SMAIRT project** (run from this folder, venv active):
    ```bash
-   cookiecutter https://github.com/biodataganache/smairt-template.git
    ```
-   Cookiecutter asks a series of questions. If you've run it before you may first
    see `Is it okay to delete and re-download it? [y/n] (y):`. Press
    **Enter**. Then answer the prompts. Press **Enter** to accept a default, or
    type the value/number shown. For the **Select** prompts, type the **number**
@@ -164,9 +160,7 @@ problem.
 
 | Symptom | Likely cause / fix |
 |---------|--------------------|
-| `command not found: cookiecutter` | venv not active or Step 0 skipped. Run `source .venv/bin/activate` then `pip install -r requirements.txt`. |
 | `No such file or directory: .../.venv/bin/...` | The venv was deleted/moved. Recreate it (the `python3 -m venv .venv` + install lines). |
-| cookiecutter asks to re-download the template | Normal if you've run it before. Press **Enter** (y). |
 | Your script needs a library that isn't installed | `pip install <package>` into the active venv, then re-run. |
 | AI's result seems too good / circular | Check it isn't testing on the same data it learned from; ask for a held-out check. |
 | Can't tell if the result answers the question | Your hypothesis or metric is probably fuzzy. Revisit the worksheet's "metric" and "what would change my mind" rows. |
@@ -194,5 +188,4 @@ files hold the context.
    Summarize where the project stands and the next step. Don't rewrite working
    code. Continue from here.
    ```
-   Tip: if it exists, run `python scripts/compile_for_ai.py` and paste its output
    to hand over the whole trail at once.

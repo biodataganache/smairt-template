@@ -75,43 +75,23 @@ Full context, hypothesis, and metrics are in
    source .venv/bin/activate     # Windows PowerShell: .venv\Scripts\Activate.ps1
    pip install -r requirements.txt
    ```
-   This installs `cookiecutter` (used in the next step) plus numpy/scipy/
-   matplotlib. If you see `command not found: cookiecutter`, this step was
-   skipped or your venv isn't active.
+   This installs only the scientific Python dependencies for the demo.
+
 
    Windows users: if PowerShell blocks activation, run
    `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that terminal,
    then try `.venv\Scripts\Activate.ps1` again. In Command Prompt, use
    `.venv\Scripts\activate.bat`.
 
-1. **Generate a fresh SMAIRT project** (run from this folder, venv active):
+1. **Create a fresh SMAIRT project** with the installed CLI:
    ```bash
-   cookiecutter https://github.com/biodataganache/smairt-template.git
+   smairt new
    ```
-   Cookiecutter then asks you a series of questions. If you've run it before you
-   may first see `Is it okay to delete and re-download it? [y/n] (y):`. Press
-   **Enter**. Then answer the prompts. Press **Enter** to accept a default,
-   or type the value/number shown. For the **Select** prompts, type the
-   **number** (not the word). **Suggested answers for this demo:**
+   Use the guided prompts to choose the demo name, research question, domain,
+   starting phase, and assistant. The installed `smairt` command is the only
+   supported generator.
 
-   | Prompt | Suggested answer |
-   |--------|------------------|
-   | project_name | `SIRD Epidemic Model` |
-   | project_slug | press Enter (auto) |
-   | author_name | your name |
-   | author_email | your email (or Enter) |
-   | description | `Modeling infection, recovery, and death with the SIRD equations` |
-   | project_mode | `1` (standard) |
-   | workflow_mode | `1` (ide_native) |
-   | initial_research_question | `How does a SIRD outbreak evolve, and does it grow or fade as R0 predicts?` |
-   | domain | number closest to `mathematics` (or `physics` if math isn't listed) |
-   | ai_tool | `1` (roo_zoo / Zoo Code) |
-   | include_example_project | `1` (no) |
-   | starting_phase | `1` (synthetic) |
-   | license | `1` (MIT) |
-   | create_git_repo | `1` (yes) |
 
-   This creates a folder named after your project_slug (e.g. `sird_epidemic_model/`).
 
 2. **Seed your project with the background:**
    ```bash
@@ -209,7 +189,6 @@ A working SIRD model whose S, I, R, D curves conserve the total population, a
 clear demonstration that the outbreak grows when R0 > 1 and fades when R0 < 1, a
 reported epidemic peak (size and timing) and final recovered-vs-deceased split,
 and a parameter-sweep plot showing how the infected peak shifts with `beta`, all
-reproducible from your breadcrumb trail. (Requirements: cookiecutter +
 numpy/scipy/matplotlib, installed in Step 0; CPU-only, no network needed.)
 
 > **Going further (optional, later):** fit `beta`, `gamma`, and `mu` to a small
@@ -223,9 +202,7 @@ numpy/scipy/matplotlib, installed in Step 0; CPU-only, no network needed.)
 
 | Symptom | Likely cause / fix |
 |---------|--------------------|
-| `command not found: cookiecutter` | venv not active or Step 0 skipped. Run `source .venv/bin/activate` then `pip install -r requirements.txt`. |
 | `No such file or directory: .../.venv/bin/...` | The venv was deleted/moved. Recreate it: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`. |
-| cookiecutter asks to re-download the template | Normal if you've run it before. Press **Enter** (y). |
 | S + I + R + D drifts away from N | Solver tolerance too loose or a sign error in the equations. Tighten `rtol`/`atol` and re-check the flow terms. |
 | A compartment goes negative | Step too large or wrong sign; use an adaptive solver (`solve_ivp`) and verify `dS/dt` is negative, `dD/dt`/`dR/dt` non-negative. |
 | No epidemic peak appears | With R0 < 1 that's correct (outbreak fades). To see a peak, raise `beta` so R0 = beta/(gamma+mu) > 1. |
@@ -256,5 +233,4 @@ files hold the context.
    Summarize where the project stands and what the next step is. Don't rewrite
    working code. Continue from here.
    ```
-   Tip: if it exists, run `python scripts/compile_for_ai.py` and paste its output
    to hand over the whole trail at once.

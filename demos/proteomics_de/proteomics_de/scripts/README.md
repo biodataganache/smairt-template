@@ -6,7 +6,6 @@ Utility scripts to support the SMAIRT workflow.
 
 ## Included Scripts
 
-### compile_for_ai.py
 
 Compiles the current project state into a single document that can be pasted into a new AI session.
 
@@ -18,7 +17,6 @@ for what reason, and what the results were.
 
 **Usage:**
 ```bash
-python scripts/compile_for_ai.py
 ```
 
 **Output:**

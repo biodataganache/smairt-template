@@ -5,8 +5,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --time=4:00:00
-{% if cookiecutter.project_mode == 'paper_driven' %}
-# SMAIRT Paper-Driven Mode - Basic SLURM Template
+# Optional HPC template for any SMAIRT project.
+# SMAIRT optional Paper workspace - Basic SLURM Template
 # 
 # Usage:
 #   sbatch slurm_basic.sh /path/to/script.py
@@ -47,7 +47,3 @@ python $(basename $SCRIPT)
 echo "=========================================="
 echo "Finished at: $(date)"
 echo "=========================================="
-{% else %}
-# This template is only used in paper-driven mode
-echo "Paper-driven mode not enabled"
-{% endif %}

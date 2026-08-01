@@ -1,6 +1,5 @@
-# Bring-Your-Own demo. cookiecutter generates the SMAIRT project; the rest are
+# Bring-Your-Own demo dependencies are
 # common starter libs for the synthetic-first quick-starts (add your own).
-cookiecutter
 numpy
 pandas
 matplotlib

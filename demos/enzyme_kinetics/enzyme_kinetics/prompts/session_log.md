@@ -1,6 +1,6 @@
 # Session Log
 
-Record prompts and key decisions here. This is primarily for the **browser-paste workflow** (ChatGPT, Claude web) where session history isn't preserved.
+Record prompts and key decisions here. This is primarily for the **file-based workflow** (ChatGPT, Claude web) where session history isn't preserved.
 
 ---
 
@@ -115,7 +115,7 @@ This creates a breadcrumb trail for tracking the research journey.
 
 From each session, capture:
 
-1. **The prompts** - What you asked (exact text for browser-paste; summary for IDE-native)
+1. **The prompts** - What you asked (exact text for file-based; summary for IDE-native)
 2. **Scripts generated** - Link to the files created or modified
 3. **Results** - What happened (reference log files in `results/logs/`)
 4. **Your observations** - What you noticed, thought about, connected

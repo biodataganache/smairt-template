@@ -58,7 +58,7 @@ def generate_manifest():
     manifest_content = f"""# Final Manifest
 
 **Generated**: {date}
-**Project**: {{ cookiecutter.project_name }}
+**Project**: Protein Language Model
 
 This file maps all final results to their source analyses and iterations.
 

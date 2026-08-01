@@ -1,5 +1,5 @@
 # Iteration Review Prompt
 
 
-This prompt is for paper-driven mode only.
+This prompt is for optional Paper workspace only.
 

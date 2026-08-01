@@ -68,46 +68,22 @@ Full context, hypothesis, and metrics are in
    source .venv/bin/activate     # Windows PowerShell: .venv\Scripts\Activate.ps1
    pip install -r requirements.txt
    ```
+   This installs only the scientific Python dependencies for the demo.
 
-   This installs `cookiecutter` (used in the next step) plus matplotlib (optional
-   plots). The digestion itself is pure-Python standard library. If you see
-   `command not found: cookiecutter`, this step was skipped or your venv isn't
-   active.
 
    Windows users: if PowerShell blocks activation, run
    `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that terminal,
    then try `.venv\Scripts\Activate.ps1` again. In Command Prompt, use
    `.venv\Scripts\activate.bat`.
-1. **Generate a fresh SMAIRT project** (run from this folder, venv active):
-
+1. **Create a fresh SMAIRT project** with the installed CLI:
    ```bash
-   cookiecutter https://github.com/biodataganache/smairt-template.git
+   smairt new
    ```
+   Use the guided prompts to choose the demo name, research question, domain,
+   starting phase, and assistant. The installed `smairt` command is the only
+   supported generator.
 
-   Cookiecutter then asks you a series of questions. If you've run it before you
-   may first see `Is it okay to delete and re-download it? [y/n] (y):`. Press
-   **Enter**. Then answer the prompts. Press **Enter** to accept a default,
-   or type the value/number shown. For the **Select** prompts, type the
-   **number** (not the word). **Suggested answers for this demo:**
 
-   | Prompt                    | Suggested answer                                                               |
-   | ------------------------- | ------------------------------------------------------------------------------ |
-   | project_name              | `Peptide Digest`                                                             |
-   | project_slug              | press Enter (auto)                                                             |
-   | author_name               | your name                                                                      |
-   | author_email              | your email (or Enter)                                                          |
-   | description               | `In-silico tryptic digestion and MS-observable peptides`                     |
-   | project_mode              | `1` (standard)                                                               |
-   | workflow_mode             | `1` (ide_native)                                                             |
-   | initial_research_question | `What tryptic peptides does a protein produce, and which are MS-observable?` |
-   | domain                    | `3` (computational_biology)                                                  |
-   | ai_tool                   | `1` (roo_zoo / Zoo Code)                                                     |
-   | include_example_project   | `1` (no)                                                                     |
-   | starting_phase            | `1` (synthetic)                                                              |
-   | license                   | `1` (MIT)                                                                    |
-   | create_git_repo           | `1` (yes)                                                                    |
-
-   This creates a folder named after your project_slug (e.g. `peptide_digest/`).
 2. **Seed your project with the background:**
 
    ```bash
@@ -198,7 +174,6 @@ Full context, hypothesis, and metrics are in
 A trypsin digester that passes your hand-checked test cases, computes peptide
 masses that match reference values, honors the "not before P" rule, and reports
 how many peptides are MS-observable, all reproducible from your breadcrumb trail.
-(Requirements: cookiecutter + matplotlib, installed in Step 0; pure Python,
 CPU-only, no network needed.)
 
 > **Going further (optional, later):** paste a real protein sequence (e.g. BSA or
@@ -211,9 +186,7 @@ CPU-only, no network needed.)
 
 | Symptom                                          | Likely cause / fix                                                                                                                 |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `command not found: cookiecutter`              | venv not active or Step 0 skipped. Run`source .venv/bin/activate` then `pip install -r requirements.txt`.                      |
 | `No such file or directory: .../.venv/bin/...` | The venv was deleted/moved. Recreate it:`python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`. |
-| cookiecutter asks to re-download the template    | Normal if you've run it before. Press**Enter** (y).                                                                          |
 | Peptide split at K-P or R-P                      | The "not before P" exception isn't implemented. Ask the AI to skip cleavage when the next residue is proline.                      |
 | Off-by-one peptides (missing first/last)         | Boundary handling at the protein N-/C-terminus. Check the last peptide is emitted even without a trailing K/R.                     |
 | Peptide masses look wrong (~18 Da off)           | Forgot to add one water for the terminal groups, or used average instead of monoisotopic masses.                                   |
@@ -244,5 +217,4 @@ files hold the context.
    Summarize where the project stands and what the next step is. Don't rewrite
    working code. Continue from here.
    ```
-   Tip: if it exists, run `python scripts/compile_for_ai.py` and paste its output
    to hand over the whole trail at once.

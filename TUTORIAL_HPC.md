@@ -16,6 +16,7 @@ smairt new ./cluster_study \
   --domain "Not sure yet" \
   --phase real \
   --assistant opencode \
+  --accept-license \
   --hpc \
   --no-git
 ```

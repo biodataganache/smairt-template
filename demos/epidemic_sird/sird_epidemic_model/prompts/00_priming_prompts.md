@@ -58,6 +58,5 @@ SMAIRT reminder:
 When switching to a different AI tool:
 
 ```bash
-python scripts/compile_for_ai.py
 # Then provide prompts/compiled_for_ai.md to the new tool
 ```

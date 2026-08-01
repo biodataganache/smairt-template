@@ -67,45 +67,22 @@ Full context, hypothesis, and metrics are in
    source .venv/bin/activate     # Windows PowerShell: .venv\Scripts\Activate.ps1
    pip install -r requirements.txt
    ```
+   This installs only the scientific Python dependencies for the demo.
 
-   This installs `cookiecutter` (used in the next step) plus numpy/scipy/
-   matplotlib. If you see `command not found: cookiecutter`, this step was
-   skipped or your venv isn't active.
 
    Windows users: if PowerShell blocks activation, run
    `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that terminal,
    then try `.venv\Scripts\Activate.ps1` again. In Command Prompt, use
    `.venv\Scripts\activate.bat`.
-1. **Generate a fresh SMAIRT project** (run from this folder, venv active):
-
+1. **Create a fresh SMAIRT project** with the installed CLI:
    ```bash
-   cookiecutter https://github.com/biodataganache/smairt-template.git
+   smairt new
    ```
+   Use the guided prompts to choose the demo name, research question, domain,
+   starting phase, and assistant. The installed `smairt` command is the only
+   supported generator.
 
-   Cookiecutter then asks you a series of questions. If you've run it before you
-   may first see `Is it okay to delete and re-download it? [y/n] (y):`. Press
-   **Enter**. Then answer the prompts. Press **Enter** to accept a default,
-   or type the value/number shown. For the **Select** prompts, type the
-   **number** (not the word). **Suggested answers for this demo:**
 
-   | Prompt                    | Suggested answer                                                        |
-   | ------------------------- | ----------------------------------------------------------------------- |
-   | project_name              | `Enzyme Kinetics`                                                     |
-   | project_slug              | press Enter (auto)                                                      |
-   | author_name               | your name                                                               |
-   | author_email              | your email (or Enter)                                                   |
-   | description               | `Recovering Km and Vmax from velocity data`                           |
-   | project_mode              | `1` (standard)                                                        |
-   | workflow_mode             | `1` (ide_native)                                                      |
-   | initial_research_question | `How accurately can we recover Km and Vmax from noisy velocity data?` |
-   | domain                    | `3` (computational_biology)                                           |
-   | ai_tool                   | `1` (roo_zoo / Zoo Code)                                              |
-   | include_example_project   | `1` (no)                                                              |
-   | starting_phase            | `1` (synthetic)                                                       |
-   | license                   | `1` (MIT)                                                             |
-   | create_git_repo           | `1` (yes)                                                             |
-
-   This creates a folder named after your project_slug (e.g. `enzyme_kinetics/`).
 2. **Seed your project with the background:**
 
    ```bash
@@ -196,7 +173,6 @@ Full context, hypothesis, and metrics are in
 On synthetic data: fitted Km/Vmax that recover the planted truth within a small
 error, a clear demonstration that the nonlinear fit beats Lineweaver-Burk as
 noise grows, and a fitted-curve plot, all reproducible from your breadcrumb
-trail. (Requirements: cookiecutter + numpy/scipy/matplotlib, installed in
 Step 0; CPU-only, no network needed.)
 
 > **Going further (optional, later):** fit a small published v-vs-[S] dataset.
@@ -209,9 +185,7 @@ Step 0; CPU-only, no network needed.)
 
 | Symptom                                            | Likely cause / fix                                                                                                                 |
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `command not found: cookiecutter`                | venv not active or Step 0 skipped. Run`source .venv/bin/activate` then `pip install -r requirements.txt`.                      |
 | `No such file or directory: .../.venv/bin/...`   | The venv was deleted/moved. Recreate it:`python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`. |
-| cookiecutter asks to re-download the template      | Normal if you've run it before. Press**Enter** (y).                                                                          |
 | Fit doesn't converge / gives nonsense              | Bad initial guesses. Seed Km near the [S] of half-max and Vmax near the highest observed v.                                        |
 | Fitted Vmax keeps climbing                         | Substrate range doesn't reach saturation. Extend [S] well above Km so the plateau is sampled.                                      |
 | Lineweaver-Burk looks as good as the nonlinear fit | Noise is too low to expose the bias. Increase noise; the reciprocal plot should degrade faster.                                    |
@@ -242,6 +216,5 @@ files hold the context.
    Summarize where the project stands and what the next step is. Don't rewrite
    working code. Continue from here.
    ```
-   Tip: if it exists, run `python scripts/compile_for_ai.py` and paste its output
    to hand over the whole trail at once.
 

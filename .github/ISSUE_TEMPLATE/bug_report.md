@@ -10,7 +10,7 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 ## Steps to Reproduce
-1. Run `smairt ...` (or the legacy Cookiecutter command, if applicable)
+1. Run `smairt ...`
 2. Enter these values: ...
 3. See error
 
@@ -24,7 +24,7 @@ What actually happened.
 - OS: [e.g., macOS 14.0, Ubuntu 22.04, WSL]
 - Python version: [e.g., 3.11.5]
 - SMAIRT version: [e.g., 0.1.0]
-- Installation route: [`uv tool install .`, `pipx install .`, or legacy Cookiecutter]
+- Installation route: [`uv tool install .` or `pipx install .`]
 
 ## Error Output
 ```

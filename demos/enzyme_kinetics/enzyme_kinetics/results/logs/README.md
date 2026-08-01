@@ -20,7 +20,6 @@ script_02_add_noise_YYYYMMDD_HHMMSS.log
 
 These logs serve as:
 1. **The audit trail** - Connect hypothesis → script → log → interpretation
-2. **AI context** - AI can read these directly (IDE-native) or they feed into `compile_for_ai.py` (browser-paste)
 3. **Reproducibility record** - Full output preserved for each experiment run
 
 ## The Audit Trail Connection

@@ -58,6 +58,7 @@ def main() -> None:
             "downloaded",
             "--assistant",
             "opencode",
+            "--accept-license",
             "--paper",
             "--hpc",
             "--no-git",
@@ -65,6 +66,9 @@ def main() -> None:
     )
     if created.returncode:
         raise SystemExit(created.stderr)
+    script_help = run([str(python), "scripts/new_script.py", "--help"], cwd=destination)
+    if script_help.returncode:
+        raise SystemExit(script_help.stderr or script_help.stdout)
     checked = run([str(smairt), "check", str(destination), "--json"])
     if checked.returncode:
         raise SystemExit(checked.stderr or checked.stdout)

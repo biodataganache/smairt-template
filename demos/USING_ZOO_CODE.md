@@ -135,7 +135,6 @@ After a run, paste the output into the comment block at the bottom of the script
   right because... please change it to..."*. Catching mistakes is good science.
 - **Command fails?** Copy the error into the chat and ask it to fix it.
 - **Lost the thread?** Ask: *"Summarize what we've done so far and what the next
-  step is,"* or run `python scripts/compile_for_ai.py` and paste the result back
   in.
 - **`command not found`?** Your virtual environment probably isn't active. See
   step 3 above.

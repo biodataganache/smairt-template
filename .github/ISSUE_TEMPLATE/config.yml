@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: SMAIRT Documentation
-    url: https://github.com/biodataganache/smairt-cookiecutter#readme
+    url: https://github.com/PNNL-CompBio/smairt-template#readme
     about: Check the README for usage instructions and philosophy

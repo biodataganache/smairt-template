@@ -36,7 +36,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "cookiecutter>=2.6",
   "mypy>=1.13",
   "pytest>=8.0",
   "ruff>=0.9",
@@ -56,10 +55,6 @@ include = [
   "/scripts/smoke_install.py",
   "/README.md",
   "/LICENSE",
-  "/cookiecutter.json",
-  "/hooks",
-  "/{{ cookiecutter.project_slug }}",
-  "/legacy/cookiecutter",
 ]
 
 [tool.pytest.ini_options]
@@ -69,7 +64,7 @@ addopts = "-ra"
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-include = ["src/**/*.py", "tests/**/*.py", "scripts/**/*.py", "hooks/*.py"]
+include = ["src/**/*.py", "tests/**/*.py", "scripts/**/*.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]

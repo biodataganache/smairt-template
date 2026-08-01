@@ -1,4 +1,4 @@
 interface:
-  display_name: "SMAIRT Paper-Driven"
-  short_description: "Paper-driven research workflow with iterative analyses mapped to publication sections"
-  default_prompt: "Use $smairt-paper-driven to help organize and execute analyses for my paper."
+  display_name: "SMAIRT Paper Overlay"
+  short_description: "Map SMAIRT research evidence to publication sections"
+  default_prompt: "Use $smairt-paper-driven to map my SMAIRT study evidence into the optional Paper workspace."

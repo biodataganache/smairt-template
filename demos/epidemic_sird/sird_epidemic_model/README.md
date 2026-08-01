@@ -78,7 +78,6 @@ The **next steps** from your analysis feed right back into the background for th
 │   └── figures/       # Generated visualizations
 ├── analysis/          # Interpretation and analysis documentation
 ├── data/              # Data files by phase
-├── scripts/           # Helper scripts (new_script.py, compile_for_ai.py)
 │   └── shared/        # TeeLogger and shared utilities
 └── paper_draft/       # Parallel narrative and figure generation
 ```
@@ -111,7 +110,6 @@ Track reusable patterns and recurring errors in `prompts/KNOWN_PATTERNS.md`. Thi
 
 For **IDE-native** workflows (Roo/Zoo, Cursor, Windsurf): AI reads project files directly—use `prompts/AI_CONTEXT.md` and `prompts/KNOWN_PATTERNS.md` as context.
 
-For **browser-paste** workflows (ChatGPT, Claude web): Use `scripts/compile_for_ai.py` to generate a summary of the entire project state that you can paste into a new session.
 
 ---
 

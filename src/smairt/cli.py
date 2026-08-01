@@ -170,6 +170,8 @@ class Wizard:
             self.console.print(f"  {number}. {label}{recommended} - {explanation}")
         mapping = {number: value for number, _, value, _ in choices}
         current = str(self.answers.get(key, default))
+        if current not in mapping.values():
+            current = "custom" if key == "domain" and self.answers.get("custom_domain") else default
         while True:
             answer = self.session.prompt(f"{prompt} [Enter for {default}]: ").strip()
             if answer == _CANCEL:
@@ -559,7 +561,11 @@ def check(
     verbose: bool = typer.Option(False, help="Explain diagnostics and show detected local tools."),
 ) -> None:
     """Read-only Project Check for structural and configuration issues."""
-    root = _project_or_exit(path, remember=False)
+    try:
+        root = resolve_project(path)
+    except ProjectError as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
     issues = project_check(root)
     payload = {
         "issues": [issue.as_dict() for issue in issues],
@@ -769,7 +775,8 @@ def settings(
             contract = load_contract(root)
             typer.echo(f"Project Settings: {contract.project.name}")
             typer.echo(f"Slug (immutable): {contract.project.slug}")
-            typer.echo(f"Current phase: {contract.starting_phase.value}")
+            typer.echo(f"Starting phase: {contract.starting_phase.value}")
+            typer.echo(f"Current phase: {contract.current_phase.value}")
             typer.echo(f"Assistant: {contract.assistant.value}")
             typer.echo(f"License: {contract.license.value}")
             typer.echo(f"Collaborators: {', '.join(contract.people)}")
@@ -863,8 +870,8 @@ class Dashboard:
             self.console.rule(f"[bold cyan]SMAIRT {mode} Mode: {contract.project.name}[/]")
             self.console.print("1. Launch assistant or open folder")
             self.console.print("2. Project Settings")
-            self.console.print("3. Paper Support")
-            self.console.print("4. HPC Support")
+            self.console.print(f"3. Paper Support: {contract.capabilities['paper'].state.value}")
+            self.console.print(f"4. HPC Support: {contract.capabilities['hpc'].state.value}")
             self.console.print("5. Project Check")
             self.console.print("6. Help")
             if advanced:
@@ -1220,6 +1227,11 @@ def new(
     phase: StartingPhase = typer.Option(StartingPhase.SYNTHETIC, help="Starting data phase."),
     assistant: Assistant = typer.Option(Assistant.OPENCODE, help="Selected coding assistant."),
     license: License = typer.Option(License.MIT, help="Project license."),
+    accept_license: bool = typer.Option(
+        False,
+        "--accept-license",
+        help="Confirm the selected license for noninteractive creation.",
+    ),
     question: str | None = typer.Option(None, help="Optional research question."),
     email: str | None = typer.Option(None, help="Optional researcher email."),
     paper: bool = typer.Option(False, help="Include additive Paper support."),
@@ -1242,6 +1254,12 @@ def new(
     ):
         typer.echo(
             "Error: --name, --slug, --description, --researcher, and --domain are required with a destination.",
+            err=True,
+        )
+        raise typer.Exit(code=2)
+    if not wizard_mode and not accept_license:
+        typer.echo(
+            "Error: review the selected license and pass --accept-license to create the project.",
             err=True,
         )
         raise typer.Exit(code=2)

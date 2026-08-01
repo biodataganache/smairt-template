@@ -23,14 +23,14 @@ Run the same gates used by CI before opening a pull request:
 uv run ruff format --check .
 uv run ruff check .
 uv run mypy src tests
-uv run pytest tests/test_cli.py tests/test_legacy.py
+uv run pytest tests/test_cli.py
 uv run pytest
 uv build
 uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0-py3-none-any.whl --workspace .smoke/wheel
 uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0.tar.gz --workspace .smoke/sdist
 ```
 
-The focused suites exercise the installed command and legacy Cookiecutter seam.
+The focused suite exercises the installed command seam.
 The artifact smoke tests install the wheel and source distribution into clean
 environments, create a representative project, and run Project Check.
 
@@ -39,8 +39,8 @@ environments, create a representative project, and run Project Check.
 - Document `smairt new` as the normal onboarding path.
 - Keep `uv tool install .` as the repository-preview installation command;
   document `pipx install .` as the fallback.
-- Treat Cookiecutter as legacy compatibility only. Its local command and
-  equivalence guarantee are documented in `legacy/cookiecutter/README.md`.
+- Treat Cookiecutter files as unsupported historical references only. The CLI
+  is the sole supported generator.
 - Keep generated-project guidance aligned with actual `smairt` commands and
   assets. Do not introduce browser-paste, removed helper-script, or stale
   Cookiecutter repository instructions.

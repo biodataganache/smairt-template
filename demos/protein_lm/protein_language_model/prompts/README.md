@@ -33,7 +33,7 @@ These files serve as persistent project memory. They accumulate knowledge across
 
 The AI reads these files directly. Point it to `AI_CONTEXT.md` on first encounter, then it knows to check `CONTEXT_INDEX.md` for task-specific guidance.
 
-## For Browser-Paste Workflow (ChatGPT, Claude web)
+## For file-based Workflow (ChatGPT, Claude web)
 
 Paste the contents of key files at the start of each session, or use `compiled_for_ai.md` for full context.
 

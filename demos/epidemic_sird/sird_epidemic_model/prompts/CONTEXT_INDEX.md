@@ -90,7 +90,6 @@ Read these files to understand the project from scratch:
 ## Cross-Tool Transfer
 
 When switching to a different AI tool:
-1. Run `python scripts/compile_for_ai.py`
 2. Provide the output file `prompts/compiled_for_ai.md` to the new tool
 
 ---
@@ -116,7 +115,6 @@ When switching to a different AI tool:
 - `experiments/02_downloaded/` — Phase 2 scripts
 - `experiments/03_real_data/` — Phase 3 scripts
 - `scripts/shared/` — Reusable library code
-- `scripts/compile_for_ai.py` — Project state compiler
 
 ### Results
 - `results/logs/` — Script output logs

@@ -70,43 +70,23 @@ Full context, hypothesis, and metrics are in
    source .venv/bin/activate     # Windows PowerShell: .venv\Scripts\Activate.ps1
    pip install -r requirements.txt
    ```
-   This installs `cookiecutter` (used in the next step) plus numpy/pandas/scipy/
-   statsmodels/matplotlib. If you see `command not found: cookiecutter`, this
-   step was skipped or your venv isn't active.
+   This installs only the scientific Python dependencies for the demo.
+
 
    Windows users: if PowerShell blocks activation, run
    `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that terminal,
    then try `.venv\Scripts\Activate.ps1` again. In Command Prompt, use
    `.venv\Scripts\activate.bat`.
 
-1. **Generate a fresh SMAIRT project** (run from this folder, venv active):
+1. **Create a fresh SMAIRT project** with the installed CLI:
    ```bash
-   cookiecutter https://github.com/biodataganache/smairt-template.git
+   smairt new
    ```
-   Cookiecutter then asks you a series of questions. If you've run it before you
-   may first see `Is it okay to delete and re-download it? [y/n] (y):`. Press
-   **Enter**. Then answer the prompts. Press **Enter** to accept a default,
-   or type the value/number shown. For the **Select** prompts, type the
-   **number** (not the word). **Suggested answers for this demo:**
+   Use the guided prompts to choose the demo name, research question, domain,
+   starting phase, and assistant. The installed `smairt` command is the only
+   supported generator.
 
-   | Prompt | Suggested answer |
-   |--------|------------------|
-   | project_name | `Proteomics DE` |
-   | project_slug | press Enter (auto) |
-   | author_name | your name |
-   | author_email | your email (or Enter) |
-   | description | `Differential protein abundance with FDR control` |
-   | project_mode | `1` (standard) |
-   | workflow_mode | `1` (ide_native) |
-   | initial_research_question | `Which proteins are differentially abundant, and can we recover them at controlled FDR?` |
-   | domain | `3` (computational_biology) |
-   | ai_tool | `1` (roo_zoo / Zoo Code) |
-   | include_example_project | `1` (no) |
-   | starting_phase | `1` (synthetic) |
-   | license | `1` (MIT) |
-   | create_git_repo | `1` (yes) |
 
-   This creates a folder named after your project_slug (e.g. `proteomics_de/`).
 
 2. **Seed your project with the background:**
    ```bash
@@ -201,7 +181,6 @@ Full context, hypothesis, and metrics are in
 On synthetic data: a volcano plot with the planted true positives highlighted, a
 reported recall and observed FDR that track your BH threshold, and an honest note
 on what the missing-value handling did. Reproducible from your breadcrumb trail.
-(Requirements: cookiecutter + numpy/pandas/scipy/statsmodels/matplotlib,
 installed in Step 0; CPU-only, no network needed.)
 
 > **Going further (optional, later):** once the synthetic workflow is solid, you
@@ -215,9 +194,7 @@ installed in Step 0; CPU-only, no network needed.)
 
 | Symptom | Likely cause / fix |
 |---------|--------------------|
-| `command not found: cookiecutter` | venv not active or Step 0 skipped. Run `source .venv/bin/activate` then `pip install -r requirements.txt`. |
 | `No such file or directory: .../.venv/bin/...` | The venv was deleted/moved. Recreate it: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`. |
-| cookiecutter asks to re-download the template | Normal if you've run it before. Press **Enter** (y). |
 | Almost everything is "significant" | You're testing raw p-values without correction. Add Benjamini-Hochberg FDR; recount hits. |
 | Recall is ~0 even on synthetic data | Effect size too small vs. noise, or you tested on raw (not log2) intensities. Increase planted fold-change or fix the transform. |
 | Observed FDR is far above your threshold | Correction not applied, or applied per-comparison instead of across all proteins. Ask the AI to apply BH across the full p-value vector. |
@@ -248,5 +225,4 @@ files hold the context.
    Summarize where the project stands and what the next step is. Don't rewrite
    working code. Continue from here.
    ```
-   Tip: if it exists, run `python scripts/compile_for_ai.py` and paste its output
    to hand over the whole trail at once.

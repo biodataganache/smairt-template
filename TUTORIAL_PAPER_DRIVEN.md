@@ -17,6 +17,7 @@ smairt new ./my_study \
   --domain "Not sure yet" \
   --phase real \
   --assistant opencode \
+  --accept-license \
   --paper \
   --no-git
 ```
@@ -34,10 +35,10 @@ validate publication claims.
 
 ## Preserve The Audit Trail
 
-For each paper-focused result, retain the hypothesis, experiment or analysis
-script, raw log, interpretation, and relation to the paper outline. The
-assistant should read `prompts/AI_CONTEXT.md` and work from project files
-directly. Avoid browser-paste and references to removed helper scripts.
+For each paper-focused result, retain the question and background, hypothesis,
+phase experiment, raw log, analysis and decision, and study report. Relate that
+existing evidence chain to the paper outline. The assistant should read
+`prompts/AI_CONTEXT.md` and work from project files directly.
 
 ## Validate The Workspace
 

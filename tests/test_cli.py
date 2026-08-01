@@ -7,6 +7,7 @@ import select
 import subprocess
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -46,6 +47,7 @@ def test_invalid_slug_exits_cleanly_without_creating_a_project(tmp_path: Path) -
             "Test Researcher",
             "--domain",
             "Not sure yet",
+            "--accept-license",
             "--no-git",
         ],
         check=False,
@@ -55,6 +57,36 @@ def test_invalid_slug_exits_cleanly_without_creating_a_project(tmp_path: Path) -
 
     assert result.returncode == 1
     assert "Slug must start with a lowercase letter" in result.stderr
+    assert not destination.exists()
+
+
+def test_noninteractive_creation_requires_explicit_license_acceptance(tmp_path: Path) -> None:
+    destination = tmp_path / "unaccepted-license"
+
+    result = subprocess.run(
+        [
+            str(installed_smairt()),
+            "new",
+            str(destination),
+            "--name",
+            "License Test",
+            "--slug",
+            "license_test",
+            "--description",
+            "Must not be created without acceptance.",
+            "--researcher",
+            "Test Researcher",
+            "--domain",
+            "Not sure yet",
+            "--no-git",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 2
+    assert "--accept-license" in result.stderr
     assert not destination.exists()
 
 
@@ -84,6 +116,7 @@ def test_installed_command_creates_a_project_with_a_versioned_contract(
             "opencode",
             "--license",
             "MIT",
+            "--accept-license",
             "--no-git",
         ],
         check=False,
@@ -106,6 +139,8 @@ def test_installed_command_creates_a_project_with_a_versioned_contract(
         "people": {"researcher": {"name": "Ada Researcher"}},
         "assistant": "opencode",
         "starting_phase": "synthetic",
+        "current_phase": "synthetic",
+        "license_year": datetime.now().year,
         "license": "MIT",
         "git_requested": False,
         "git_initialized": False,
@@ -191,17 +226,53 @@ def test_hpc_guidance_is_a_phase_independent_editable_template(tmp_path: Path) -
         assert "results/logs" in script
 
 
-def test_generated_project_keeps_managed_bookkeeping_local(tmp_path: Path) -> None:
+def test_managed_assets_are_derived_from_the_package_after_clone(tmp_path: Path) -> None:
     destination = tmp_path / "managed"
 
-    result = create_project(destination)
+    result = create_project(destination, initialize_git=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=SMAIRT Test",
+            "-c",
+            "user.email=test@example.com",
+            "commit",
+            "-m",
+            "initial",
+        ],
+        cwd=destination,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    clone = tmp_path / "clone"
+    subprocess.run(
+        ["git", "clone", "--quiet", str(destination), str(clone)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    checked = subprocess.run(
+        [str(installed_smairt()), "check", str(clone), "--json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    inspected = subprocess.run(
+        [str(installed_smairt()), "inspect", str(clone)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
 
     assert result.returncode == 0, result.stderr
-    manifest = yaml.safe_load((destination / ".smairt" / "managed-files.yaml").read_text())
-    assert manifest["version"] == 1
-    assert "README.md" in manifest["files"]
-    assert "smairt.yaml" not in manifest["files"]
+    assert not (destination / ".smairt" / "managed-files.yaml").exists()
     assert ".smairt/" in (destination / ".gitignore").read_text()
+    assert checked.returncode == 0, checked.stdout
+    assert json.loads(checked.stdout) == {"issues": [], "ok": True, "repairs": []}
+    assert inspected.returncode == 0, inspected.stderr
+    assert "README.md: unchanged" in inspected.stdout
 
 
 def test_existing_destination_is_never_overwritten_or_partially_exposed(
@@ -308,6 +379,7 @@ def create_project(
         assistant,
     ]
     command.append("--git" if initialize_git else "--no-git")
+    command.append("--accept-license")
     if paper:
         command.append("--paper")
     if hpc:
@@ -487,7 +559,8 @@ def test_settings_license_check_and_repair_are_guarded(tmp_path: Path) -> None:
     assert settings.returncode == 0, settings.stderr
     assert metadata["project"]["name"] == "Renamed Project"
     assert metadata["project"]["slug"] == "test_project"
-    assert metadata["starting_phase"] == "real"
+    assert metadata["starting_phase"] == "synthetic"
+    assert metadata["current_phase"] == "real"
     assert metadata["people"]["analyst"] == {"name": "Grace Analyst"}
     assert preferences == {"experience": "advanced", "motion": False}
     assert preview.returncode == 0
@@ -555,9 +628,13 @@ def test_license_change_updates_managed_asset_and_renaming_researcher_is_not_a_l
     assert regenerated.returncode == 0, regenerated.stderr
     assert "Apache License" in license_path.read_text()
     assert "Renamed Researcher" in license_path.read_text()
-    manifest = yaml.safe_load((destination / ".smairt" / "managed-files.yaml").read_text())
-    assert "Apache License" in manifest["assets"]["LICENSE"]
-    assert "Renamed Researcher" in manifest["assets"]["LICENSE"]
+    checked = subprocess.run(
+        [str(installed_smairt()), "check", str(destination), "--json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert checked.returncode == 0, checked.stdout
 
 
 def test_open_tracks_recents_and_home_cleans_stale_paths(tmp_path: Path) -> None:
@@ -751,7 +828,8 @@ def test_deactivated_capabilities_do_not_offer_guidance_until_safely_reenabled(
 
     assert disabled_paper.returncode == 0, disabled_paper.stderr
     assert disabled_hpc.returncode == 0, disabled_hpc.stderr
-    assert json.loads(inactive_check.stdout)["repairs"] == []
+    assert inactive_check.returncode == 0, inactive_check.stdout
+    assert json.loads(inactive_check.stdout) == {"issues": [], "ok": True, "repairs": []}
     assert reenabled_paper.returncode == 0, reenabled_paper.stderr
     assert reenabled_hpc.returncode == 0, reenabled_hpc.stderr
     assert paper_readme.read_text() == "researcher paper notes\n"
@@ -979,6 +1057,7 @@ def test_interactive_wizard_creates_a_project_from_a_real_input_stream(
     }
     assert metadata["assistant"] == "opencode"
     assert metadata["starting_phase"] == "synthetic"
+    assert metadata["current_phase"] == "synthetic"
     assert metadata["license"] == "MIT"
     assert metadata["git_requested"] is False
     assert metadata["capabilities"] == {

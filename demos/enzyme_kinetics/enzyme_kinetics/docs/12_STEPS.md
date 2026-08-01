@@ -115,9 +115,7 @@ The `setup_logging()` function from `scripts/shared/` handles this automatically
 
 ---
 
-## Step 7: Use compile_for_ai.py for Cross-Tool Transfer
 
-`scripts/compile_for_ai.py` generates a single document containing the full
 project state. Use it when:
 
 - **Switching AI tools** — Moving from Roo to ChatGPT or vice versa

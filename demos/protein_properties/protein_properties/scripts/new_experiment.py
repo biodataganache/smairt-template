@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Create a new experiment directory for paper-driven SMAIRT project.
+Create a new experiment directory for paper-enabled SMAIRT project.
 
 Usage:
     python scripts/new_experiment.py --section 01 --name initial_analysis
@@ -178,7 +178,7 @@ def create_experiment(section: str, name: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Create a new experiment directory for paper-driven SMAIRT"
+        description="Create a new experiment directory for paper-enabled SMAIRT"
     )
     parser.add_argument(
         "--section", 

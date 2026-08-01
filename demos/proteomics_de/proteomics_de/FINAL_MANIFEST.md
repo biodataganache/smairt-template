@@ -1,7 +1,7 @@
 # Final Manifest
 
 
-This file is only used in paper-driven mode.
+This file is only used in optional Paper workspace.
 
 For standard SMAIRT mode, results are tracked through the audit trail:
 - `hypotheses/` - Hypothesis documentation (H1_*.md, H2_*.md, ...)

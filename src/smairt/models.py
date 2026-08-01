@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class StartingPhase(StrEnum):
@@ -118,11 +119,24 @@ class ProjectContract(BaseModel):
     people: dict[str, Researcher]
     assistant: Assistant
     starting_phase: StartingPhase
+    current_phase: StartingPhase
+    license_year: int = Field(ge=2000, le=9999)
     license: License
     git_requested: bool
     git_initialized: bool
     capabilities: dict[str, Capability]
     conventions: ConventionSettings = Field(default_factory=ConventionSettings)
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_current_phase(cls, data: object) -> object:
+        if isinstance(data, dict):
+            migrated = dict(data)
+            if "current_phase" not in migrated and "starting_phase" in migrated:
+                migrated["current_phase"] = migrated["starting_phase"]
+            migrated.setdefault("license_year", datetime.now().year)
+            return migrated
+        return data
 
     @classmethod
     def from_options(cls, options: ProjectOptions, git_initialized: bool) -> ProjectContract:
@@ -131,6 +145,8 @@ class ProjectContract(BaseModel):
             people={"researcher": options.researcher},
             assistant=options.assistant,
             starting_phase=options.starting_phase,
+            current_phase=options.starting_phase,
+            license_year=datetime.now().year,
             license=options.license,
             git_requested=options.initialize_git,
             git_initialized=git_initialized,

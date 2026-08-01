@@ -18,6 +18,7 @@ smairt new ./classification_noise_study \
   --domain "Computational biology" \
   --phase synthetic \
   --assistant opencode \
+  --accept-license \
   --no-git
 ```
 
@@ -93,7 +94,5 @@ for JSON, redirected output, tests, and CI.
 
 ## Compatibility Note
 
-Existing Cookiecutter automation can continue using the repository-local legacy
-adapter described in `legacy/cookiecutter/README.md`. It delegates to the same
-installed package, yielding the same canonical project as `smairt new` for the
-same answers. It is not the normal onboarding path.
+Cookiecutter implementations are retained under `legacy/cookiecutter/` as
+unsupported historical references only. Migrate automation to `smairt new`.

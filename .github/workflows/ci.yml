@@ -26,7 +26,6 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run ruff check .
       - run: uv run mypy src tests
-      - run: uv run pytest tests/test_cli.py tests/test_legacy.py
       - run: uv run pytest
       - run: uv build
       - run: uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0-py3-none-any.whl --workspace .smoke/wheel

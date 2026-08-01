@@ -48,6 +48,7 @@ smairt new ./my_smairt_project \
   --phase synthetic \
   --assistant opencode \
   --license MIT \
+  --accept-license \
   --no-git
 ```
 
@@ -104,7 +105,7 @@ Each project is ordinary, readable files:
 ```text
 my_smairt_project/
 |-- smairt.yaml            # Tracked, versioned project contract
-|-- .smairt/               # Ignored local preferences and managed-file hashes
+|-- .smairt/               # Ignored local dashboard preferences
 |-- background/
 |-- hypotheses/
 |-- plans/
@@ -125,11 +126,9 @@ conclusions.
 
 ## Legacy Cookiecutter
 
-Cookiecutter is a compatibility path for existing automation, not normal
-onboarding. Its post-generation hook delegates to the installed `smairt`
-package, so both routes produce the same canonical scaffold. See
-[`legacy/cookiecutter/README.md`](legacy/cookiecutter/README.md) for the
-repository-local command and constraints. New projects should use `smairt new`.
+Cookiecutter implementations are retained under `legacy/cookiecutter/` only as
+unsupported historical references. They are not packaged, tested, or supported
+generation paths. Use `smairt new` for every new project and automation flow.
 
 ## V0.1 Limits
 
@@ -138,7 +137,7 @@ repository-local command and constraints. New projects should use `smairt new`.
   scientific correctness or modify researcher-authored content.
 - Repairs and regeneration are limited to deterministic, tool-owned assets.
 - HPC support supplies guidance and a template, not scheduler integration.
-- Native Windows support and removing the legacy adapter are deferred.
+- Native Windows support is deferred.
 
 ## Development
 
@@ -149,7 +148,7 @@ uv sync --all-extras --locked
 uv run ruff format --check .
 uv run ruff check .
 uv run mypy src tests
-uv run pytest tests/test_cli.py tests/test_legacy.py
+uv run pytest tests/test_cli.py
 uv run pytest
 uv build
 uv run python scripts/smoke_install.py --artifact dist/smairt-0.1.0-py3-none-any.whl --workspace .smoke/wheel

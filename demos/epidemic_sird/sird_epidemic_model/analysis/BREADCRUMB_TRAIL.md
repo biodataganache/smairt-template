@@ -1,7 +1,7 @@
 # Breadcrumb Trail
 
 
-This file is only used in paper-driven mode.
+This file is only used in optional Paper workspace.
 
 For standard SMAIRT mode, the breadcrumb trail is maintained through:
 - TeeLogger auto-captures all script output to `results/logs/`

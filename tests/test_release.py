@@ -38,15 +38,13 @@ def test_built_wheel_and_sdist_install_into_clean_environments_and_create_projec
             member.name.split("/", 1)[1] for member in archive.getmembers() if "/" in member.name
         }
     assert "smairt/assets/scaffold/prompts/AI_CONTEXT.md" in wheel_files
+    assert "smairt/assets/scaffold/scripts/new_script.py" in wheel_files
+    assert "smairt/assets/scaffold/scripts/shared/logging.py" in wheel_files
     assert "smairt-0.1.0.dist-info/METADATA" in wheel_files
     assert any(path.endswith(".dist-info/licenses/LICENSE") for path in wheel_files)
     assert {
         "LICENSE",
         "README.md",
-        "cookiecutter.json",
-        "hooks/post_gen_project.py",
-        "{{ cookiecutter.project_slug }}/LEGACY_COOKIECUTTER.md",
-        "legacy/cookiecutter/README.md",
     } <= source_files
     protected_workspace = tmp_path / "protected-workspace"
     protected_workspace.mkdir()

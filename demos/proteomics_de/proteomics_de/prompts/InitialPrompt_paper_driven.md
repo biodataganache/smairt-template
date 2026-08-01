@@ -1,12 +1,12 @@
-# Initial Prompt: Paper-Driven Mode
+# Initial Prompt: optional Paper workspace
 
-Use this prompt when starting an AI session for a paper-driven SMAIRT project.
+Use this prompt when starting an AI session for a paper-focused SMAIRT project.
 
 ---
 
 ## Your Task
 
-You are helping with a paper-driven research project using the SMAIRT framework.
+You are helping with a paper-focused research project using the SMAIRT framework.
 
 Please read:
 - `prompts/AI_CONTEXT.md` — Your role and workflow
@@ -22,13 +22,13 @@ Please read:
 - **Project:** Proteomics DE
 - **Author:** Jane Doe
 - **Research Question:** Which proteins are differentially abundant, and can we recover them at controlled FDR?
-- **Mode:** Paper-Driven (working toward a specific paper)
+- **Mode:** paper-focused (working toward a specific paper)
 
 ---
 
 ## Process
 
-The paper-driven workflow:
+The paper-focused workflow:
 
 1. **Paper outline exists** — The structure we're writing toward
 2. **Data is available** — Real datasets ready for analysis
@@ -76,7 +76,7 @@ analysis/
 experiments/
 ├── 01_synthetic/           # If applicable
 ├── 02_downloaded/          # If applicable
-└── 03_real_data/           # Primary for paper-driven
+└── 03_real_data/           # Primary for paper-focused
 
 scripts/
 ├── shared/                 # Reusable library

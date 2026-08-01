@@ -16,9 +16,9 @@ The **next steps** from your analysis feed right back into the background for th
 ## Files
 
 - `ANALYSIS_TEMPLATE.md` - Template for documenting each iteration's results, interpretation, and next steps
-- `BREADCRUMB_TRAIL.md` - Running log of all analyses performed (paper-driven mode)
-- `ANALYSIS_PLAN.md` - Paper structure mapping and iteration planning (paper-driven mode)
-- `REPOSITORY_PLAN.md` - Repository organization plan (paper-driven mode)
+- `BREADCRUMB_TRAIL.md` - Running log of all analyses performed (optional Paper workspace)
+- `ANALYSIS_PLAN.md` - Paper structure mapping and iteration planning (optional Paper workspace)
+- `REPOSITORY_PLAN.md` - Repository organization plan (optional Paper workspace)
 
 ## The Audit Trail
 

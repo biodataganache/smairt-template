@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import os
 import shutil
 import subprocess
@@ -12,9 +11,12 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from smairt.models import ProjectContract, ProjectOptions, StartingPhase
-from smairt.project import create_management_assets, hpc_asset_contents, phase_directories
-
-MANIFEST_PATH = Path(".smairt") / "managed-files.yaml"
+from smairt.project import (
+    create_management_assets,
+    hpc_asset_contents,
+    phase_asset_contents,
+    phase_directories,
+)
 
 
 class GenerationError(Exception):
@@ -33,7 +35,6 @@ def generate_project(destination: Path, options: ProjectOptions) -> list[str]:
         _generate_into(temporary, options)
         _write_contract(temporary, options, git_initialized=False)
         create_management_assets(temporary, options.assistant, options.license, options.researcher)
-        _write_manifest(temporary, options)
         git_initialized = False
         if options.initialize_git:
             git_initialized = _initialize_git(temporary, messages)
@@ -65,12 +66,15 @@ def _generate_into(root: Path, options: ProjectOptions) -> None:
     )
     context: dict[str, Any] = {"project": options.project, "researcher": options.researcher}
     for path in templates.rglob("*"):
-        if path.is_dir():
+        if path.is_dir() or "__pycache__" in path.parts or path.suffix == ".pyc":
             continue
         relative_path = Path(str(path.relative_to(templates)))
         target = root / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(environment.get_template(relative_path.as_posix()).render(context))
+        if path.suffix == ".py":
+            target.write_bytes(path.read_bytes())
+        else:
+            target.write_text(environment.get_template(relative_path.as_posix()).render(context))
 
     _create_phase_directories(root, options.starting_phase)
     if options.paper:
@@ -82,16 +86,17 @@ def _generate_into(root: Path, options: ProjectOptions) -> None:
 def _create_phase_directories(root: Path, phase: StartingPhase) -> None:
     for directory in phase_directories(phase):
         (root / directory).mkdir(parents=True)
+    for relative, content in phase_asset_contents(phase).items():
+        (root / relative).write_text(content)
 
 
 def _create_paper_assets(root: Path) -> None:
-    (root / "paper" / "analysis").mkdir(parents=True)
-    (root / "paper" / "README.md").write_text(
-        "# Paper Workspace\n\n"
-        "Keep publication-focused analyses in `paper/analysis/` so they remain "
-        "separate from exploratory `analysis/` work.\n"
-    )
-    (root / "paper" / "outline.md").write_text("# Paper Outline\n")
+    from smairt.project import paper_asset_contents
+
+    for relative, content in paper_asset_contents().items():
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
 
 
 def _create_hpc_assets(root: Path, project_slug: str) -> None:
@@ -135,63 +140,3 @@ def _write_contract(root: Path, options: ProjectOptions, git_initialized: bool) 
     data = contract.model_dump(mode="json", exclude_none=True)
     data.pop("conventions", None)
     (root / "smairt.yaml").write_text(yaml.safe_dump(data, sort_keys=False))
-
-
-def _write_manifest(root: Path, options: ProjectOptions) -> None:
-    managed: dict[str, str] = {}
-    for path in sorted(root.rglob("*")):
-        if path.is_file() and path.name != "smairt.yaml":
-            managed[path.relative_to(root).as_posix()] = hashlib.sha256(
-                path.read_bytes()
-            ).hexdigest()
-    manifest = root / MANIFEST_PATH
-    manifest.parent.mkdir()
-    manifest.write_text(
-        yaml.safe_dump(
-            {"version": 1, "files": managed, "assets": _managed_assets(options)},
-            sort_keys=True,
-        )
-    )
-
-
-def _managed_assets(options: ProjectOptions) -> dict[str, str]:
-    templates = Path(__file__).parent / "assets" / "scaffold"
-    environment = Environment(
-        loader=FileSystemLoader(str(templates)),
-        undefined=StrictUndefined,
-        keep_trailing_newline=True,
-    )
-    context: dict[str, Any] = {"project": options.project, "researcher": options.researcher}
-    assets: dict[str, str] = {}
-    for path in templates.rglob("*"):
-        if path.is_file():
-            relative = path.relative_to(templates).as_posix()
-            assets[relative] = environment.get_template(relative).render(context)
-    assets["LICENSE"] = _license_text(options)
-    alias = _assistant_alias(options)
-    if alias is not None:
-        assets[alias] = (
-            "# SMAIRT AI Context\n\nRead `prompts/AI_CONTEXT.md` before working in this project.\n"
-        )
-    if options.paper:
-        assets.update(
-            {
-                "paper/README.md": "# Paper Workspace\n\nKeep publication-focused analyses in `paper/analysis/` so they remain separate from exploratory `analysis/` work.\n",
-                "paper/outline.md": "# Paper Outline\n",
-            }
-        )
-    if options.hpc:
-        assets.update(hpc_asset_contents(options.project.slug))
-    return assets
-
-
-def _license_text(options: ProjectOptions) -> str:
-    from smairt.project import _render_license
-
-    return _render_license(options.license, options.researcher.name)
-
-
-def _assistant_alias(options: ProjectOptions) -> str | None:
-    from smairt.project import ASSISTANT_ALIASES
-
-    return ASSISTANT_ALIASES.get(options.assistant)

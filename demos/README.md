@@ -2,7 +2,6 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../smairt-template/README.md)
 [![Framework: SMAIRT](https://img.shields.io/badge/framework-SMAIRT-6f42c1.svg)](../smairt-template/README.md)
-[![Template: Cookiecutter](https://img.shields.io/badge/template-cookiecutter-ffca28.svg)](../smairt-template/README.md)
 [![Mode: Scientist in Control](https://img.shields.io/badge/AI%20workflow-human%20review%20required-darkgreen.svg)](USING_ZOO_CODE.md)
 
 **A professional, scientist-friendly set of SMAIRT demos for learning how to do reproducible, AI-assisted research without giving up scientific judgment.**
@@ -158,10 +157,10 @@ Then try activation again.
 ### 3. Generate a fresh SMAIRT project
 
 ```bash
-cookiecutter https://github.com/biodataganache/smairt-template.git
+smairt new
 ```
 
-Each track's [`DEMO.md`](lunar/DEMO.md) provides suggested answers for the Cookiecutter prompts.
+Each track's [`DEMO.md`](lunar/DEMO.md) provides suggested answers for the guided CLI prompts.
 
 ### 4. Configure Zoo Code
 
@@ -233,7 +232,7 @@ The completed lunar example shows what a multi-iteration trail can look like, bu
 | [`epidemic_sird/`](epidemic_sird/DEMO.md)             | Math / epidemiology demo (SIRD infection-recovery-death model)    |
 | [`bring_your_own/`](bring_your_own/DEMO.md)           | Flexible worksheet-driven custom-project entry point              |
 | [`FIRST_SCRIPT_GUIDE.md`](FIRST_SCRIPT_GUIDE.md)      | Shared beginner guide for choosing a strong first SMAIRT script   |
-| [`../smairt-template/`](../smairt-template/README.md) | The canonical SMAIRT Cookiecutter framework                       |
+| [`../smairt-template/`](../smairt-template/README.md) | The canonical SMAIRT toolkit                       |
 | [`../smairt-agentic/`](../smairt-agentic/README.md)   | SMAIRT agentic tooling and CLI                                    |
 
 ---

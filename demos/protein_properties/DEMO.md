@@ -71,46 +71,22 @@ Full context, hypothesis, and metrics are in
    source .venv/bin/activate     # Windows PowerShell: .venv\Scripts\Activate.ps1
    pip install -r requirements.txt
    ```
+   This installs only the scientific Python dependencies for the demo.
 
-   This installs `cookiecutter` (used in the next step) plus numpy/pandas/
-   scikit-learn/matplotlib. If you see `command not found: cookiecutter`, this
-   step was skipped or your venv isn't active.
 
    Windows users: if PowerShell blocks activation, run
    `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that terminal,
    then try `.venv\Scripts\Activate.ps1` again. In Command Prompt, use
    `.venv\Scripts\activate.bat`.
-1. **Generate a fresh SMAIRT project** (run from this folder, venv active):
-
+1. **Create a fresh SMAIRT project** with the installed CLI:
    ```bash
-   cookiecutter https://github.com/biodataganache/smairt-template.git
+   smairt new
    ```
+   Use the guided prompts to choose the demo name, research question, domain,
+   starting phase, and assistant. The installed `smairt` command is the only
+   supported generator.
 
-   Cookiecutter then asks you a series of questions. If you've run it before you
-   may first see `Is it okay to delete and re-download it? [y/n] (y):`. Press
-   **Enter**. Then answer the prompts. Press **Enter** to accept a default,
-   or type the value/number shown. For the **Select** prompts, type the
-   **number** (not the word). **Suggested answers for this demo:**
 
-   | Prompt                    | Suggested answer                                                          |
-   | ------------------------- | ------------------------------------------------------------------------- |
-   | project_name              | `Protein Properties`                                                    |
-   | project_slug              | press Enter (auto)                                                        |
-   | author_name               | your name                                                                 |
-   | author_email              | your email (or Enter)                                                     |
-   | description               | `Computing MW, pI, GRAVY and separating membrane from soluble proteins` |
-   | project_mode              | `1` (standard)                                                          |
-   | workflow_mode             | `1` (ide_native)                                                        |
-   | initial_research_question | `Can a hydrophobicity rule separate membrane from soluble proteins?`    |
-   | domain                    | `3` (computational_biology)                                             |
-   | ai_tool                   | `1` (roo_zoo / Zoo Code)                                                |
-   | include_example_project   | `1` (no)                                                                |
-   | starting_phase            | `1` (synthetic)                                                         |
-   | license                   | `1` (MIT)                                                               |
-   | create_git_repo           | `1` (yes)                                                               |
-
-   This creates a folder named after your project_slug (e.g.
-   `protein_properties/`).
 2. **Seed your project with the background:**
 
    ```bash
@@ -207,7 +183,6 @@ On synthetic data: MW/pI/GRAVY calculators that match reference values within a
 small tolerance, a demonstration that GRAVY separates membrane-like from
 soluble-like sequences well above chance, and the GRAVY histograms / feature
 comparison, all reproducible from your breadcrumb trail. (Requirements:
-cookiecutter + numpy/pandas/scikit-learn/matplotlib, installed in Step 0;
 CPU-only, no network needed.)
 
 > **Going further (optional, later):** download a small labeled set from UniProt
@@ -221,9 +196,7 @@ CPU-only, no network needed.)
 
 | Symptom                                          | Likely cause / fix                                                                                                                                                |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `command not found: cookiecutter`              | venv not active or Step 0 skipped. Run`source .venv/bin/activate` then `pip install -r requirements.txt`.                                                     |
 | `No such file or directory: .../.venv/bin/...` | The venv was deleted/moved. Recreate it:`python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`.                                |
-| cookiecutter asks to re-download the template    | Normal if you've run it before. Press**Enter** (y).                                                                                                         |
 | Computed MW is off by ~18 Da                     | Forgot to add (or double-counted) the terminal water. Add exactly one water to the summed residue masses.                                                         |
 | Computed MW is off by a lot                      | Mixed up monoisotopic vs. average masses, or used peptide-bond-subtracted residue masses inconsistently. Pick one scheme and check against a reference tool.      |
 | pI is wildly wrong                               | Wrong pKa set or missing the N-/C-terminus charges. Include termini plus D, E, C, Y, H, K, R.                                                                     |
@@ -255,5 +228,4 @@ files hold the context.
    Summarize where the project stands and what the next step is. Don't rewrite
    working code. Continue from here.
    ```
-   Tip: if it exists, run `python scripts/compile_for_ai.py` and paste its output
    to hand over the whole trail at once.

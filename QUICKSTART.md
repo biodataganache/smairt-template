@@ -37,6 +37,7 @@ smairt new ./classification_noise_study \
   --domain "Computational biology" \
   --phase synthetic \
   --assistant opencode \
+  --accept-license \
   --no-git
 ```
 
@@ -50,11 +51,13 @@ commit.
 Open the project in the selected coding assistant. Ask it to read
 `prompts/AI_CONTEXT.md`, then work through a traceable chain:
 
-1. Write a hypothesis in `hypotheses/`.
-2. Create an experiment in the selected `experiments/` phase directory.
-3. Record raw command output in `results/logs/`.
-4. Interpret the result in `analysis/`.
-5. Create a plan in `plans/` before complex work.
+1. Record the research question and context in `background/`.
+2. Write a hypothesis in `hypotheses/`.
+3. Create an experiment in the selected `experiments/` phase directory.
+4. Record raw command output in `results/logs/`.
+5. Interpret the result and record the decision in `analysis/`.
+6. Consolidate the completed study in its study report. Create a plan in
+   `plans/` before complex work.
 
 SMAIRT does not perform science or validate conclusions. The researcher owns
 the question, the evidence, and the interpretation.
@@ -76,8 +79,5 @@ review it first with `smairt repair .`, then apply only the chosen repair with
 
 ## Legacy Automation
 
-Cookiecutter remains available only for existing automation. It generates the
-same canonical workspace through the installed package; see
-[`legacy/cookiecutter/README.md`](legacy/cookiecutter/README.md). Do not use a
-GitHub shorthand, browser-paste workflow, or an old Cookiecutter repository
-name for new projects.
+Cookiecutter implementations under `legacy/cookiecutter/` are unsupported,
+untested historical references. Replace existing automation with `smairt new`.

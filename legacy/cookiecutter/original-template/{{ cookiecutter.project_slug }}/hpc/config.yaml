@@ -1,0 +1,55 @@
+# HPC Configuration
+{% if cookiecutter.project_mode == 'paper_driven' %}
+# Edit these settings for your cluster
+
+cluster:
+  type: slurm  # slurm, pbs, or sge
+  partition: default
+  account: null  # Your account/allocation
+
+resources:
+  default:
+    cpus: 4
+    memory: 16G
+    time: "4:00:00"
+  
+  large:
+    cpus: 16
+    memory: 64G
+    time: "12:00:00"
+  
+  gpu:
+    cpus: 8
+    memory: 32G
+    time: "8:00:00"
+    gpus: 1
+    gpu_type: null  # e.g., v100, a100
+
+environment:
+  # Path to conda environment or virtualenv
+  conda_env: null
+  virtualenv: null
+  
+  # Modules to load
+  modules: []
+  # Example:
+  # modules:
+  #   - python/3.10
+  #   - cuda/11.8
+
+paths:
+  # Scratch directory for large files
+  scratch: null  # e.g., /scratch/$USER
+  
+  # Project directory on cluster (if different from local)
+  project: null
+
+notifications:
+  email: {{ cookiecutter.author_email }}
+  events:
+    - END
+    - FAIL
+{% else %}
+# HPC configuration is only used in paper-driven mode
+{}
+{% endif %}

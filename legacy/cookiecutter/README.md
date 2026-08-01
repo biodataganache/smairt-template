@@ -1,37 +1,11 @@
-# Legacy Cookiecutter Compatibility
+# Archived Cookiecutter Implementations
 
-Cookiecutter is retained in SMAIRT V0.1 only for existing local automation. It
-is not the recommended onboarding path. New projects should install this
-repository as a tool and run `smairt new`.
+Cookiecutter is unsupported and retained here for reference only. The installed
+`smairt` CLI is the only supported project generator; use `smairt new`.
 
-## Requirements
+- `adapter/` is the final compatibility adapter formerly located at the
+  repository root. It delegates generation to an installed `smairt` package.
+- `original-template/` is the complete Cookiecutter template recovered from
+  commit `78f22af`. Its historical files are preserved without modification.
 
-- macOS, Linux, or WSL with Python 3.11 through 3.13. Native Windows is
-  deferred.
-- An installed copy of this checkout: `uv tool install .` is preferred;
-  `pipx install .` is the fallback.
-- Cookiecutter available to the invoking environment, for example
-  `uv tool install cookiecutter`.
-
-## Repository-Local Command
-
-From the repository root, run:
-
-```bash
-cookiecutter .
-```
-
-For automation, use the same checkout path explicitly:
-
-```bash
-cookiecutter /path/to/smairt-template --no-input \
-  project_name="My SMAIRT Project" \
-  project_slug=my_smairt_project \
-  author_name="Your Name"
-```
-
-Do not use a `gh:` shorthand, an old Cookiecutter repository name, or a
-browser-paste workflow. The post-generation hook runs the installed `smairt`
-package, which is the sole owner of scaffold assets. The resulting project is
-equivalent to `smairt new` for the same answers, including Paper, HPC, Git,
-assistant pointers, and Project Check behavior.
+Neither archive is packaged, linted, tested, or exercised in CI.

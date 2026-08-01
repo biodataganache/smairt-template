@@ -1,113 +1,51 @@
 ---
 name: smairt-research
-description: Use when helping with a SMAIRT project or AI-assisted computational research that should follow the scientific method, maintain a complete audit trail, track human intellectual contribution, and move through synthetic, downloaded benchmark, and real-data experiments.
+description: Use when helping with a SMAIRT computational research project that needs hypothesis-driven experiments, reproducible evidence, decisions, and a complete scientific audit trail.
 ---
 
 # SMAIRT Research
 
-SMAIRT means Scientific Method with AI Research Template. Use this skill to help a human run an AI-assisted computational research project without losing the scientific thread across chats, models, or tools.
+Help the researcher use an existing SMAIRT project. New projects must be
+created with the installed `smairt` CLI; this skill is not a generator.
 
-## Core stance
+## Core Stance
 
-- Treat the human as the source of novelty, judgment, and intellectual contribution.
-- Use AI to move quickly to the frontier of known approaches, generate testable code, interpret results, and propose next experiments.
-- Be explicit about uncertainty, especially literature claims. Important claims should be verified against current sources.
-- Keep the project organized so a future AI session can reconstruct what happened via the audit trail.
-- Proactively watch for novel contributions from the human (Active Innovation Detection) and offer to log them.
+- The researcher owns novelty, judgment, validation, and conclusions.
+- Record important human intellectual contributions explicitly.
+- State uncertainty and verify consequential literature claims.
+- Prefer readable project artifacts over conversational memory.
 
-## Workflow
-
-Every iteration follows:
+## Canonical Audit Trail
 
 ```text
-Background -> Hypothesis -> Methods/Code -> Results -> Analysis -> Future Directions -> repeat
+question/background -> hypothesis -> phase experiment -> results/logs
+  -> analysis/decision -> study report
 ```
 
-Maintain the four-part scientific method structure:
+1. Capture the question and relevant context in `background/`.
+2. Write a testable hypothesis in `hypotheses/` before implementation.
+3. Put a numbered experiment in the active phase under `experiments/`.
+4. Preserve raw output in `results/logs/` and figures in `results/figures/`.
+5. Interpret evidence and record the decision in `analysis/`.
+6. Consolidate the completed chain into the study report.
 
-1. Background: research question, relevant context, prior results.
-2. Hypothesis: the thing being tested in the current iteration (written BEFORE code).
-3. Methods: code, data, and experimental design.
-4. Results plus interpretation: logs, figures, what happened, and what it means through the hypothesis.
+Projects may start with synthetic, downloaded benchmark, or real data. Do not
+claim that every project must traverse every phase.
 
-Future directions should seed the next background section.
+## Practices
 
-## The 10 Steps
+- Link each script to its hypothesis and phase.
+- Match log names to experiment names where practical.
+- Validate inputs and record parameters, dependencies, and reproducibility
+  information.
+- Distinguish raw results from interpretation.
+- State whether evidence supports, refutes, or only partly supports the
+  hypothesis, including limitations and the next decision.
+- Read `prompts/AI_CONTEXT.md` and recent background, hypothesis, log, analysis,
+  and report files when joining a project.
+- Use `plans/` for complex work without treating plans as evidence.
 
-1. Track intellectual contributions — document human insights vs AI-generated ideas
-2. Write hypotheses before experiments — forces clarity
-3. Follow the data progression — synthetic → downloaded → real (or start where appropriate)
-4. Number scripts sequentially — clear timeline
-5. Maintain the audit trail — hypothesis → script → log → analysis
-6. Name log files to match scripts — handled by TeeLogger
-7. Use compile_for_ai.py for cross-tool context transfer
-8. Use priming prompts from SESSION_START.md; maintain KNOWN_PATTERNS.md
-9. Follow 4-part structure — Background, Hypothesis, Methods, Results
-10. Use future directions to seed next iteration — keep momentum
+If Paper is enabled, keep this audit trail and map accepted evidence into the
+optional `paper/` workspace. Paper is an overlay, not another workflow mode.
 
-## Data progression
-
-Prefer this progression unless the project context says otherwise:
-
-1. Synthetic data: fast, low-dependency exploration.
-2. Downloaded benchmark data: broader validation and robustness checks.
-3. Real data: full test against the actual target problem.
-
-Synthetic results are useful for fast iteration, but they are not strong evidence until tested on messier benchmark or real data.
-
-Projects may start at any phase (configured by `starting_phase`). Not all projects need all three phases.
-
-## Required project practices
-
-When creating or editing experiment code:
-
-- Use numbered script names like `script_01_initial_test.py`.
-- Put scripts in the active phase directory: `experiments/01_synthetic/`, `experiments/02_downloaded/`, or `experiments/03_real_data/`.
-- Use `TeeLogger` from `scripts/shared/logging` to write output to both console and `results/logs/` automatically.
-- Include a docstring referencing the hypothesis file and phase.
-- Include data validation checks when loading or generating data.
-- Check `prompts/KNOWN_PATTERNS.md` before generating code to avoid known errors.
-
-When interpreting results:
-
-- Evaluate them through the current hypothesis.
-- Say whether the result supports, refutes, or only partially supports the hypothesis.
-- Identify boundaries: where the approach works, where it breaks, and what assumptions seem fragile.
-- Write analysis to `analysis/ANALYSIS_XX.md` files.
-- Update `prompts/KNOWN_PATTERNS.md` when you discover reusable patterns or recurring errors.
-- Update `prompts/intellectual_contribution.md` when the human makes a novel decision.
-
-## The audit trail
-
-Every experiment produces a complete audit trail:
-
-| Artifact | Location | Purpose |
-|----------|----------|---------|
-| Hypothesis | `hypotheses/HYPOTHESIS_XX.md` | What we predict and why |
-| Script | `experiments/XX_phase/script_XX_*.py` | What code was run |
-| Log file | `results/logs/script_XX_*.log` | Raw output (auto-generated by TeeLogger) |
-| Analysis | `analysis/ANALYSIS_XX.md` | Interpretation & next steps |
-
-Do NOT ask the user to paste output into scripts. The AI reads log files directly.
-
-## Active Innovation Detection
-
-Watch for novel contributions from the human. When you notice something that goes beyond standard approaches — a new framing, unexpected connection, creative pivot, novel methodology, or interpretation that wouldn't follow from the data alone — ask:
-
-> "This seems like a novel contribution (briefly describe why). Would you like me to log it in `prompts/intellectual_contribution.md`?"
-
-Do NOT flag routine decisions (file names, parameter tweaks, standard methodology choices).
-
-## Context reload
-
-When joining an existing project:
-
-1. Read `prompts/AI_CONTEXT.md`, `prompts/CODE_CONVENTIONS.md`, and `prompts/KNOWN_PATTERNS.md` first if they exist.
-2. Check recent hypothesis files, analysis files, and the latest log output.
-3. If available, use `prompts/compiled_for_ai.md` generated by `scripts/compile_for_ai.py`.
-4. Read `prompts/SESSION_START.md` for appropriate priming prompts.
-5. Continue from the latest recorded state instead of restarting the research thread.
-
-## Reference
-
-Read `references/workflow.md` when you need the exact project structure, script template, context reload prompt, or integration notes for ChatGPT, Claude, and MCP.
+Read `references/workflow.md` for the artifact map and session checklist.
