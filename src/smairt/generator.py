@@ -12,7 +12,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from smairt.models import ProjectContract, ProjectOptions, StartingPhase
-from smairt.project import create_management_assets
+from smairt.project import create_management_assets, hpc_asset_contents, phase_directories
 
 MANIFEST_PATH = Path(".smairt") / "managed-files.yaml"
 
@@ -80,24 +80,7 @@ def _generate_into(root: Path, options: ProjectOptions) -> None:
 
 
 def _create_phase_directories(root: Path, phase: StartingPhase) -> None:
-    phase_directories = {
-        StartingPhase.SYNTHETIC: [
-            "data/synthetic",
-            "data/downloaded",
-            "data/real",
-            "experiments/01_synthetic",
-            "experiments/02_downloaded",
-            "experiments/03_real_data",
-        ],
-        StartingPhase.DOWNLOADED: [
-            "data/downloaded",
-            "data/real",
-            "experiments/02_downloaded",
-            "experiments/03_real_data",
-        ],
-        StartingPhase.REAL: ["data/real", "experiments/03_real_data"],
-    }
-    for directory in phase_directories[phase]:
+    for directory in phase_directories(phase):
         (root / directory).mkdir(parents=True)
 
 
@@ -112,19 +95,10 @@ def _create_paper_assets(root: Path) -> None:
 
 
 def _create_hpc_assets(root: Path, project_slug: str) -> None:
-    hpc = root / "hpc"
-    hpc.mkdir()
-    (hpc / "README.md").write_text(
-        "# HPC Guidance\n\n"
-        "Adapt `slurm_job.sh` to your cluster, then submit it with your cluster's "
-        "documented scheduler command. SMAIRT does not submit or manage jobs.\n"
-    )
-    (hpc / "slurm_job.sh").write_text(
-        "#!/usr/bin/env bash\n"
-        f"#SBATCH --job-name={project_slug}\n"
-        "#SBATCH --output=results/logs/%x-%j.out\n\n"
-        "python experiments/03_real_data/run.py\n"
-    )
+    for relative, content in hpc_asset_contents(project_slug).items():
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
 
 
 def _initialize_git(root: Path, messages: list[str]) -> bool:
@@ -207,15 +181,7 @@ def _managed_assets(options: ProjectOptions) -> dict[str, str]:
             }
         )
     if options.hpc:
-        assets.update(
-            {
-                "hpc/README.md": "# HPC Guidance\n\nAdapt `slurm_job.sh` to your cluster, then submit it with your cluster's documented scheduler command. SMAIRT does not submit or manage jobs.\n",
-                "hpc/slurm_job.sh": "#!/usr/bin/env bash\n"
-                f"#SBATCH --job-name={options.project.slug}\n"
-                "#SBATCH --output=results/logs/%x-%j.out\n\n"
-                "python experiments/03_real_data/run.py\n",
-            }
-        )
+        assets.update(hpc_asset_contents(options.project.slug))
     return assets
 
 

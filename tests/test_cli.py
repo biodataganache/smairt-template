@@ -178,6 +178,19 @@ def test_paper_and_hpc_are_independent_additive_capabilities(tmp_path: Path) -> 
     assert "{{" not in (hpc_only / "hpc" / "slurm_job.sh").read_text()
 
 
+def test_hpc_guidance_is_a_phase_independent_editable_template(tmp_path: Path) -> None:
+    for phase in ("synthetic", "downloaded", "real"):
+        destination = tmp_path / phase
+
+        result = create_project(destination, phase=phase, hpc=True)
+
+        assert result.returncode == 0, result.stderr
+        script = (destination / "hpc" / "slurm_job.sh").read_text()
+        assert "experiments/03_real_data/run.py" not in script
+        assert "Usage: sbatch hpc/slurm_job.sh <experiment-command> [arguments...]" in script
+        assert "results/logs" in script
+
+
 def test_generated_project_keeps_managed_bookkeeping_local(tmp_path: Path) -> None:
     destination = tmp_path / "managed"
 
@@ -490,6 +503,63 @@ def test_settings_license_check_and_repair_are_guarded(tmp_path: Path) -> None:
     assert missing_directory.is_dir()
 
 
+def test_license_change_updates_managed_asset_and_renaming_researcher_is_not_a_legal_edit(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "license-project"
+    assert create_project(destination).returncode == 0
+
+    renamed = subprocess.run(
+        [
+            str(installed_smairt()),
+            "settings",
+            str(destination),
+            "--researcher",
+            "Renamed Researcher",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    changed = subprocess.run(
+        [
+            str(installed_smairt()),
+            "settings",
+            str(destination),
+            "--license",
+            "Apache-2.0",
+            "--confirm-license",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    license_path = destination / "LICENSE"
+    license_path.unlink()
+    regenerated = subprocess.run(
+        [
+            str(installed_smairt()),
+            "regenerate",
+            str(destination),
+            "--select",
+            "LICENSE",
+            "--confirm",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert renamed.returncode == 0, renamed.stderr
+    assert changed.returncode == 0, changed.stderr
+    assert regenerated.returncode == 0, regenerated.stderr
+    assert "Apache License" in license_path.read_text()
+    assert "Renamed Researcher" in license_path.read_text()
+    manifest = yaml.safe_load((destination / ".smairt" / "managed-files.yaml").read_text())
+    assert "Apache License" in manifest["assets"]["LICENSE"]
+    assert "Renamed Researcher" in manifest["assets"]["LICENSE"]
+
+
 def test_open_tracks_recents_and_home_cleans_stale_paths(tmp_path: Path) -> None:
     data_home = tmp_path / "local-data"
     destination = tmp_path / "opened-project"
@@ -564,6 +634,22 @@ def test_assistant_aliases_and_dashboard_are_available_from_installed_command(
     )
 
 
+def test_standard_dashboard_previews_and_confirms_safe_repairs(tmp_path: Path) -> None:
+    destination = tmp_path / "repair-dashboard"
+    assert create_project(destination).returncode == 0
+    plans = destination / "plans"
+    (plans / "README.md").unlink()
+    plans.rmdir()
+
+    dashboard = run_dashboard(destination, "5\ncreate-directory:plans\nyes\n7\n")
+
+    assert dashboard.returncode == 0, dashboard.stderr
+    assert "Safe repairs available:" in dashboard.stdout
+    assert "Preview: create-directory:plans" in dashboard.stdout
+    assert "Selected safe repairs applied." in dashboard.stdout
+    assert plans.is_dir()
+
+
 def test_recents_are_capped_and_hpc_deactivation_preserves_modified_templates(
     tmp_path: Path,
 ) -> None:
@@ -616,6 +702,62 @@ def test_recents_are_capped_and_hpc_deactivation_preserves_modified_templates(
     assert reenabled.returncode == 0, reenabled.stderr
     assert template.read_text() == "#!/usr/bin/env bash\n# researcher template\n"
     assert metadata["capabilities"]["hpc"] == {"state": "enabled"}
+
+
+def test_deactivated_capabilities_do_not_offer_guidance_until_safely_reenabled(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "inactive-capabilities"
+    assert create_project(destination, paper=True, hpc=True).returncode == 0
+    paper_readme = destination / "paper" / "README.md"
+    hpc_readme = destination / "hpc" / "README.md"
+    paper_outline = destination / "paper" / "outline.md"
+    hpc_template = destination / "hpc" / "slurm_job.sh"
+    paper_readme.write_text("researcher paper notes\n")
+    hpc_readme.write_text("researcher cluster notes\n")
+
+    disabled_paper = subprocess.run(
+        [str(installed_smairt()), "paper", "disable", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    disabled_hpc = subprocess.run(
+        [str(installed_smairt()), "hpc", "disable", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    inactive_check = subprocess.run(
+        [str(installed_smairt()), "check", str(destination), "--json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    paper_outline.unlink()
+    hpc_template.unlink()
+    reenabled_paper = subprocess.run(
+        [str(installed_smairt()), "paper", "enable", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    reenabled_hpc = subprocess.run(
+        [str(installed_smairt()), "hpc", "enable", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert disabled_paper.returncode == 0, disabled_paper.stderr
+    assert disabled_hpc.returncode == 0, disabled_hpc.stderr
+    assert json.loads(inactive_check.stdout)["repairs"] == []
+    assert reenabled_paper.returncode == 0, reenabled_paper.stderr
+    assert reenabled_hpc.returncode == 0, reenabled_hpc.stderr
+    assert paper_readme.read_text() == "researcher paper notes\n"
+    assert hpc_readme.read_text() == "researcher cluster notes\n"
+    assert paper_outline.read_text() == "# Paper Outline\n"
+    assert "Usage: sbatch hpc/slurm_job.sh" in hpc_template.read_text()
 
 
 def test_advanced_controls_are_local_safe_and_visible_from_installed_command(
@@ -886,6 +1028,45 @@ def test_interactive_wizard_keeps_answers_when_going_back_and_edits_review_answe
     assert metadata["project"]["description"] == "A retained description."
 
 
+def test_interactive_wizard_reconfirms_a_license_changed_during_final_review(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "reviewed-license-project"
+
+    result = run_interactive_new(
+        wizard_answers(
+            destination,
+            review_action="12\n3\ncreate\nyes",
+        )
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Apache-2.0 controls how others may use this project" in result.stdout
+    assert yaml.safe_load((destination / "smairt.yaml").read_text())["license"] == "Apache-2.0"
+
+
+def test_saved_motion_preference_controls_a_project_dashboard_tty(tmp_path: Path) -> None:
+    enabled_project = tmp_path / "motion-enabled"
+    disabled_project = tmp_path / "motion-disabled"
+    assert create_project(enabled_project).returncode == 0
+    assert create_project(disabled_project).returncode == 0
+    configured = subprocess.run(
+        [str(installed_smairt()), "settings", str(disabled_project), "--no-motion"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    enabled_dashboard = run_interactive_dashboard(enabled_project, "7\n")
+    disabled_dashboard = run_interactive_dashboard(disabled_project, "7\n")
+
+    assert configured.returncode == 0, configured.stderr
+    assert enabled_dashboard.returncode == 0, enabled_dashboard.stderr
+    assert disabled_dashboard.returncode == 0, disabled_dashboard.stderr
+    assert "\x1b[1;36mSMAIRT Standard Mode: Test Project" in enabled_dashboard.stdout
+    assert "\x1b[1;36mSMAIRT Standard Mode: Test Project" not in disabled_dashboard.stdout
+
+
 def test_interactive_wizard_validates_destination_before_final_review(tmp_path: Path) -> None:
     destination = tmp_path / "occupied"
     destination.mkdir()
@@ -970,6 +1151,62 @@ def run_interactive_new(input_text: str) -> subprocess.CompletedProcess[str]:
             except OSError:
                 break
         if not sent and b"Destination" in output:
+            os.write(master, input_text.encode())
+            sent = True
+    if process.poll() is None:
+        process.kill()
+        raise AssertionError(f"interactive command timed out: {output.decode()}")
+    while True:
+        try:
+            chunk = os.read(master, 4096)
+        except OSError:
+            break
+        if not chunk:
+            break
+        output.extend(chunk)
+    os.close(master)
+    return subprocess.CompletedProcess(command, process.wait(), output.decode(), "")
+
+
+def run_dashboard(root: Path, input_text: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [str(installed_smairt())],
+        input=input_text,
+        check=False,
+        capture_output=True,
+        text=True,
+        cwd=root,
+        env={**os.environ, "TERM": "dumb", "CI": "1"},
+    )
+
+
+def run_interactive_dashboard(root: Path, input_text: str) -> subprocess.CompletedProcess[str]:
+    command = [str(installed_smairt())]
+    environment = {**os.environ, "TERM": "xterm-256color"}
+    environment.pop("CI", None)
+    environment.pop("PYTEST_CURRENT_TEST", None)
+    master, slave = pty.openpty()
+    process = subprocess.Popen(
+        command,
+        stdin=slave,
+        stdout=slave,
+        stderr=slave,
+        text=False,
+        cwd=root,
+        env=environment,
+    )
+    os.close(slave)
+    output = bytearray()
+    sent = False
+    deadline = time.monotonic() + 10
+    while process.poll() is None and time.monotonic() < deadline:
+        readable, _, _ = select.select([master], [], [], 0.1)
+        if readable:
+            try:
+                output.extend(os.read(master, 4096))
+            except OSError:
+                break
+        if not sent and b"Choose an action:" in output:
             os.write(master, input_text.encode())
             sent = True
     if process.poll() is None:

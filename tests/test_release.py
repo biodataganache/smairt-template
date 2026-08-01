@@ -48,7 +48,32 @@ def test_built_wheel_and_sdist_install_into_clean_environments_and_create_projec
         "{{ cookiecutter.project_slug }}/LEGACY_COOKIECUTTER.md",
         "legacy/cookiecutter/README.md",
     } <= source_files
+    protected_workspace = tmp_path / "protected-workspace"
+    protected_workspace.mkdir()
+    sentinel = protected_workspace / "research-notes.txt"
+    sentinel.write_text("do not delete\n")
+    unsafe_workspace = subprocess.run(
+        [
+            sys.executable,
+            "scripts/smoke_install.py",
+            "--artifact",
+            str(wheel),
+            "--workspace",
+            str(protected_workspace),
+        ],
+        cwd=REPOSITORY_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert unsafe_workspace.returncode == 1
+    assert "must be absent or empty" in unsafe_workspace.stderr
+    assert sentinel.read_text() == "do not delete\n"
     for artifact in artifacts:
+        workspace = tmp_path / artifact.stem
+        if artifact == wheel:
+            workspace.mkdir()
         smoke = subprocess.run(
             [
                 sys.executable,
@@ -56,7 +81,7 @@ def test_built_wheel_and_sdist_install_into_clean_environments_and_create_projec
                 "--artifact",
                 str(artifact),
                 "--workspace",
-                str(tmp_path / artifact.stem),
+                str(workspace),
             ],
             cwd=REPOSITORY_ROOT,
             check=False,

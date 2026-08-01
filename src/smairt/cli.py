@@ -69,7 +69,8 @@ class WizardCancelled(Exception):
 
 class Wizard:
     def __init__(self) -> None:
-        self.console = Console(force_interactive=_interactive_motion_enabled())
+        motion = _interactive_motion_enabled()
+        self.console = Console(force_interactive=motion, force_terminal=motion)
         self.session: PromptSession[str] = PromptSession(
             input=create_input(sys.stdin),
             output=create_output(sys.stdout),
@@ -78,6 +79,7 @@ class Wizard:
             "phase": StartingPhase.SYNTHETIC.value,
             "assistant": Assistant.OPENCODE.value,
             "license": License.MIT.value,
+            "license_confirmation": "",
             "paper": False,
             "hpc": False,
             "git": False,
@@ -334,6 +336,7 @@ class Wizard:
         )
 
     def _license(self) -> None:
+        previous_license = str(self.answers["license"])
         self._choose(
             "Choose a license",
             key="license",
@@ -366,6 +369,8 @@ class Wizard:
                 ),
             ),
         )
+        if str(self.answers["license"]) != previous_license:
+            self.answers["license_confirmation"] = ""
 
     def _confirm_license(self) -> None:
         self.console.print(
@@ -378,6 +383,7 @@ class Wizard:
             if answer == _BACK:
                 raise BackRequested
             if answer in {"yes", "y"}:
+                self.answers["license_confirmation"] = str(self.answers["license"])
                 return
             if answer in {"no", "n"}:
                 raise BackRequested
@@ -413,6 +419,12 @@ class Wizard:
             if answer in {"cancel", _CANCEL}:
                 raise WizardCancelled
             if answer in {"create", "c"}:
+                if self.answers["license_confirmation"] != self.answers["license"]:
+                    self.console.print(
+                        "Confirm the final selected license before creating the project.",
+                        style="yellow",
+                    )
+                    self._confirm_license()
                 return
             if answer.isdigit() and 1 <= int(answer) < _WIZARD_STEPS:
                 self._edit(int(answer) - 1)
@@ -832,15 +844,21 @@ def regenerate(
 class Dashboard:
     def __init__(self, root: Path) -> None:
         self.root = root
-        self.console = Console(force_interactive=_interactive_motion_enabled())
+        motion = _interactive_motion_enabled(root)
+        self.console = Console(force_interactive=motion, force_terminal=motion)
         self.session: PromptSession[str] = PromptSession(
             input=create_input(sys.stdin), output=create_output(sys.stdout)
         )
 
     def run(self) -> None:
         while True:
-            contract = load_contract(self.root)
-            advanced = local_preferences(self.root).get("experience") == "advanced"
+            if _interactive_motion_enabled(self.root):
+                with self.console.status("Loading project dashboard...", spinner="dots"):
+                    contract = load_contract(self.root)
+                    advanced = local_preferences(self.root).get("experience") == "advanced"
+            else:
+                contract = load_contract(self.root)
+                advanced = local_preferences(self.root).get("experience") == "advanced"
             mode = "Advanced" if advanced else "Standard"
             self.console.rule(f"[bold cyan]SMAIRT {mode} Mode: {contract.project.name}[/]")
             self.console.print("1. Launch assistant or open folder")
@@ -921,9 +939,33 @@ class Dashboard:
                     )
             repairable = [issue for issue in issues if issue.repair is not None]
             if repairable:
-                self.console.print("Use `smairt repair` to preview and confirm any safe repair.")
+                self.console.print("Safe repairs available:")
+                for issue in repairable:
+                    assert issue.repair is not None
+                    self.console.print(f"- {issue.repair}: {issue.message}")
+                selection = self.session.prompt(
+                    "Enter repair identifiers separated by commas, or back: "
+                ).strip()
+                if selection not in {"", "back"}:
+                    self._repair([item.strip() for item in selection.split(",") if item.strip()])
         if verbose:
             self._tools()
+
+    def _repair(self, identifiers: list[str]) -> None:
+        try:
+            preview = repair_previews(self.root, identifiers)
+        except ProjectError as error:
+            self.console.print(str(error), style="yellow")
+            return
+        for issue in preview:
+            assert issue.repair is not None
+            self.console.print(f"Preview: {issue.repair}: {issue.message}")
+        confirmed = self.session.prompt("Apply these safe repairs [yes/no]: ").strip().lower()
+        if confirmed not in {"yes", "y"}:
+            self.console.print("No changes made.")
+            return
+        apply_repairs(self.root, identifiers)
+        self.console.print("Selected safe repairs applied.")
 
     def _inspect(self) -> None:
         contract = load_contract(self.root)
@@ -1115,7 +1157,8 @@ def _home() -> None:
     session: PromptSession[str] = PromptSession(
         input=create_input(sys.stdin), output=create_output(sys.stdout)
     )
-    console = Console(force_interactive=_interactive_motion_enabled())
+    motion = _interactive_motion_enabled()
+    console = Console(force_interactive=motion, force_terminal=motion)
     while True:
         console.rule("[bold cyan]SMAIRT Home[/]")
         console.print("1. Create New Project")
@@ -1272,9 +1315,11 @@ def _assistant_label(value: str) -> str:
     }[value]
 
 
-def _interactive_motion_enabled() -> bool:
+def _interactive_motion_enabled(root: Path | None = None) -> bool:
+    motion = local_preferences(root).get("motion") if root is not None else None
     return (
-        sys.stdin.isatty()
+        motion is not False
+        and sys.stdin.isatty()
         and sys.stdout.isatty()
         and os.environ.get("TERM", "") not in {"", "dumb"}
         and not os.environ.get("CI")

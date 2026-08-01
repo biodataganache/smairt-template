@@ -39,6 +39,23 @@ REQUIRED_DIRECTORIES = (
     "results/figures",
     "prompts",
 )
+PHASE_DIRECTORIES = {
+    StartingPhase.SYNTHETIC: (
+        "data/synthetic",
+        "data/downloaded",
+        "data/real",
+        "experiments/01_synthetic",
+        "experiments/02_downloaded",
+        "experiments/03_real_data",
+    ),
+    StartingPhase.DOWNLOADED: (
+        "data/downloaded",
+        "data/real",
+        "experiments/02_downloaded",
+        "experiments/03_real_data",
+    ),
+    StartingPhase.REAL: ("data/real", "experiments/03_real_data"),
+}
 LICENSE_TEXT = {
     License.MIT: 'MIT License\n\nCopyright (c) {year} {holder}\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the "Software"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n',
     License.BSD_3_CLAUSE: 'BSD 3-Clause License\n\nCopyright (c) {year}, {holder}\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n3. Neither the name of the copyright holder nor the names of its contributors\n   may be used to endorse or promote products derived from this software\n   without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES.\n',
@@ -226,21 +243,27 @@ def _create_paper_assets_safely(root: Path) -> None:
 
 def _create_hpc_assets_safely(root: Path, slug: str) -> None:
     _create_directory(root / "hpc")
-    _write_if_missing_and_track(
-        root,
-        root / "hpc" / "README.md",
-        "# HPC Guidance\n\n"
-        "Adapt `slurm_job.sh` to your cluster, then submit it with your cluster's "
-        "documented scheduler command. SMAIRT does not submit or manage jobs.\n",
-    )
-    _write_if_missing_and_track(
-        root,
-        root / "hpc" / "slurm_job.sh",
-        "#!/usr/bin/env bash\n"
+    for relative, content in hpc_asset_contents(slug).items():
+        _write_if_missing_and_track(root, root / relative, content)
+
+
+def hpc_asset_contents(slug: str) -> dict[str, str]:
+    return {
+        "hpc/README.md": "# HPC Guidance\n\n"
+        "Run `sbatch hpc/slurm_job.sh <experiment-command> [arguments...]` from the project root "
+        "after adapting the scheduler directives to your cluster. Choose a command that uses "
+        "paths created for the project's current phase. SMAIRT does not submit or manage jobs.\n",
+        "hpc/slurm_job.sh": "#!/usr/bin/env bash\n"
         f"#SBATCH --job-name={slug}\n"
         "#SBATCH --output=results/logs/%x-%j.out\n\n"
-        "python experiments/03_real_data/run.py\n",
-    )
+        "set -eu\n\n"
+        'if [ "$#" -eq 0 ]; then\n'
+        '  echo "Usage: sbatch hpc/slurm_job.sh <experiment-command> [arguments...]" >&2\n'
+        '  echo "Choose a command and paths appropriate for the current project phase." >&2\n'
+        "  exit 2\n"
+        "fi\n\n"
+        '"$@"\n',
+    }
 
 
 def _create_directory(path: Path) -> None:
@@ -312,6 +335,8 @@ def update_settings(
     if conventions:
         updates["conventions"] = ConventionSettings.model_validate(conventions)
     updated_contract = contract.model_copy(update=updates)
+    if researcher is not None:
+        _refresh_managed_license_holder(root, updated_contract)
     save_contract(root, updated_contract)
     if prompt_convention is not None or code_convention is not None:
         _apply_convention_guidance(root, updated_contract)
@@ -320,24 +345,7 @@ def update_settings(
 
 
 def _create_phase_directories_non_destructively(root: Path, phase: StartingPhase) -> None:
-    directories = {
-        StartingPhase.SYNTHETIC: (
-            "data/synthetic",
-            "data/downloaded",
-            "data/real",
-            "experiments/01_synthetic",
-            "experiments/02_downloaded",
-            "experiments/03_real_data",
-        ),
-        StartingPhase.DOWNLOADED: (
-            "data/downloaded",
-            "data/real",
-            "experiments/02_downloaded",
-            "experiments/03_real_data",
-        ),
-        StartingPhase.REAL: ("data/real", "experiments/03_real_data"),
-    }
-    for directory in directories[phase]:
+    for directory in phase_directories(phase):
         _create_directory(root / directory)
 
 
@@ -360,14 +368,45 @@ def license_preview(root: Path, license: License) -> str:
 
 def change_license(root: Path, license: License) -> None:
     contract = load_contract(root)
-    license_path = root / "LICENSE"
-    if license_path.exists() and license_path.read_text() != _render_license(
-        contract.license, contract.people["researcher"].name
-    ):
+    status = _managed_license_status(root)
+    if status == "modified":
         raise ProjectError("LICENSE has been modified; SMAIRT will not replace custom legal text.")
-    license_path.write_text(_render_license(license, contract.people["researcher"].name))
-    _update_manifest_for(license_path, root)
+    if status == "invalid":
+        raise ProjectError("Managed-file bookkeeping cannot safely verify LICENSE ownership.")
+    _write_managed_license(root, _render_license(license, contract.people["researcher"].name))
     save_contract(root, contract.model_copy(update={"license": license}))
+
+
+def _refresh_managed_license_holder(root: Path, contract: ProjectContract) -> None:
+    if _managed_license_status(root) == "unchanged":
+        _write_managed_license(
+            root, _render_license(contract.license, contract.people["researcher"].name)
+        )
+
+
+def _write_managed_license(root: Path, content: str) -> None:
+    license_path = root / "LICENSE"
+    license_path.write_text(content)
+    _update_manifest_for(license_path, root, content)
+
+
+def _managed_license_status(root: Path) -> str:
+    try:
+        manifest = _managed_manifest(root)
+        files = manifest.get("files")
+        assets = manifest.get("assets")
+        expected_hash = files.get("LICENSE") if isinstance(files, dict) else None
+        canonical = assets.get("LICENSE") if isinstance(assets, dict) else None
+    except ProjectError:
+        return "invalid"
+    if not isinstance(expected_hash, str) or not isinstance(canonical, str):
+        return "invalid"
+    if expected_hash != _hash_text(canonical):
+        return "invalid"
+    license_path = root / "LICENSE"
+    if not license_path.is_file():
+        return "missing"
+    return "unchanged" if _hash_file(license_path) == expected_hash else "modified"
 
 
 def _render_license(license: License, holder: str) -> str:
@@ -499,23 +538,11 @@ def project_check(root: Path) -> list[CheckIssue]:
 
 
 def _phase_directories(phase: StartingPhase) -> tuple[str, ...]:
-    return {
-        StartingPhase.SYNTHETIC: (
-            "data/synthetic",
-            "data/downloaded",
-            "data/real",
-            "experiments/01_synthetic",
-            "experiments/02_downloaded",
-            "experiments/03_real_data",
-        ),
-        StartingPhase.DOWNLOADED: (
-            "data/downloaded",
-            "data/real",
-            "experiments/02_downloaded",
-            "experiments/03_real_data",
-        ),
-        StartingPhase.REAL: ("data/real", "experiments/03_real_data"),
-    }[phase]
+    return phase_directories(phase)
+
+
+def phase_directories(phase: StartingPhase) -> tuple[str, ...]:
+    return PHASE_DIRECTORIES[phase]
 
 
 def _managed_file_issues(root: Path) -> list[CheckIssue]:
@@ -770,6 +797,10 @@ def _managed_asset_content(root: Path, relative: str) -> str | None:
 
 def _hash_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _hash_text(content: str) -> str:
+    return hashlib.sha256(content.encode()).hexdigest()
 
 
 def _timestamp() -> str:

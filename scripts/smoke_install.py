@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -27,9 +26,9 @@ def main() -> None:
     workspace = arguments.workspace.resolve()
     if not artifact.is_file():
         raise SystemExit(f"Artifact does not exist: {artifact}")
-    if workspace.exists():
-        shutil.rmtree(workspace)
-    workspace.mkdir(parents=True)
+    if workspace.exists() and (not workspace.is_dir() or any(workspace.iterdir())):
+        raise SystemExit(f"Workspace must be absent or empty: {workspace}")
+    workspace.mkdir(parents=True, exist_ok=True)
     environment = workspace / "environment"
     created = run([sys.executable, "-m", "venv", str(environment)])
     if created.returncode:
