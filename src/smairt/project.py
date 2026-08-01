@@ -30,7 +30,9 @@ from smairt.models import (
 )
 from smairt.scaffold import (
     ASSISTANT_POINTERS,
+    active_assets,
     asset_ownership,
+    asset_path,
     materialize_template_assets,
     render_template_assets,
 )
@@ -594,12 +596,14 @@ def _managed_file_issues(root: Path, contract: ProjectContract) -> list[CheckIss
     for relative, expected in sorted(assets.items()):
         path = root / relative
         if not path.is_file():
-            capability = (
-                "paper"
-                if relative.startswith("paper/")
-                else "hpc"
-                if relative.startswith("hpc/")
-                else None
+            capability = next(
+                (
+                    asset.condition
+                    for asset in active_assets(contract)
+                    if asset_path(asset, contract) == relative
+                    and asset.condition in {"paper", "hpc"}
+                ),
+                None,
             )
             issues.append(
                 CheckIssue(

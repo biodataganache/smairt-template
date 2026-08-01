@@ -46,6 +46,16 @@ def test_every_blueprint_file_source_exists_in_the_installed_package() -> None:
 
     assert missing == []
 
+    declared_directories = {asset.path for asset in blueprint.assets if asset.kind == "directory"}
+    undeclared_parents = []
+    for asset in blueprint.assets:
+        if asset.path.startswith("$") or "/" not in asset.path:
+            continue
+        parent = str(Path(asset.path).parent).replace("\\", "/")
+        if parent not in declared_directories:
+            undeclared_parents.append(f"{asset.path} -> {parent}")
+    assert undeclared_parents == []
+
 
 def test_blueprint_diff_calls_out_product_surface_changes() -> None:
     previous = {

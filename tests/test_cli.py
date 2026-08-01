@@ -319,6 +319,9 @@ def test_generated_script_captures_stdout_stderr_warnings_and_tracebacks(tmp_pat
     log = logs[0].read_text()
     assert "standard output" in log
     assert "standard error" in log
+    assert "standard output" in ran.stdout
+    assert "standard error" in ran.stderr
+    assert "standard error" not in ran.stdout
     assert "warning output" in log
     assert "Traceback (most recent call last)" in log
     assert "RuntimeError: failure output" in log
@@ -967,6 +970,42 @@ def test_deactivated_capabilities_do_not_offer_guidance_until_safely_reenabled(
     assert hpc_readme.read_text() == "researcher cluster notes\n"
     assert paper_outline.read_text().startswith("# Paper Outline\n")
     assert "Usage: sbatch hpc/slurm_job.sh" in hpc_template.read_text()
+
+
+def test_enabled_capability_repairs_missing_starters_outside_capability_directories(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "paper-repair"
+    assert create_project(destination, paper=True).returncode == 0
+    prompt = destination / "prompts" / "figure_generation_prompt.md"
+    prompt.unlink()
+
+    checked = subprocess.run(
+        [str(installed_smairt()), "check", str(destination), "--json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(checked.stdout)
+
+    assert checked.returncode == 1
+    assert "restore-capability:paper" in payload["repairs"]
+
+    repaired = subprocess.run(
+        [
+            str(installed_smairt()),
+            "repair",
+            str(destination),
+            "--select",
+            "restore-capability:paper",
+            "--confirm",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert repaired.returncode == 0, repaired.stderr
+    assert prompt.is_file()
 
 
 def test_advanced_controls_are_local_safe_and_visible_from_installed_command(
