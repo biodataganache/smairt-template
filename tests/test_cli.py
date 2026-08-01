@@ -167,33 +167,72 @@ def test_synthetic_project_contains_all_phase_directories(tmp_path: Path) -> Non
     }
 
 
-def test_downloaded_project_omits_synthetic_phase_directories(tmp_path: Path) -> None:
+def test_downloaded_project_contains_all_phase_directories(tmp_path: Path) -> None:
     destination = tmp_path / "downloaded"
 
     result = create_project(destination, phase="downloaded")
 
     assert result.returncode == 0, result.stderr
     assert paths(destination) >= {
+        "data/synthetic",
         "data/downloaded",
         "data/real",
+        "experiments/01_synthetic",
         "experiments/02_downloaded",
         "experiments/03_real_data",
     }
-    assert "data/synthetic" not in paths(destination)
-    assert "experiments/01_synthetic" not in paths(destination)
+    metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
+    assert metadata["starting_phase"] == "downloaded"
+    assert metadata["current_phase"] == "downloaded"
 
 
-def test_real_project_omits_earlier_phase_directories(tmp_path: Path) -> None:
+def test_real_project_contains_all_phase_directories(tmp_path: Path) -> None:
     destination = tmp_path / "real"
 
     result = create_project(destination, phase="real")
 
     assert result.returncode == 0, result.stderr
-    assert paths(destination) >= {"data/real", "experiments/03_real_data"}
-    assert "data/synthetic" not in paths(destination)
-    assert "data/downloaded" not in paths(destination)
-    assert "experiments/01_synthetic" not in paths(destination)
-    assert "experiments/02_downloaded" not in paths(destination)
+    assert paths(destination) >= {
+        "data/synthetic",
+        "data/downloaded",
+        "data/real",
+        "experiments/01_synthetic",
+        "experiments/02_downloaded",
+        "experiments/03_real_data",
+    }
+    metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
+    assert metadata["starting_phase"] == "real"
+    assert metadata["current_phase"] == "real"
+
+
+def test_generated_project_restores_the_scientific_workflow_surface(tmp_path: Path) -> None:
+    destination = tmp_path / "restored"
+
+    result = create_project(destination)
+
+    assert result.returncode == 0, result.stderr
+    assert paths(destination) >= {
+        "analysis/ANALYSIS_PLAN.md",
+        "analysis/BREADCRUMB_TRAIL.md",
+        "analysis/REPOSITORY_PLAN.md",
+        "analysis/XX_figures/README.md",
+        "docs/BEST_PRACTICE_COLLABORATIVE.md",
+        "hypotheses/README.md",
+        "prompts/00_priming_prompts.md",
+        "prompts/README.md",
+        "prompts/SESSION_START.md",
+        "prompts/session_log.md",
+        "scripts/generate_manifest.py",
+        "scripts/monitor_template.py",
+        "scripts/shared/README.md",
+    }
+    gitignore = (destination / ".gitignore").read_text()
+    assert "data/**" in gitignore
+    assert "!data/**/README.md" in gitignore
+    assert "results/logs/*.log" not in gitignore
+    assert len((destination / "hypotheses/HYPOTHESIS_TEMPLATE.md").read_text().splitlines()) > 30
+    assert len((destination / "analysis/ANALYSIS_TEMPLATE.md").read_text().splitlines()) > 30
+    assert len((destination / "analysis/STUDY_REPORT_TEMPLATE.md").read_text().splitlines()) > 60
 
 
 def test_paper_and_hpc_are_independent_additive_capabilities(tmp_path: Path) -> None:
@@ -205,10 +244,23 @@ def test_paper_and_hpc_are_independent_additive_capabilities(tmp_path: Path) -> 
 
     assert paper_result.returncode == 0, paper_result.stderr
     assert "paper/analysis" in paths(paper_only)
+    assert paths(paper_only) >= {
+        "FINAL_MANIFEST.md",
+        "paper/drafts/README.md",
+        "paper/reviewer_feedback/README.md",
+        "prompts/InitialPrompt_paper_driven.md",
+        "prompts/figure_generation_prompt.md",
+        "prompts/iteration_review_prompt.md",
+    }
     assert "hpc" not in paths(paper_only)
     assert hpc_result.returncode == 0, hpc_result.stderr
     assert "hpc" in paths(hpc_only)
     assert "hpc/slurm_job.sh" in paths(hpc_only)
+    assert paths(hpc_only) >= {
+        "hpc/config.yaml",
+        "hpc/logs/README.md",
+        "hpc/templates/slurm_basic.sh",
+    }
     assert "paper" not in paths(hpc_only)
     assert "{{" not in (hpc_only / "hpc" / "slurm_job.sh").read_text()
 
@@ -224,6 +276,52 @@ def test_hpc_guidance_is_a_phase_independent_editable_template(tmp_path: Path) -
         assert "experiments/03_real_data/run.py" not in script
         assert "Usage: sbatch hpc/slurm_job.sh <experiment-command> [arguments...]" in script
         assert "results/logs" in script
+
+
+def test_generated_script_captures_stdout_stderr_warnings_and_tracebacks(tmp_path: Path) -> None:
+    destination = tmp_path / "logging"
+    assert create_project(destination).returncode == 0
+    created = subprocess.run(
+        [
+            sys.executable,
+            "scripts/new_script.py",
+            "synthetic",
+            "capture failure",
+            "--hypothesis",
+            "Logging captures a complete execution record.",
+        ],
+        cwd=destination,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    script = destination / "experiments" / "01_synthetic" / "script_01_capture_failure.py"
+    contents = script.read_text().replace(
+        'print("TODO: implement the experiment")',
+        'print("standard output")\n        print("standard error", file=sys.stderr)\n'
+        '        import warnings\n        warnings.warn("warning output")\n'
+        '        raise RuntimeError("failure output")',
+    )
+    script.write_text(contents)
+
+    ran = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=destination,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    logs = list((destination / "results" / "logs").glob("script_01_capture_failure_*.log"))
+
+    assert created.returncode == 0, created.stderr
+    assert ran.returncode != 0
+    assert len(logs) == 1
+    log = logs[0].read_text()
+    assert "standard output" in log
+    assert "standard error" in log
+    assert "warning output" in log
+    assert "Traceback (most recent call last)" in log
+    assert "RuntimeError: failure output" in log
 
 
 def test_managed_assets_are_derived_from_the_package_after_clone(tmp_path: Path) -> None:
@@ -303,7 +401,10 @@ def test_optional_email_is_omitted_and_scaffold_uses_log_first_guidance(
     metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
     assert "email" not in metadata["people"]["researcher"]
     assert not list(destination.rglob("*browser*"))
-    assert not list(destination.rglob("*session_log*"))
+    assert (
+        "not a pasted conversation transcript"
+        in (destination / "prompts" / "session_log.md").read_text()
+    )
     assert "results/logs/" in (destination / "prompts" / "AI_CONTEXT.md").read_text()
 
 
@@ -834,7 +935,7 @@ def test_deactivated_capabilities_do_not_offer_guidance_until_safely_reenabled(
     assert reenabled_hpc.returncode == 0, reenabled_hpc.stderr
     assert paper_readme.read_text() == "researcher paper notes\n"
     assert hpc_readme.read_text() == "researcher cluster notes\n"
-    assert paper_outline.read_text() == "# Paper Outline\n"
+    assert paper_outline.read_text().startswith("# Paper Outline\n")
     assert "Usage: sbatch hpc/slurm_job.sh" in hpc_template.read_text()
 
 
@@ -955,7 +1056,7 @@ def test_advanced_controls_are_local_safe_and_visible_from_installed_command(
     assert preview.returncode == 0, preview.stderr
     assert "No changes made" in preview.stdout
     assert restored.returncode == 0, restored.stderr
-    assert (destination / "paper" / "outline.md").read_text() == "# Paper Outline\n"
+    assert (destination / "paper" / "outline.md").read_text().startswith("# Paper Outline\n")
     assert dashboard.returncode == 0, dashboard.stderr
     assert "SMAIRT Advanced Mode: Test Project" in dashboard.stdout
     assert "Launch assistant or open folder" in dashboard.stdout

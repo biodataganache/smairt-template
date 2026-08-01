@@ -1,0 +1,97 @@
+blueprint_version: 1
+assets:
+  - {id: root-readme, path: README.md, kind: file, purpose: Project entry point and scientific workflow orientation., ownership: tool-guidance, condition: always, source: README.md}
+  - {id: gitignore, path: .gitignore, kind: file, purpose: Safe default version-control exclusions., ownership: editable-starter, condition: always, source: .gitignore}
+  - {id: project-contract, path: smairt.yaml, kind: file, purpose: Tracked project identity provenance and capability contract., ownership: tool-guidance, condition: always, source: contract}
+  - {id: license, path: LICENSE, kind: file, purpose: Selected project license., ownership: tool-guidance, condition: always, source: license}
+  - {id: assistant-pointer, path: $assistant_pointer, kind: file, purpose: Thin pointer from the selected assistant to canonical project context., ownership: tool-guidance, condition: always, source: assistant-pointer}
+
+  - {id: background-directory, path: background, kind: directory, purpose: Research question background and prior evidence., ownership: researcher-work, condition: always}
+  - {id: background-readme, path: background/README.md, kind: file, purpose: Background and literature guidance., ownership: tool-guidance, condition: always, source: background/README.md}
+  - {id: hypotheses-directory, path: hypotheses, kind: directory, purpose: Testable scientific hypotheses., ownership: researcher-work, condition: always}
+  - {id: hypotheses-readme, path: hypotheses/README.md, kind: file, purpose: Hypothesis workflow guidance., ownership: tool-guidance, condition: always, source: hypotheses/README.md}
+  - {id: hypothesis-template, path: hypotheses/HYPOTHESIS_TEMPLATE.md, kind: file, purpose: Reusable hypothesis starter., ownership: editable-starter, condition: always, source: hypotheses/HYPOTHESIS_TEMPLATE.md}
+  - {id: plans-directory, path: plans, kind: directory, purpose: Experiment and analysis plans., ownership: researcher-work, condition: always}
+  - {id: plans-readme, path: plans/README.md, kind: file, purpose: Research planning guidance., ownership: tool-guidance, condition: always, source: plans/README.md}
+
+  - {id: analysis-directory, path: analysis, kind: directory, purpose: Interpretation decisions and study synthesis., ownership: researcher-work, condition: always}
+  - {id: analysis-readme, path: analysis/README.md, kind: file, purpose: Analysis workflow guidance., ownership: tool-guidance, condition: always, source: analysis/README.md}
+  - {id: analysis-plan, path: analysis/ANALYSIS_PLAN.md, kind: file, purpose: Living analysis plan starter., ownership: editable-starter, condition: always, source: analysis/ANALYSIS_PLAN.md}
+  - {id: analysis-template, path: analysis/ANALYSIS_TEMPLATE.md, kind: file, purpose: Reusable result interpretation starter., ownership: editable-starter, condition: always, source: analysis/ANALYSIS_TEMPLATE.md}
+  - {id: breadcrumb-trail, path: analysis/BREADCRUMB_TRAIL.md, kind: file, purpose: Living index from decisions to evidence., ownership: researcher-work, condition: always, source: analysis/BREADCRUMB_TRAIL.md}
+  - {id: repository-plan, path: analysis/REPOSITORY_PLAN.md, kind: file, purpose: Reusable repository organization plan., ownership: editable-starter, condition: always, source: analysis/REPOSITORY_PLAN.md}
+  - {id: study-report-template, path: analysis/STUDY_REPORT_TEMPLATE.md, kind: file, purpose: Reusable major-checkpoint scientific synthesis template., ownership: editable-starter, condition: always, source: analysis/STUDY_REPORT_TEMPLATE.md}
+  - {id: analysis-figures-directory, path: analysis/XX_figures, kind: directory, purpose: Analysis-specific figure workspaces., ownership: researcher-work, condition: always}
+  - {id: analysis-figures-readme, path: analysis/XX_figures/README.md, kind: file, purpose: Analysis figure provenance guidance., ownership: tool-guidance, condition: always, source: analysis/XX_figures/README.md}
+
+  - {id: data-directory, path: data, kind: directory, purpose: Data inputs and provenance records., ownership: researcher-work, condition: always}
+  - {id: synthetic-data-directory, path: data/synthetic, kind: directory, purpose: Synthetic test data and provenance., ownership: researcher-work, condition: always}
+  - {id: synthetic-data-readme, path: data/synthetic/README.md, kind: file, purpose: Synthetic data inventory and provenance starter., ownership: editable-starter, condition: always, source: data/synthetic/README.md}
+  - {id: downloaded-data-directory, path: data/downloaded, kind: directory, purpose: Downloaded benchmark data and provenance., ownership: researcher-work, condition: always}
+  - {id: downloaded-data-readme, path: data/downloaded/README.md, kind: file, purpose: Downloaded data inventory and provenance starter., ownership: editable-starter, condition: always, source: data/downloaded/README.md}
+  - {id: real-data-directory, path: data/real, kind: directory, purpose: Real data and access provenance., ownership: researcher-work, condition: always}
+  - {id: real-data-readme, path: data/real/README.md, kind: file, purpose: Real data inventory and provenance starter., ownership: editable-starter, condition: always, source: data/real/README.md}
+
+  - {id: experiments-directory, path: experiments, kind: directory, purpose: Executable scientific experiments., ownership: researcher-work, condition: always}
+  - {id: synthetic-experiments-directory, path: experiments/01_synthetic, kind: directory, purpose: Synthetic-data experiments., ownership: researcher-work, condition: always}
+  - {id: synthetic-experiments-readme, path: experiments/01_synthetic/README.md, kind: file, purpose: Synthetic phase experiment starter., ownership: editable-starter, condition: always, source: experiments/01_synthetic/README.md}
+  - {id: downloaded-experiments-directory, path: experiments/02_downloaded, kind: directory, purpose: Downloaded-data experiments., ownership: researcher-work, condition: always}
+  - {id: downloaded-experiments-readme, path: experiments/02_downloaded/README.md, kind: file, purpose: Downloaded phase experiment starter., ownership: editable-starter, condition: always, source: experiments/02_downloaded/README.md}
+  - {id: real-experiments-directory, path: experiments/03_real_data, kind: directory, purpose: Real-data experiments., ownership: researcher-work, condition: always}
+  - {id: real-experiments-readme, path: experiments/03_real_data/README.md, kind: file, purpose: Real-data phase experiment starter., ownership: editable-starter, condition: always, source: experiments/03_real_data/README.md}
+
+  - {id: results-directory, path: results, kind: directory, purpose: Durable execution evidence and figures., ownership: researcher-work, condition: always}
+  - {id: logs-directory, path: results/logs, kind: directory, purpose: Raw stdout stderr warnings and tracebacks., ownership: researcher-work, condition: always}
+  - {id: logs-readme, path: results/logs/README.md, kind: file, purpose: Execution-record guidance., ownership: tool-guidance, condition: always, source: results/logs/README.md}
+  - {id: figures-directory, path: results/figures, kind: directory, purpose: Result figures and provenance., ownership: researcher-work, condition: always}
+  - {id: figures-readme, path: results/figures/README.md, kind: file, purpose: Figure naming and provenance guidance., ownership: tool-guidance, condition: always, source: results/figures/README.md}
+
+  - {id: docs-directory, path: docs, kind: directory, purpose: Stable project workflow documentation., ownership: researcher-work, condition: always}
+  - {id: docs-readme, path: docs/README.md, kind: file, purpose: Project documentation index., ownership: tool-guidance, condition: always, source: docs/README.md}
+  - {id: twelve-steps, path: docs/12_STEPS.md, kind: file, purpose: Detailed SMAIRT research loop., ownership: tool-guidance, condition: always, source: docs/12_STEPS.md}
+  - {id: philosophy, path: docs/SMAIRT_PHILOSOPHY.md, kind: file, purpose: Scientific and collaboration principles., ownership: tool-guidance, condition: always, source: docs/SMAIRT_PHILOSOPHY.md}
+  - {id: collaborative-practice, path: docs/BEST_PRACTICE_COLLABORATIVE.md, kind: file, purpose: Collaborative audit-trail practices., ownership: tool-guidance, condition: always, source: docs/BEST_PRACTICE_COLLABORATIVE.md}
+
+  - {id: prompts-directory, path: prompts, kind: directory, purpose: Local assistant context and researcher records., ownership: researcher-work, condition: always}
+  - {id: prompts-readme, path: prompts/README.md, kind: file, purpose: Prompt and context index., ownership: tool-guidance, condition: always, source: prompts/README.md}
+  - {id: priming-prompts, path: prompts/00_priming_prompts.md, kind: file, purpose: Direct-file session priming guidance., ownership: tool-guidance, condition: always, source: prompts/00_priming_prompts.md}
+  - {id: ai-context, path: prompts/AI_CONTEXT.md, kind: file, purpose: Canonical assistant-neutral project context., ownership: tool-guidance, condition: always, source: prompts/AI_CONTEXT.md}
+  - {id: code-conventions, path: prompts/CODE_CONVENTIONS.md, kind: file, purpose: Scientific code and audit-trail conventions., ownership: tool-guidance, condition: always, source: prompts/CODE_CONVENTIONS.md}
+  - {id: context-index, path: prompts/CONTEXT_INDEX.md, kind: file, purpose: Task-oriented project file index., ownership: tool-guidance, condition: always, source: prompts/CONTEXT_INDEX.md}
+  - {id: known-patterns, path: prompts/KNOWN_PATTERNS.md, kind: file, purpose: Living record of project patterns and pitfalls., ownership: researcher-work, condition: always, source: prompts/KNOWN_PATTERNS.md}
+  - {id: session-start, path: prompts/SESSION_START.md, kind: file, purpose: Direct-file context refresh and task start guidance., ownership: tool-guidance, condition: always, source: prompts/SESSION_START.md}
+  - {id: session-log, path: prompts/session_log.md, kind: file, purpose: Living index of session decisions and durable artifacts., ownership: researcher-work, condition: always, source: prompts/session_log.md}
+  - {id: intellectual-contribution, path: prompts/intellectual_contribution.md, kind: file, purpose: Living human and assistant contribution record., ownership: researcher-work, condition: always, source: prompts/intellectual_contribution.md}
+
+  - {id: scripts-directory, path: scripts, kind: directory, purpose: Reusable project helpers., ownership: researcher-work, condition: always}
+  - {id: scripts-readme, path: scripts/README.md, kind: file, purpose: Safe helper inventory and usage guidance., ownership: tool-guidance, condition: always, source: scripts/README.md}
+  - {id: new-script, path: scripts/new_script.py, kind: file, purpose: Numbered experiment-script generator., ownership: tool-guidance, condition: always, source: scripts/new_script.py}
+  - {id: monitor-template, path: scripts/monitor_template.py, kind: file, purpose: Non-destructive progress-file observer., ownership: tool-guidance, condition: always, source: scripts/monitor_template.py}
+  - {id: generate-manifest, path: scripts/generate_manifest.py, kind: file, purpose: Non-destructive project evidence inventory., ownership: tool-guidance, condition: always, source: scripts/generate_manifest.py}
+  - {id: shared-directory, path: scripts/shared, kind: directory, purpose: Shared experiment utilities., ownership: researcher-work, condition: always}
+  - {id: shared-init, path: scripts/shared/__init__.py, kind: file, purpose: Shared helper exports., ownership: tool-guidance, condition: always, source: scripts/shared/__init__.py}
+  - {id: shared-logging, path: scripts/shared/logging.py, kind: file, purpose: Complete terminal and execution-log capture., ownership: tool-guidance, condition: always, source: scripts/shared/logging.py}
+  - {id: shared-readme, path: scripts/shared/README.md, kind: file, purpose: Shared-code extraction guidance., ownership: tool-guidance, condition: always, source: scripts/shared/README.md}
+
+  - {id: final-manifest, path: FINAL_MANIFEST.md, kind: file, purpose: Living Paper claim and figure evidence map., ownership: researcher-work, condition: paper, source: paper/FINAL_MANIFEST.md}
+  - {id: paper-directory, path: paper, kind: directory, purpose: Publication overlay workspace., ownership: researcher-work, condition: paper}
+  - {id: paper-readme, path: paper/README.md, kind: file, purpose: Paper capability workflow guidance., ownership: tool-guidance, condition: paper, source: paper/README.md}
+  - {id: paper-outline, path: paper/outline.md, kind: file, purpose: Editable manuscript outline., ownership: editable-starter, condition: paper, source: paper/outline.md}
+  - {id: paper-analysis-directory, path: paper/analysis, kind: directory, purpose: Publication-focused interpretation linked to core analyses., ownership: researcher-work, condition: paper}
+  - {id: paper-analysis-readme, path: paper/analysis/README.md, kind: file, purpose: Publication analysis guidance., ownership: tool-guidance, condition: paper, source: paper/analysis/README.md}
+  - {id: paper-drafts-directory, path: paper/drafts, kind: directory, purpose: Manuscript drafts., ownership: researcher-work, condition: paper}
+  - {id: paper-drafts-readme, path: paper/drafts/README.md, kind: file, purpose: Draft naming and evidence guidance., ownership: tool-guidance, condition: paper, source: paper/drafts/README.md}
+  - {id: reviewer-feedback-directory, path: paper/reviewer_feedback, kind: directory, purpose: Reviewer feedback and response records., ownership: researcher-work, condition: paper}
+  - {id: reviewer-feedback-readme, path: paper/reviewer_feedback/README.md, kind: file, purpose: Reviewer response guidance., ownership: tool-guidance, condition: paper, source: paper/reviewer_feedback/README.md}
+  - {id: paper-session-prompt, path: prompts/InitialPrompt_paper_driven.md, kind: file, purpose: Paper capability session-start guidance., ownership: tool-guidance, condition: paper, source: prompts/InitialPrompt_paper_driven.md}
+  - {id: figure-generation-prompt, path: prompts/figure_generation_prompt.md, kind: file, purpose: Evidence-linked publication figure guidance., ownership: tool-guidance, condition: paper, source: prompts/figure_generation_prompt.md}
+  - {id: iteration-review-prompt, path: prompts/iteration_review_prompt.md, kind: file, purpose: Non-destructive Paper iteration review guidance., ownership: tool-guidance, condition: paper, source: prompts/iteration_review_prompt.md}
+
+  - {id: hpc-directory, path: hpc, kind: directory, purpose: Optional cluster execution guidance., ownership: researcher-work, condition: hpc}
+  - {id: hpc-readme, path: hpc/README.md, kind: file, purpose: Honest cluster preparation guidance., ownership: tool-guidance, condition: hpc, source: hpc/README.md}
+  - {id: hpc-config, path: hpc/config.yaml, kind: file, purpose: Editable cluster configuration starter., ownership: editable-starter, condition: hpc, source: hpc/config.yaml}
+  - {id: hpc-job-script, path: hpc/slurm_job.sh, kind: file, purpose: Editable phase-independent SLURM wrapper., ownership: editable-starter, condition: hpc, source: hpc/slurm_job.sh}
+  - {id: hpc-logs-directory, path: hpc/logs, kind: directory, purpose: Cluster job metadata and guidance., ownership: researcher-work, condition: hpc}
+  - {id: hpc-logs-readme, path: hpc/logs/README.md, kind: file, purpose: Cluster execution-log guidance., ownership: tool-guidance, condition: hpc, source: hpc/logs/README.md}
+  - {id: hpc-templates-directory, path: hpc/templates, kind: directory, purpose: Editable scheduler templates., ownership: researcher-work, condition: hpc}
+  - {id: hpc-basic-template, path: hpc/templates/slurm_basic.sh, kind: file, purpose: Editable basic SLURM template., ownership: editable-starter, condition: hpc, source: hpc/templates/slurm_basic.sh}

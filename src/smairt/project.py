@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from platformdirs import user_data_path
 from pydantic import ValidationError
 
@@ -29,6 +28,7 @@ from smairt.models import (
     Researcher,
     StartingPhase,
 )
+from smairt.scaffold import ASSISTANT_POINTERS, materialize_template_assets, render_template_assets
 
 CONTRACT_PATH = Path("smairt.yaml")
 LOCAL_PREFERENCES_PATH = Path(".smairt") / "preferences.yaml"
@@ -79,14 +79,7 @@ ASSISTANT_COMMANDS = {
     Assistant.PI: ("pi",),
     Assistant.CURSOR: ("cursor", "."),
 }
-ASSISTANT_ALIASES = {
-    Assistant.ZOO_CODE: "ZOO.md",
-    Assistant.CLAUDE_CODE: "CLAUDE.md",
-    Assistant.OPENCODE: "AGENTS.md",
-    Assistant.CODEX: "AGENTS.md",
-    Assistant.PI: "AGENTS.md",
-    Assistant.CURSOR: ".cursor/rules/smairt.mdc",
-}
+ASSISTANT_ALIASES = {assistant: ASSISTANT_POINTERS[assistant.value] for assistant in Assistant}
 
 
 class ProjectError(Exception):
@@ -209,12 +202,16 @@ def enable_capability(root: Path, name: str) -> str:
     capability = _capability(contract, name)
     if capability.state is CapabilityState.ENABLED:
         return f"{_capability_label(name)} support is already enabled."
-    if name == "paper":
-        _create_paper_assets_safely(root)
-    else:
-        _create_hpc_assets_safely(root, contract.project.slug)
-    contract.capabilities[name] = Capability(state=CapabilityState.ENABLED)
-    save_contract(root, contract)
+    updated = contract.model_copy(
+        update={
+            "capabilities": {
+                **contract.capabilities,
+                name: Capability(state=CapabilityState.ENABLED),
+            }
+        }
+    )
+    materialize_template_assets(root, updated, missing_only=True)
+    save_contract(root, updated)
     return f"{_capability_label(name)} support enabled; existing project files were retained."
 
 
@@ -244,15 +241,12 @@ def _capability_label(name: str) -> str:
 
 
 def _create_paper_assets_safely(root: Path) -> None:
-    _create_directory(root / "paper" / "analysis")
-    for relative, content in paper_asset_contents().items():
-        _write_if_missing_and_track(root, root / relative, content)
+    materialize_template_assets(root, load_contract(root), missing_only=True)
 
 
 def _create_hpc_assets_safely(root: Path, slug: str) -> None:
-    _create_directory(root / "hpc")
-    for relative, content in hpc_asset_contents(slug).items():
-        _write_if_missing_and_track(root, root / relative, content)
+    del slug
+    materialize_template_assets(root, load_contract(root), missing_only=True)
 
 
 def hpc_asset_contents(slug: str) -> dict[str, str]:
@@ -584,7 +578,8 @@ def _phase_directories(phase: StartingPhase) -> tuple[str, ...]:
 
 
 def phase_directories(phase: StartingPhase) -> tuple[str, ...]:
-    return PHASE_DIRECTORIES[phase]
+    del phase
+    return PHASE_DIRECTORIES[StartingPhase.SYNTHETIC]
 
 
 def _managed_file_issues(root: Path, contract: ProjectContract) -> list[CheckIssue]:
@@ -743,37 +738,14 @@ def detected_tools(root: Path) -> dict[str, str]:
 
 def managed_asset_contents(root: Path, *, include_inactive: bool = False) -> dict[str, str]:
     contract = load_contract(root)
-    templates = Path(__file__).parent / "assets" / "scaffold"
-    environment = Environment(
-        loader=FileSystemLoader(str(templates)),
-        undefined=StrictUndefined,
-        keep_trailing_newline=True,
-    )
-    context = {"project": contract.project, "researcher": contract.people["researcher"]}
-    assets: dict[str, str] = {}
-    for path in templates.rglob("*"):
-        if not path.is_file() or "__pycache__" in path.parts or path.suffix == ".pyc":
-            continue
-        relative = path.relative_to(templates).as_posix()
-        assets[relative] = (
-            path.read_text()
-            if path.suffix == ".py"
-            else environment.get_template(relative).render(context)
-        )
+    assets = render_template_assets(contract, include_inactive=include_inactive)
     assets.pop(".gitignore", None)
-    assets.update(phase_asset_contents(contract.current_phase))
     assets["LICENSE"] = _render_license(
         contract.license, contract.people["researcher"].name, contract.license_year
     )
     assets[ASSISTANT_ALIASES[contract.assistant]] = (
         "# SMAIRT AI Context\n\nRead `prompts/AI_CONTEXT.md` before working in this project.\n"
     )
-    paper = contract.capabilities["paper"].state
-    hpc = contract.capabilities["hpc"].state
-    if paper is CapabilityState.ENABLED or (include_inactive and paper is CapabilityState.INACTIVE):
-        assets.update(paper_asset_contents())
-    if hpc is CapabilityState.ENABLED or (include_inactive and hpc is CapabilityState.INACTIVE):
-        assets.update(hpc_asset_contents(contract.project.slug))
     _apply_contract_conventions(assets, contract)
     return assets
 

@@ -3,4 +3,6 @@ __pycache__/
 *.py[cod]
 .venv/
 .smairt/
-results/logs/*.log
+data/**
+!data/**/
+!data/**/README.md

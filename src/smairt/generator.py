@@ -5,10 +5,8 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Any
 
 import yaml
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from smairt.models import ProjectContract, ProjectOptions, StartingPhase
 from smairt.project import (
@@ -17,6 +15,7 @@ from smairt.project import (
     phase_asset_contents,
     phase_directories,
 )
+from smairt.scaffold import materialize_template_assets
 
 
 class GenerationError(Exception):
@@ -58,29 +57,8 @@ def validate_destination(destination: Path) -> None:
 
 
 def _generate_into(root: Path, options: ProjectOptions) -> None:
-    templates = Path(__file__).parent / "assets" / "scaffold"
-    environment = Environment(
-        loader=FileSystemLoader(str(templates)),
-        undefined=StrictUndefined,
-        keep_trailing_newline=True,
-    )
-    context: dict[str, Any] = {"project": options.project, "researcher": options.researcher}
-    for path in templates.rglob("*"):
-        if path.is_dir() or "__pycache__" in path.parts or path.suffix == ".pyc":
-            continue
-        relative_path = Path(str(path.relative_to(templates)))
-        target = root / relative_path
-        target.parent.mkdir(parents=True, exist_ok=True)
-        if path.suffix == ".py":
-            target.write_bytes(path.read_bytes())
-        else:
-            target.write_text(environment.get_template(relative_path.as_posix()).render(context))
-
-    _create_phase_directories(root, options.starting_phase)
-    if options.paper:
-        _create_paper_assets(root)
-    if options.hpc:
-        _create_hpc_assets(root, options.project.slug)
+    contract = ProjectContract.from_options(options, git_initialized=False)
+    materialize_template_assets(root, contract, missing_only=False)
 
 
 def _create_phase_directories(root: Path, phase: StartingPhase) -> None:
