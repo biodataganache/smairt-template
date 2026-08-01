@@ -87,10 +87,9 @@ Read these files to understand the project from scratch:
 
 ---
 
-## Cross-Tool Transfer
+## Direct-File Handoff
 
-When switching to a different AI tool:
-2. Provide the output file `prompts/compiled_for_ai.md` to the new tool
+Ask the new assistant to read `smairt.yaml`, project context, hypotheses, raw logs, and analyses directly.
 
 ---
 

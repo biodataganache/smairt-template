@@ -12,7 +12,7 @@ You are operating within an AI-integrated IDE (VSCode with Roo/Zoo, Cursor, Wind
 - **You can execute commands** — Run scripts, check output, verify results
 - **You can write files directly** — Create scripts, update documentation, generate analysis
 - **You have persistent context** — Within a session, you remember previous interactions
-- **The conversation IS the session log** — No need for manual session logging
+- **Project files are the durable record** - update hypotheses, logs, analyses, and decisions
 
 ### What This Changes
 
