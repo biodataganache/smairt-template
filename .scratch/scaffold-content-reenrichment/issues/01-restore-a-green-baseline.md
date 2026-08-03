@@ -1,6 +1,6 @@
 # 01 - Restore a green baseline
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Blocked by: none
 
@@ -32,3 +32,32 @@ Note that CI runs mypy as a hard gate and `uv.lock` pins mypy 2.3.0, which is st
 ## Notes
 
 Renaming the visual-path binding to something like `selection` is the smaller edit and leaves the set-based fallback logic untouched.
+
+## Answer
+
+Yes. All eight release gates pass.
+
+The two bindings were separated rather than merely renamed. The visual path now binds `selection` (a `str` from `select_choice`); the text-fallback path keeps `requested` (a `set[str]`). Both funnel into one `_record_capabilities(requested: set[str])` method, so the answer-setting logic exists once instead of twice. A module-level `_parse_capabilities()` helper and `_OPTIONAL_CAPABILITIES` constant replace the duplicated comma-splitting expression and the inline `{"paper", "hpc"}` literal.
+
+The visual path subtracts `{"off"}` before recording, so the sentinel choice cannot be mistaken for a capability name.
+
+Gate results:
+
+| Gate | Result |
+|---|---|
+| `ruff format --check .` | 36 files already formatted |
+| `ruff check .` | All checks passed |
+| `mypy src tests` | Success: no issues found in 17 source files |
+| `ci_scaffold_diff.py` | no blueprint change |
+| `pytest` | 48 passed |
+| `uv build` | wheel + sdist built |
+| `smoke_install.py` wheel | exit 0 |
+| `smoke_install.py` sdist | exit 0 |
+
+Behavior was verified unchanged across both paths, including the whitespace case `" hpc , paper "` and rejection of invalid input:
+
+- visual `off`/`paper`/`hpc`/`paper,hpc` → correct `paper`/`hpc` answers
+- fallback `""`/`paper`/`hpc`/`paper,hpc`/`" hpc , paper "` → correct answers
+- fallback `nonsense` → rejected, re-prompts
+
+Diff is 15 insertions and 7 deletions in one file.

@@ -62,6 +62,12 @@ _SKIP = ":skip"
 _BACK = ":back"
 _CANCEL = ":cancel"
 _WIZARD_STEPS = 15
+_OPTIONAL_CAPABILITIES = {"paper", "hpc"}
+
+
+def _parse_capabilities(answer: str) -> set[str]:
+    """Split a comma-separated capability answer into a set of requested names."""
+    return {item.strip() for item in answer.split(",") if item.strip()}
 
 
 class WizardCancelled(Exception):
@@ -348,7 +354,7 @@ class Wizard:
                 else "off"
             )
             try:
-                requested = select_choice(
+                selection = select_choice(
                     "Optional capabilities",
                     [
                         ("off", "Focused workspace (no optional capabilities)"),
@@ -360,8 +366,7 @@ class Wizard:
                 )
             except SelectionCancelled as error:
                 raise WizardCancelled from error
-            self.answers["paper"] = "paper" in requested
-            self.answers["hpc"] = "hpc" in requested
+            self._record_capabilities(_parse_capabilities(selection) - {"off"})
             return
         self.console.print("Type paper, hpc, paper,hpc, or press Enter to skip.")
         while True:
@@ -370,12 +375,15 @@ class Wizard:
                 raise WizardCancelled
             if answer == _BACK:
                 raise BackRequested
-            requested = {item.strip() for item in answer.split(",") if item.strip()}
-            if requested <= {"paper", "hpc"}:
-                self.answers["paper"] = "paper" in requested
-                self.answers["hpc"] = "hpc" in requested
+            requested = _parse_capabilities(answer)
+            if requested <= _OPTIONAL_CAPABILITIES:
+                self._record_capabilities(requested)
                 return
             self.console.print("Use paper, hpc, or paper,hpc.", style="yellow")
+
+    def _record_capabilities(self, requested: set[str]) -> None:
+        self.answers["paper"] = "paper" in requested
+        self.answers["hpc"] = "hpc" in requested
 
     def _phase(self) -> None:
         self._choose(
