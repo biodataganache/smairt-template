@@ -54,7 +54,13 @@ from smairt.project import (
     update_collaborator,
     update_settings,
 )
-from smairt.terminal import BackRequested, SelectionCancelled, navigation_bindings, select_choice
+from smairt.terminal import (
+    BackRequested,
+    SelectionCancelled,
+    navigation_bindings,
+    select_choice,
+    select_menu,
+)
 
 app = typer.Typer(no_args_is_help=False, invoke_without_command=True)
 
@@ -998,6 +1004,7 @@ class Dashboard:
     def __init__(self, root: Path) -> None:
         self.root = root
         motion = _interactive_motion_enabled(root)
+        self.visual = motion
         self.console = Console(force_interactive=motion, force_terminal=motion)
         self.session: PromptSession[str] = PromptSession(
             input=create_input(sys.stdin), output=create_output(sys.stdout)
@@ -1013,23 +1020,27 @@ class Dashboard:
                 contract = load_contract(self.root)
                 advanced = local_preferences(self.root).get("experience") == "advanced"
             mode = "Advanced" if advanced else "Standard"
-            self.console.rule(f"[bold cyan]SMAIRT {mode} Mode: {contract.project.name}[/]")
-            self.console.print("1. Launch assistant or open folder")
-            self.console.print("2. Project Settings")
-            self.console.print(f"3. Paper Support: {contract.capabilities['paper'].state.value}")
-            self.console.print(f"4. HPC Support: {contract.capabilities['hpc'].state.value}")
-            self.console.print("5. Project Check")
-            self.console.print("6. Help")
+            actions = [
+                ("1", "Launch assistant or open folder"),
+                ("2", "Project Settings"),
+                ("3", f"Paper Support: {contract.capabilities['paper'].state.value}"),
+                ("4", f"HPC Support: {contract.capabilities['hpc'].state.value}"),
+                ("5", "Project Check"),
+                ("6", "Help"),
+            ]
             if advanced:
-                self.console.print("7. Inspect project contract")
-                self.console.print("8. Verbose Project Check")
-                self.console.print("9. Regenerate managed assets")
-                self.console.print("10. Customize prompt and code conventions")
-                self.console.print("11. Detected local tools")
-                self.console.print("12. Exit")
+                actions += [
+                    ("7", "Inspect project contract"),
+                    ("8", "Verbose Project Check"),
+                    ("9", "Regenerate managed assets"),
+                    ("10", "Customize prompt and code conventions"),
+                    ("11", "Detected local tools"),
+                    ("12", "Exit"),
+                ]
             else:
-                self.console.print("7. Exit")
-            action = self.session.prompt("Choose an action: ").strip()
+                actions.append(("7", "Exit"))
+            self.console.rule(f"[bold cyan]SMAIRT {mode} Mode: {contract.project.name}[/]")
+            action = self._menu("Choose an action", actions, escape=actions[-1][0])
             if action == "1":
                 self._assistant()
             elif action == "2":
@@ -1056,6 +1067,23 @@ class Dashboard:
                 return
             else:
                 self.console.print("Choose a listed action.", style="yellow")
+
+    def _menu(
+        self,
+        title: str,
+        actions: list[tuple[str, str]],
+        *,
+        escape: str,
+    ) -> str:
+        """Return a chosen action identifier from a scrollable menu or a numbered fallback."""
+        if self.visual:
+            try:
+                return select_menu(title, actions)
+            except (BackRequested, SelectionCancelled):
+                return escape
+        for identifier, label in actions:
+            self.console.print(f"{identifier}. {label}")
+        return self.session.prompt(f"{title}: ").strip()
 
     def _assistant(self) -> None:
         message = prepare_assistant(self.root)
@@ -1185,19 +1213,23 @@ class Dashboard:
 
     def _settings(self) -> None:
         while True:
-            self.console.print("Project Settings")
-            self.console.print("1. Project name")
-            self.console.print("2. Description")
-            self.console.print("3. Domain")
-            self.console.print("4. Research question")
-            self.console.print("5. Primary researcher")
-            self.console.print("6. Assistant")
-            self.console.print("7. Current phase")
-            self.console.print("8. Collaborator")
-            self.console.print("9. License")
-            self.console.print("10. Local experience and motion")
-            self.console.print("11. Back")
-            action = self.session.prompt("Choose a setting: ").strip()
+            action = self._menu(
+                "Project Settings",
+                [
+                    ("1", "Project name"),
+                    ("2", "Description"),
+                    ("3", "Domain"),
+                    ("4", "Research question"),
+                    ("5", "Primary researcher"),
+                    ("6", "Assistant"),
+                    ("7", "Current phase"),
+                    ("8", "Collaborator"),
+                    ("9", "License"),
+                    ("10", "Local experience and motion"),
+                    ("11", "Back"),
+                ],
+                escape="11",
+            )
             contract = load_contract(self.root)
             if action == "1":
                 update_settings(self.root, name=self._required("Project name"))
@@ -1312,14 +1344,24 @@ def _home() -> None:
     )
     motion = _interactive_motion_enabled()
     console = Console(force_interactive=motion, force_terminal=motion)
+    actions = [
+        ("1", "Create New Project"),
+        ("2", "Recent Projects"),
+        ("3", "Open Existing Project"),
+        ("4", "Help"),
+        ("5", "Exit"),
+    ]
     while True:
         console.rule("[bold cyan]SMAIRT Home[/]")
-        console.print("1. Create New Project")
-        console.print("2. Recent Projects")
-        console.print("3. Open Existing Project")
-        console.print("4. Help")
-        console.print("5. Exit")
-        action = session.prompt("Choose an action: ").strip()
+        if motion:
+            try:
+                action = select_menu("Choose an action", actions)
+            except (BackRequested, SelectionCancelled):
+                return
+        else:
+            for identifier, label in actions:
+                console.print(f"{identifier}. {label}")
+            action = session.prompt("Choose an action: ").strip()
         if action == "1":
             try:
                 destination, options = Wizard().run()
@@ -1337,6 +1379,17 @@ def _home() -> None:
             recents = recent_projects()
             if not recents:
                 console.print("No recent SMAIRT projects.")
+                continue
+            if motion:
+                try:
+                    chosen = select_choice(
+                        "Recent Projects",
+                        [(str(entry["path"]), str(entry["path"])) for entry in recents],
+                    )
+                except (BackRequested, SelectionCancelled):
+                    continue
+                root = _project_or_exit(Path(chosen))
+                Dashboard(root).run()
                 continue
             for index, entry in enumerate(recents, start=1):
                 console.print(f"{index}. {entry['path']}")

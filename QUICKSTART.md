@@ -64,7 +64,12 @@ the question, the evidence, and the interpretation.
 
 ## 4. Check And Manage
 
-Run the dashboard from the project root with `smairt`, or use stable commands:
+Run the dashboard from the project root with `smairt`. In a capable terminal,
+move with Up/Down or `k`/`j`, scroll long lists with PageUp/PageDown, choose
+with Enter, go back with Left or Escape, and cancel with Ctrl-C. Basic
+terminals, redirected input, and CI show the same options as a numbered list.
+
+Or use stable commands:
 
 ```bash
 smairt check . --json

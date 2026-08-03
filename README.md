@@ -76,6 +76,23 @@ experience preference to `advanced` with `smairt settings` to expose Advanced
 Mode controls. The dashboard manages workspace utilities only; scientific work
 stays with the selected coding assistant.
 
+In a capable interactive terminal, Home, the dashboard, Project Settings, and
+guided project creation present scrollable keyboard menus:
+
+| Control | Action |
+| --- | --- |
+| Up/Down or `k`/`j` | Move the selection, wrapping at both ends |
+| PageUp/PageDown | Scroll one visible viewport without wrapping |
+| Enter | Choose the highlighted item |
+| Left or Escape | Return to the previous screen |
+| Ctrl-C | Cancel |
+
+Long lists stay inside a bounded viewport with a scrollbar rather than printing
+every row, and the highlighted row always remains visible. Menus never take
+over the terminal with an alternate screen. Redirected input, `TERM=dumb`, CI,
+tests, and `--no-motion` use the equivalent numbered text menus instead, so
+scripted transcripts stay deterministic.
+
 Stable scriptable commands include:
 
 ```bash
@@ -141,6 +158,17 @@ generation paths. Use `smairt new` for every new project and automation flow.
 - Native Windows support is deferred.
 
 ## Development
+
+Clone into an ordinary local directory rather than a cloud-synced folder such
+as OneDrive, iCloud Drive, or Dropbox. Generated development files (`.venv`,
+caches, `dist`, and smoke-install workspaces) are large, disposable, and not
+tracked by Git; syncing them wastes upload capacity and can corrupt a virtual
+environment when files are offloaded to the cloud:
+
+```bash
+git clone https://github.com/PNNL-CompBio/smairt-template.git ~/Developer/smairt-template
+cd ~/Developer/smairt-template
+```
 
 Install development dependencies and run all release gates locally:
 

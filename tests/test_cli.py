@@ -1389,7 +1389,7 @@ def test_saved_motion_preference_controls_a_project_dashboard_tty(tmp_path: Path
         text=True,
     )
 
-    enabled_dashboard = run_interactive_dashboard(enabled_project, "7\n")
+    enabled_dashboard = run_interactive_dashboard(enabled_project, "\x1b")
     disabled_dashboard = run_interactive_dashboard(disabled_project, "7\n")
 
     assert configured.returncode == 0, configured.stderr
@@ -1397,6 +1397,43 @@ def test_saved_motion_preference_controls_a_project_dashboard_tty(tmp_path: Path
     assert disabled_dashboard.returncode == 0, disabled_dashboard.stderr
     assert "\x1b[1;36mSMAIRT Standard Mode: Test Project" in enabled_dashboard.stdout
     assert "\x1b[1;36mSMAIRT Standard Mode: Test Project" not in disabled_dashboard.stdout
+    assert "Up/Down or j/k move" in enabled_dashboard.stdout
+    assert "(*) Launch assistant or open folder" in enabled_dashboard.stdout
+    assert "Up/Down or j/k move" not in disabled_dashboard.stdout
+    assert "1. Launch assistant or open folder" in disabled_dashboard.stdout
+
+
+def test_home_offers_a_scrollable_menu_in_a_capable_terminal(tmp_path: Path) -> None:
+    data_home = tmp_path / "home-data"
+    empty_workspace = tmp_path / "no-project-here"
+    empty_workspace.mkdir()
+
+    home = run_interactive_dashboard(
+        empty_workspace,
+        "\x1b",
+        environment={"XDG_DATA_HOME": str(data_home)},
+    )
+
+    assert home.returncode == 0, home.stdout
+    assert "SMAIRT Home" in home.stdout
+    assert "(*) Create New Project" in home.stdout
+    assert "( ) Recent Projects" in home.stdout
+    assert "Up/Down or j/k move" in home.stdout
+
+
+def test_visual_settings_menu_is_reachable_and_returns_to_the_dashboard(tmp_path: Path) -> None:
+    destination = tmp_path / "visual-settings"
+    assert create_project(destination).returncode == 0
+
+    dashboard = run_interactive_dashboard(destination, "\x1b[B\r\x1b\x03")
+
+    assert dashboard.returncode == 0, dashboard.stdout
+    assert "( ) Project Settings" in dashboard.stdout
+    assert "Project Settings" in dashboard.stdout
+    assert "Local experience and motion" in dashboard.stdout
+    assert yaml.safe_load((destination / "smairt.yaml").read_text())["project"]["name"] == (
+        "Test Project"
+    )
 
 
 def test_interactive_wizard_validates_destination_before_final_review(tmp_path: Path) -> None:
@@ -1544,9 +1581,13 @@ def run_dashboard(root: Path, input_text: str) -> subprocess.CompletedProcess[st
     )
 
 
-def run_interactive_dashboard(root: Path, input_text: str) -> subprocess.CompletedProcess[str]:
+def run_interactive_dashboard(
+    root: Path,
+    input_text: str,
+    environment: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
     command = [str(installed_smairt())]
-    environment = {**os.environ, "TERM": "xterm-256color"}
+    environment = {**os.environ, "TERM": "xterm-256color", **(environment or {})}
     environment.pop("CI", None)
     environment.pop("PYTEST_CURRENT_TEST", None)
     master, slave = pty.openpty()
@@ -1570,7 +1611,7 @@ def run_interactive_dashboard(root: Path, input_text: str) -> subprocess.Complet
                 output.extend(os.read(master, 4096))
             except OSError:
                 break
-        if not sent and b"Choose an action:" in output:
+        if not sent and b"Choose an action" in output:
             os.write(master, input_text.encode())
             sent = True
     if process.poll() is None:
