@@ -29,21 +29,48 @@ PHASES = {
 }
 """Phase names a researcher types, and the directory each one means."""
 
-ITERATION_LOG_HEADER = """# Iteration Log
+OUTCOME_PLACEHOLDER = "[Record after interpreting]"
+"""What `new_iteration.py` writes into a new row's `Outcome` cell.
 
-One row per iteration, in the order the work happened. Rows are appended and never
-rewritten: a row that turned out to be wrong is corrected by a later row saying so,
-because the sequence of attempts is itself evidence.
+This exact text is how `record_outcome.py` recognises a cell it may fill: a helper may
+replace a placeholder it wrote itself, and may never touch text a researcher wrote. Once
+the cell holds the researcher's own prose, the helper appends to the history and stops.
+"""
+
+OUTCOME_HISTORY_HEADING = "## Outcome history"
+"""The heading separating the scannable state table from the append-only history."""
+
+ITERATION_LOG_HEADER = f"""# Iteration Log
+
+Two records in one file, because a reader needs two different things from them.
+
+## Current state
+
+One row per iteration, in the order the work happened. This is the scannable view: what
+has been attempted on this project, and what came of each attempt. `new_iteration.py`
+appends a row when it creates an iteration.
 
 `Kind` is `single` when the iteration tests one change, or `panel (N)` when it probes N
 candidate directions at once. `Outcome` is prose rather than a keyword, because a panel
-that improves three of eight candidates cannot be described by a single verdict.
+that improves three of eight candidates cannot be described by a single verdict, and
+`SUPPORTED` would discard the finding.
 
-Fill in `Outcome` once the run has been interpreted. Full results belong in the matching
-`analysis/ANALYSIS_NN.md`; this table is the index into them.
+`record_outcome.py` fills `{OUTCOME_PLACEHOLDER}` the first time an outcome is recorded.
+After that the cell holds your words, so a revised understanding is yours to write; the
+helper appends to the history below and leaves the row alone. `smairt check` reports a row
+that no longer agrees with the latest history entry.
 
 | Iteration | Date | Script | Hypotheses | Kind | Changed from | Outcome |
 |---|---|---|---|---|---|---|
+
+{OUTCOME_HISTORY_HEADING}
+
+Appended, never edited. Every recording and every revision adds a line here, so a
+conclusion that changed still shows what it changed from. The sequence of attempts, and of
+readings of those attempts, is itself evidence.
+
+| Date | Iteration | Outcome recorded |
+|---|---|---|
 """
 
 
@@ -116,6 +143,15 @@ def write_new_script(path: Path, body: str) -> None:
     path.write_text(body)
 
 
+def iteration_log_path(root: Path) -> Path:
+    """Return the iteration log's location, creating the file when it is absent."""
+    log_path = root / "analysis" / "ITERATION_LOG.md"
+    if not log_path.exists():
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_path.write_text(ITERATION_LOG_HEADER)
+    return log_path
+
+
 def append_iteration_row(
     root: Path,
     *,
@@ -125,20 +161,77 @@ def append_iteration_row(
     kind: str,
     changed_from: str,
 ) -> Path:
-    """Append one row to the iteration log, creating the log when it is absent.
+    """Add one row to the state table, creating the log when it is absent.
 
-    Appending rather than printing a row for someone to paste is deliberate: the paste
-    is the step that gets skipped, and a log with gaps cannot be trusted as a record.
-    Existing rows are never read back or modified.
+    Writing the row here rather than printing one for someone to paste is deliberate: the
+    paste is the step that gets skipped, and a log with gaps cannot be trusted as a
+    record.
+
+    The row goes at the end of the state table, which sits above the outcome history, so
+    this inserts rather than appending to the file. No existing line is read back or
+    changed.
     """
-    log_path = root / "analysis" / "ITERATION_LOG.md"
-    if not log_path.exists():
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        log_path.write_text(ITERATION_LOG_HEADER)
+    log_path = iteration_log_path(root)
     row = (
         f"| {number:02d} | {date.today().isoformat()} | `{script_name}` | "
-        f"{hypotheses} | {kind} | {changed_from} | [Record after interpreting] |\n"
+        f"{hypotheses} | {kind} | {changed_from} | {OUTCOME_PLACEHOLDER} |\n"
     )
-    with log_path.open("a") as log:
-        log.write(row)
+    lines = log_path.read_text().splitlines(keepends=True)
+    log_path.write_text("".join(_with_state_row(lines, row)))
     return log_path
+
+
+def _with_state_row(lines: list[str], row: str) -> list[str]:
+    """Return the log's lines with a new state row placed at the end of that table."""
+    for index, line in enumerate(lines):
+        if line.startswith(OUTCOME_HISTORY_HEADING):
+            end = index
+            while end > 0 and not lines[end - 1].strip():
+                end -= 1
+            return [*lines[:end], row, *lines[end:]]
+    return [*lines, row]
+
+
+def append_outcome_history(root: Path, *, number: int, outcome: str) -> Path:
+    """Append one line to the outcome history, which is never edited.
+
+    A recording and a later revision both add a line, so a conclusion that changed still
+    shows what it changed from. That is the property a single editable cell cannot hold,
+    and it is why the log carries two records rather than one.
+    """
+    log_path = iteration_log_path(root)
+    line = f"| {date.today().isoformat()} | {number:02d} | {outcome} |\n"
+    with log_path.open("a") as log:
+        log.write(line)
+    return log_path
+
+
+def fill_outcome_placeholder(root: Path, *, number: int, outcome: str) -> bool:
+    """Fill an iteration's outcome cell if it still holds the placeholder we wrote.
+
+    Returns whether the cell was filled. A helper may replace its own placeholder, and may
+    never overwrite a researcher's prose: once the cell holds their words, a revised
+    understanding is theirs to write, and this reports False so the caller can say so.
+    """
+    log_path = iteration_log_path(root)
+    lines = log_path.read_text().splitlines(keepends=True)
+    prefix = f"| {number:02d} |"
+    for index, line in enumerate(lines):
+        if line.startswith(prefix) and OUTCOME_PLACEHOLDER in line:
+            lines[index] = line.replace(OUTCOME_PLACEHOLDER, outcome)
+            log_path.write_text("".join(lines))
+            return True
+    return False
+
+
+def state_row_outcome(root: Path, number: int) -> str | None:
+    """Return an iteration's recorded outcome from the state table, if it has a row."""
+    log_path = root / "analysis" / "ITERATION_LOG.md"
+    if not log_path.exists():
+        return None
+    prefix = f"| {number:02d} |"
+    for line in log_path.read_text().splitlines():
+        if line.startswith(prefix):
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            return cells[-1] if cells else None
+    return None

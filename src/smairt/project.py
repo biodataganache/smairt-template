@@ -674,10 +674,62 @@ def project_check(root: Path) -> list[CheckIssue]:
                 "create-assistant-pointer",
             )
         )
+    issues.extend(_outcome_drift_issues(root))
     if contract.scaffold_version == __version__:
         issues.extend(_managed_file_issues(root, contract))
         issues.extend(_unresolved_token_issues(root))
     return issues
+
+
+def _outcome_drift_issues(root: Path) -> list[CheckIssue]:
+    """Report iterations whose state row disagrees with the latest recorded outcome.
+
+    The iteration log holds a scannable row per iteration and an append-only history of
+    every outcome ever recorded. A helper fills the row once and then only ever appends,
+    so a revised outcome deliberately leaves the row stale rather than overwriting the
+    researcher's wording.
+
+    Detecting that drift is structural, not scientific: this compares two strings and
+    never judges which is right. There is no repair, because choosing the wording is the
+    researcher's.
+    """
+    log_path = root / "analysis" / "ITERATION_LOG.md"
+    if not log_path.is_file():
+        return []
+    rows, history = _iteration_log_records(log_path.read_text())
+    relative = log_path.relative_to(root).as_posix()
+    return [
+        CheckIssue(
+            "iteration-outcome-drift",
+            relative,
+            f"Iteration {number} records a later outcome than its row states: "
+            f"row says {rows[number]!r}, history says {latest!r}.",
+        )
+        for number, latest in history.items()
+        if number in rows and rows[number] != latest
+    ]
+
+
+def _iteration_log_records(content: str) -> tuple[dict[str, str], dict[str, str]]:
+    """Return each iteration's stated outcome and its most recently recorded one.
+
+    The two tables are told apart by which heading precedes them, so a researcher adding
+    prose or their own sections between them does not confuse the reading.
+    """
+    rows: dict[str, str] = {}
+    history: dict[str, str] = {}
+    in_history = False
+    for line in content.splitlines():
+        if line.startswith("## "):
+            in_history = line.strip() == "## Outcome history"
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if line.startswith("|") and len(cells) >= 3:
+            if in_history and re.fullmatch(r"\d+", cells[1]):
+                history[cells[1]] = cells[2]
+            elif not in_history and re.fullmatch(r"\d+", cells[0]):
+                rows[cells[0]] = cells[-1]
+    return rows, history
 
 
 def _phase_directories(phase: StartingPhase) -> tuple[str, ...]:
@@ -860,30 +912,58 @@ def next_workflow_action(root: Path) -> tuple[str, str]:
             "Hypothesis recorded, no iteration yet",
             "commit the criteria, then python scripts/new_iteration.py",
         )
-    unrecorded = _iterations_awaiting_an_outcome(root)
-    if unrecorded:
-        listed = ", ".join(f"{number:02d}" for number in unrecorded)
+    uninterpreted = _iterations_missing(root, "analysis/ANALYSIS_{:02d}.md")
+    if uninterpreted:
+        listed = ", ".join(f"{number:02d}" for number in uninterpreted)
         return (
             f"Iterations awaiting an interpretation: {listed}",
             "read the log in results/logs/, then write analysis/ANALYSIS_NN.md",
         )
+    unrecorded = _iterations_without_a_recorded_outcome(root)
+    if unrecorded:
+        listed = ", ".join(f"{number:02d}" for number in unrecorded)
+        return (
+            f"Interpreted but the outcome is not recorded: {listed}",
+            "python scripts/record_outcome.py NN --outcome '...'",
+        )
     return (
-        "Every iteration is interpreted",
+        "Every iteration is interpreted and recorded",
         "python scripts/new_iteration.py for the next attempt, or select_result.py to report one",
     )
 
 
-def _iterations_awaiting_an_outcome(root: Path) -> list[int]:
-    """Return iterations that have a script but no interpretation written yet."""
-    numbers = sorted(
+def _iteration_numbers(root: Path) -> list[int]:
+    """Return every iteration number that has a script, in order."""
+    return sorted(
         int(match.group(1))
         for script in (root / "experiments").glob("*/script_*.py")
         if (match := re.match(r"script_(\d+)", script.name))
     )
+
+
+def _iterations_missing(root: Path, template: str) -> list[int]:
+    """Return iterations for which the file named by the template does not exist."""
     return [
         number
-        for number in numbers
-        if not (root / "analysis" / f"ANALYSIS_{number:02d}.md").exists()
+        for number in _iteration_numbers(root)
+        if not (root / template.format(number)).exists()
+    ]
+
+
+def _iterations_without_a_recorded_outcome(root: Path) -> list[int]:
+    """Return interpreted iterations whose outcome cell still holds its placeholder.
+
+    An interpretation that never reaches the log leaves the scannable record saying
+    nothing came of the attempt, which is the gap the log exists to close.
+    """
+    log_path = root / "analysis" / "ITERATION_LOG.md"
+    if not log_path.is_file():
+        return []
+    rows, _ = _iteration_log_records(log_path.read_text())
+    return [
+        number
+        for number in _iteration_numbers(root)
+        if rows.get(f"{number:02d}", "").startswith("[Record after")
     ]
 
 

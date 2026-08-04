@@ -852,6 +852,59 @@ def test_the_dashboard_names_where_the_work_stands_and_how_to_move_it_forward(
     assert "new_iteration.py" not in working.stdout.split("awaiting")[0]
 
 
+def test_recording_an_outcome_appends_history_and_fills_only_its_own_placeholder(
+    tmp_path: Path,
+) -> None:
+    """The log must be scannable and still show that a conclusion changed.
+
+    One editable cell cannot do both: filling it loses the earlier reading, and never
+    filling it leaves the scannable view empty. So the row is filled once by the helper and
+    every recording appends to a history that is never edited. A revision therefore leaves
+    the row deliberately stale, and Project Check reports that drift so the researcher
+    knows to update their own wording.
+    """
+    destination = tmp_path / "outcomes"
+    assert create_project(destination).returncode == 0
+
+    def helper(*arguments: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, *arguments],
+            cwd=destination,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+    assert helper("scripts/new_track.py", "A question", "synthetic").returncode == 0
+    created = helper(
+        "scripts/new_iteration.py", "baseline", "synthetic", "--hypothesis", "HYPOTHESIS_01"
+    )
+    refused = helper("scripts/record_outcome.py", "1", "--outcome", "Criterion met")
+
+    (destination / "analysis" / "ANALYSIS_01.md").write_text("# Analysis 01\n")
+    first = helper("scripts/record_outcome.py", "1", "--outcome", "Criterion met at 0.71")
+    revised = helper("scripts/record_outcome.py", "1", "--outcome", "Revised: seed effect")
+    log = (destination / "analysis" / "ITERATION_LOG.md").read_text()
+    checked = subprocess.run(
+        [str(installed_smairt()), "check", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert created.returncode == 0, created.stderr
+    assert refused.returncode != 0
+    assert "interpret the run" in refused.stderr
+    assert first.returncode == 0, first.stderr
+    assert "Filled the row" in first.stdout
+    assert revised.returncode == 0, revised.stderr
+    assert "left untouched" in revised.stdout
+    assert log.count("Criterion met at 0.71") == 2, "the row and its first history line"
+    assert log.count("Revised: seed effect") == 1, "a revision appends without touching the row"
+    assert "iteration-outcome-drift" in checked.stdout
+    assert checked.returncode == 1
+
+
 def test_an_editor_hosted_assistant_is_launched_by_opening_the_workspace(tmp_path: Path) -> None:
     """Zoo Code runs inside VS Code, so opening the workspace is the launch.
 

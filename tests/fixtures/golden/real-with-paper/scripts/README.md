@@ -10,6 +10,7 @@ Run each from the project root, and use `--help` for the full argument list.
 |---|---|
 | `new_track.py` | Starts a track: a plan and a hypothesis, before any script exists |
 | `new_iteration.py` | Creates the next iteration and records it in the iteration log |
+| `record_outcome.py` | Records what an iteration turned out to show, once you have interpreted it |
 | `select_result.py` | Records which iteration you would report, and the evidence behind it |
 | `new_utility.py` | Creates an unnumbered utility script that is not an iteration |
 | `generate_manifest.py` | Prints or writes an inventory of research artifacts |
@@ -39,7 +40,9 @@ python scripts/new_track.py "Fitness data predicts response" synthetic
 python scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
 python experiments/01_synthetic/script_01_baseline.py
 
-# 4. Interpret the log in analysis/, then record the outcome in analysis/ITERATION_LOG.md
+# 4. Interpret the log, then record what the iteration showed
+cp analysis/ANALYSIS_TEMPLATE.md analysis/ANALYSIS_01.md
+python scripts/record_outcome.py 1 --outcome "Criterion met, 0.71 against a 0.65 target"
 
 # 5. Try again, or report the result
 python scripts/new_iteration.py "wider layer" synthetic --hypothesis HYPOTHESIS_01 --from-iteration 1
@@ -89,15 +92,16 @@ experiments/02_downloaded/script_04_benchmark_sweep.py
 experiments/03_real_data/script_07_validation.py
 ```
 
-Every run appends one row to `analysis/ITERATION_LOG.md`:
+Every run adds one row to the `Current state` table in `analysis/ITERATION_LOG.md`:
 
 | Iteration | Date | Script | Hypotheses | Kind | Changed from | Outcome |
 |---|---|---|---|---|---|---|
-| 03 | 2024-01-15 | `script_03_baseline` | H01 | single | — | [Record after interpreting] |
-| 04 | 2024-01-18 | `script_04_activation_panel` | H01 | panel (8) | 03 | [Record after interpreting] |
+| 03 | 2024-01-15 | `script_03_baseline` | HYPOTHESIS_01 | single | — | [Record after interpreting] |
+| 04 | 2024-01-18 | `script_04_activation_panel` | HYPOTHESIS_01 | panel (8) | 03 | [Record after interpreting] |
 
-Fill in `Outcome` after interpreting the run. It is prose, not a keyword: a panel that
-improves three of eight candidates and regresses one cannot be described by `SUPPORTED`.
+`record_outcome.py` replaces that placeholder once you have interpreted the run. `Outcome`
+is prose, not a keyword: a panel that improves three of eight candidates and regresses one
+cannot be described by `SUPPORTED`.
 
 ### Panels
 
@@ -118,6 +122,26 @@ test, and a reader should not have to reconstruct it from a diff.
 
 The copy gets its own `SCRIPT_NAME`, so it writes its own log rather than the earlier
 iteration's.
+
+## record_outcome.py
+
+```bash
+python scripts/record_outcome.py 4 --outcome "3 of 8 above criterion, 1 regression"
+```
+
+Records what an iteration turned out to show. It refuses until `analysis/ANALYSIS_NN.md`
+exists, because an outcome written before the run has been interpreted is a guess.
+
+Two things happen, and the difference is the point:
+
+- A line is **appended** to the `Outcome history` table, always. Nothing there is ever
+  edited, so a conclusion you later revise still shows what it changed from.
+- The `Current state` row's outcome cell is **filled**, but only while it still holds the
+  placeholder `new_iteration.py` wrote. Once it holds your prose, it is yours to change,
+  and the helper says so rather than overwriting you.
+
+So a revision appends and stops. `smairt check` then reports the row as disagreeing with
+the latest history line, which is your cue to update it.
 
 ## select_result.py
 
@@ -202,6 +226,10 @@ log. It observes only: it does not start, stop, or manage a process or a schedul
 Project-specific utilities belong in `scripts/shared/`, imported as
 `from scripts.shared.<module> import ...`. See `scripts/shared/README.md`.
 
-A helper may create a file that does not exist and append an entry to a record whose
-format it owns. It must not modify or remove an existing line. Keeping that rule is what
-makes the audit trail worth reading.
+A helper may create a file that does not exist, append an entry to a record whose format
+it owns, and replace a placeholder it wrote itself. It must never alter text a researcher
+wrote.
+
+That last clause is the whole rule. A helper filling its own `[Record after interpreting]`
+has not overwritten anyone, and the history keeps every value regardless. A helper editing
+your sentence has destroyed a conclusion, which is why it appends and tells you instead.

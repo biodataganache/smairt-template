@@ -173,15 +173,40 @@ def test_no_shipped_helper_can_delete_or_relocate_researcher_work() -> None:
     assert offenders == []
 
 
-def test_a_helper_writing_a_record_opens_it_for_append_rather_than_write() -> None:
-    """A record whose earlier lines can be rewritten is not an audit trail.
+def test_the_outcome_history_is_only_ever_appended_to() -> None:
+    """A history whose earlier lines can change is not evidence of what was believed.
 
-    Iterations are appended so the sequence of attempts stays intact, including the
-    attempts that failed. Opening the log in write mode would silently discard them.
+    Every recording and revision appends, so a conclusion that changed still shows what it
+    changed from. The state table above it is rewritten in place, which is why the two
+    records exist separately: one is scannable, the other is permanent.
     """
     iterations = rendered_assets()["scripts/shared/iterations.py"]
     assert 'open("a")' in iterations
     assert 'open("w")' not in iterations
+
+
+def test_a_helper_fills_only_the_placeholder_it_wrote_itself() -> None:
+    """Filling a placeholder is safe; overwriting a researcher's sentence is not.
+
+    The narrowed rule allows a helper to replace text it authored, because the history
+    keeps every value and nothing is lost. It never allows editing prose a researcher
+    wrote, so the fill is conditional on the placeholder still being present and reports
+    back when it is not.
+    """
+    iterations = rendered_assets()["scripts/shared/iterations.py"]
+    assert "OUTCOME_PLACEHOLDER" in iterations
+    assert "if line.startswith(prefix) and OUTCOME_PLACEHOLDER in line:" in iterations
+
+
+def test_recording_an_outcome_requires_an_interpretation_to_exist() -> None:
+    """An outcome recorded before the run was read is a guess wearing a record's clothes.
+
+    The helper holds no opinion about what the outcome says, but it does enforce the
+    ordering the workflow claims: interpret, then record.
+    """
+    record = rendered_assets()["scripts/record_outcome.py"]
+    assert "ANALYSIS_{number:02d}.md" in record
+    assert "interpret the run" in record
 
 
 def test_exactly_one_shipped_helper_assigns_an_iteration_number() -> None:
