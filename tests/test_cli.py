@@ -819,6 +819,79 @@ def test_open_tracks_recents_and_home_cleans_stale_paths(tmp_path: Path) -> None
     assert recents == [{"path": str(destination), "opened_at": recents[0]["opened_at"]}]
 
 
+def test_the_dashboard_names_where_the_work_stands_and_how_to_move_it_forward(
+    tmp_path: Path,
+) -> None:
+    """A dashboard of utilities with no route into the workflow strands a researcher.
+
+    The generated project's entry points were discoverable only by opening
+    `scripts/README.md` unprompted, so the tool reports what the record contains and names
+    the files that explain the workflow. It states project state, never scientific advice.
+    """
+    destination = tmp_path / "oriented"
+    assert create_project(destination).returncode == 0
+
+    fresh = run_dashboard(destination, "next\nexit\n")
+
+    assert fresh.returncode == 0, fresh.stderr
+    assert "No research question recorded yet" in fresh.stdout
+    assert "docs/12_STEPS.md" in fresh.stdout
+
+    (destination / "hypotheses" / "HYPOTHESIS_01.md").write_text("# H01\n")
+    (destination / "experiments" / "01_synthetic" / "script_01_baseline.py").write_text("x\n")
+    subprocess.run(
+        [str(installed_smairt()), "settings", str(destination), "--question", "Does it hold?"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    working = run_dashboard(destination, "next\nexit\n")
+
+    assert "awaiting an interpretation: 01" in working.stdout
+    assert "new_iteration.py" not in working.stdout.split("awaiting")[0]
+
+
+def test_an_editor_hosted_assistant_is_launched_by_opening_the_workspace(tmp_path: Path) -> None:
+    """Zoo Code runs inside VS Code, so opening the workspace is the launch.
+
+    It previously had no launch command at all and reported that SMAIRT could not verify
+    one, which is a dead end rather than a limitation: the researcher is told to go read
+    another project's documentation.
+    """
+    destination = tmp_path / "editor-hosted"
+    assert create_project(destination, assistant="zoo-code").returncode == 0
+
+    dashboard = run_dashboard(destination, "assistant\nback\nexit\n")
+
+    assert dashboard.returncode == 0, dashboard.stderr
+    assert "cannot safely verify" not in dashboard.stdout
+    assert "zoo-code" in dashboard.stdout
+
+
+def test_a_stale_scaffold_reports_one_route_rather_than_offering_a_refused_repair(
+    tmp_path: Path,
+) -> None:
+    """Offering a repair that the version guard will refuse wastes the researcher's time.
+
+    The guard is correct to protect an older project, but Project Check listed repairs
+    first and the refusal arrived only after one was selected, with no statement of what
+    to do instead.
+    """
+    destination = tmp_path / "stale"
+    assert create_project(destination).returncode == 0
+    contract = destination / "smairt.yaml"
+    contract.write_text(
+        re.sub(r"scaffold_version: .*", "scaffold_version: 0.0.1", contract.read_text())
+    )
+
+    dashboard = run_dashboard(destination, "check\nexit\n")
+
+    assert dashboard.returncode == 0, dashboard.stderr
+    assert "older scaffold version" in dashboard.stdout
+    assert "Safe repairs available" not in dashboard.stdout
+
+
 def test_assistant_aliases_and_dashboard_are_available_from_installed_command(
     tmp_path: Path,
 ) -> None:
@@ -1186,7 +1259,7 @@ def test_advanced_controls_are_local_safe_and_visible_from_installed_command(
     assert (destination / "paper" / "outline.md").read_text().startswith("# Paper Outline\n")
     assert dashboard.returncode == 0, dashboard.stderr
     assert "SMAIRT Advanced Mode: Test Project" in dashboard.stdout
-    assert "Launch assistant or open folder [assistant]" in dashboard.stdout
+    assert "[assistant]" in dashboard.stdout
     assert "Project Settings [settings]" in dashboard.stdout
     assert "Optional capabilities: Paper [capabilities]" in dashboard.stdout
     assert "Project Check [check]" in dashboard.stdout
@@ -1448,9 +1521,10 @@ def test_saved_motion_preference_controls_a_project_dashboard_tty(tmp_path: Path
     enabled_screen = visible_text(enabled_dashboard.stdout)
     disabled_screen = visible_text(disabled_dashboard.stdout)
     assert "Up/Down or j/k move" in enabled_screen
-    assert "(*) Launch assistant or open folder" in enabled_screen
+    assert "(*) Where the work stands" in enabled_screen
     assert "Up/Down or j/k move" not in disabled_screen
-    assert "1. Launch assistant or open folder [assistant]" in disabled_screen
+    assert "1. Where the work stands" in disabled_screen
+    assert "[assistant]" in disabled_screen
 
 
 def test_home_offers_a_scrollable_menu_in_a_capable_terminal(tmp_path: Path) -> None:
@@ -1476,7 +1550,7 @@ def test_visual_settings_menu_is_reachable_and_returns_to_the_dashboard(tmp_path
     destination = tmp_path / "visual-settings"
     assert create_project(destination).returncode == 0
 
-    dashboard = run_interactive_dashboard(destination, "\x1b[B\r\x1b\x03")
+    dashboard = run_interactive_dashboard(destination, "\x1b[B\x1b[B\r\x1b\x03")
 
     assert dashboard.returncode == 0, dashboard.stdout
     screen = visible_text(dashboard.stdout)

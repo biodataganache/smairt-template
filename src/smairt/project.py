@@ -81,13 +81,23 @@ LICENSE_EXPLANATIONS = {
     License.GPL_3_0: "Reuse and distribution requires sharing covered source changes.",
     License.PROPRIETARY: "Reserve reuse rights unless you grant permission.",
 }
+EDITOR_COMMAND = ("code", ".")
+"""Opening the workspace in VS Code, which is what launching an extension assistant means."""
+
 ASSISTANT_COMMANDS = {
+    Assistant.ZOO_CODE: EDITOR_COMMAND,
     Assistant.CLAUDE_CODE: ("claude",),
     Assistant.OPENCODE: ("opencode",),
     Assistant.CODEX: ("codex",),
     Assistant.PI: ("pi",),
     Assistant.CURSOR: ("cursor", "."),
 }
+"""How to start each assistant in a project directory.
+
+Zoo Code runs inside VS Code rather than as its own executable, so opening the workspace
+is the launch. The same command is the fallback for any assistant whose own executable is
+missing but which can still be reached from an open editor.
+"""
 ASSISTANT_ALIASES = {assistant: ASSISTANT_POINTERS[assistant.value] for assistant in Assistant}
 
 
@@ -540,27 +550,43 @@ def prepare_assistant(root: Path) -> str:
     return f"Created {alias.relative_to(root)} as a pointer to prompts/AI_CONTEXT.md."
 
 
+def assistant_launch_status(root: Path) -> tuple[str, str | None, str]:
+    """Return the assistant's name, the command that would start it, and a row label.
+
+    The dashboard needs this before offering the row, because reporting "not available"
+    only after a researcher chooses Launch tells them too late to choose otherwise. The
+    label is phrased to follow the word "Launch" so a row reads as one sentence.
+    """
+    contract = load_contract(root)
+    name = contract.assistant.value
+    command = ASSISTANT_COMMANDS[contract.assistant]
+    if shutil.which(command[0]) is not None:
+        return name, command[0], f"{name} with `{' '.join(command)}`"
+    if shutil.which(EDITOR_COMMAND[0]) is not None:
+        return name, EDITOR_COMMAND[0], f"VS Code instead, because {name} is not installed"
+    return name, None, f"{name} — not installed, and VS Code is unavailable"
+
+
 def launch_assistant(root: Path) -> tuple[bool, str]:
     contract = load_contract(root)
-    command = ASSISTANT_COMMANDS.get(contract.assistant)
-    if command is None:
-        return (
-            False,
-            "SMAIRT cannot safely verify a Zoo Code launch command. Open the project folder "
-            "and use Zoo Code's current official launch guidance.",
-        )
-    executable = shutil.which(command[0])
+    name = contract.assistant.value
+    command = ASSISTANT_COMMANDS[contract.assistant]
+    chosen = command if shutil.which(command[0]) is not None else EDITOR_COMMAND
+    executable = shutil.which(chosen[0])
     if executable is None:
         return (
             False,
-            f"{contract.assistant.value} is not available. Install it using its official instructions, "
-            f"then run `{command[0]}` in {root}. You can also open this folder in your file manager.",
+            f"{name} is not available and neither is VS Code. Install {name} using its "
+            f"official instructions, then run `{command[0]}` in {root}. You can also open "
+            "this folder in your file manager.",
         )
     try:
-        subprocess.Popen([executable, *command[1:]], cwd=root)
+        subprocess.Popen([executable, *chosen[1:]], cwd=root)
     except OSError as error:
-        return False, f"Could not launch {contract.assistant.value}: {error}"
-    return True, f"Launched {contract.assistant.value} in {root}."
+        return False, f"Could not launch {name}: {error}"
+    if chosen is command:
+        return True, f"Launched {name} in {root}."
+    return True, f"{name} is not installed; opened {root} in VS Code instead."
 
 
 def open_folder(root: Path) -> str:
@@ -804,6 +830,61 @@ def regenerate_managed_assets(root: Path, paths: list[str]) -> list[dict[str, st
 
 def managed_asset_paths(root: Path) -> list[str]:
     return sorted(managed_asset_contents(root))
+
+
+def next_workflow_action(root: Path) -> tuple[str, str]:
+    """Return what the project is missing next, and the command that addresses it.
+
+    Derived from the contract and from which files exist, so it reports the state of the
+    record rather than offering a scientific opinion. It never says which hypothesis to
+    form or whether a result is good; those decisions are the researcher's, and a tool
+    that nudged them would be overstepping.
+
+    The gap this closes is that a generated project's entry points are discoverable only
+    by opening `scripts/README.md`, so a researcher who does not think to look finds a
+    dashboard of utilities and no route into the workflow at all.
+    """
+    contract = load_contract(root)
+    if not contract.project.research_question:
+        return (
+            "No research question recorded yet",
+            "smairt settings --question '...', then expand on it in background/",
+        )
+    if not sorted((root / "hypotheses").glob("HYPOTHESIS_[0-9]*.md")):
+        return (
+            "No hypothesis yet",
+            "python scripts/new_track.py '<the question>' <phase>",
+        )
+    if not sorted((root / "experiments").glob("*/script_*.py")):
+        return (
+            "Hypothesis recorded, no iteration yet",
+            "commit the criteria, then python scripts/new_iteration.py",
+        )
+    unrecorded = _iterations_awaiting_an_outcome(root)
+    if unrecorded:
+        listed = ", ".join(f"{number:02d}" for number in unrecorded)
+        return (
+            f"Iterations awaiting an interpretation: {listed}",
+            "read the log in results/logs/, then write analysis/ANALYSIS_NN.md",
+        )
+    return (
+        "Every iteration is interpreted",
+        "python scripts/new_iteration.py for the next attempt, or select_result.py to report one",
+    )
+
+
+def _iterations_awaiting_an_outcome(root: Path) -> list[int]:
+    """Return iterations that have a script but no interpretation written yet."""
+    numbers = sorted(
+        int(match.group(1))
+        for script in (root / "experiments").glob("*/script_*.py")
+        if (match := re.match(r"script_(\d+)", script.name))
+    )
+    return [
+        number
+        for number in numbers
+        if not (root / "analysis" / f"ANALYSIS_{number:02d}.md").exists()
+    ]
 
 
 def detected_tools(root: Path) -> dict[str, str]:

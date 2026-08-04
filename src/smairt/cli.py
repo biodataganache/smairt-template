@@ -17,7 +17,7 @@ from pydantic import ValidationError
 from rich.console import Console
 
 from smairt import __version__
-from smairt.appearance import rich_theme
+from smairt.appearance import rich_theme, styling_enabled
 from smairt.generator import GenerationError, generate_project, validate_destination
 from smairt.menu import (
     Action,
@@ -46,6 +46,7 @@ from smairt.project import (
     CapabilityPlan,
     ProjectError,
     apply_repairs,
+    assistant_launch_status,
     capability_plan,
     change_license,
     detected_tools,
@@ -58,6 +59,7 @@ from smairt.project import (
     managed_asset_paths,
     managed_asset_previews,
     managed_file_statuses,
+    next_workflow_action,
     open_folder,
     prepare_assistant,
     project_check,
@@ -92,8 +94,18 @@ _NO_CAPABILITIES = "none"
 
 
 def _themed_console(motion: bool) -> Console:
-    """Return a console whose styles come from the one semantic palette."""
-    return Console(force_interactive=motion, force_terminal=motion, theme=rich_theme())
+    """Return a console whose styles come from the one semantic palette.
+
+    Styling is suppressed when the researcher has asked for no color or the stream cannot
+    carry it. ADR 0003 requires that request be honored, and wording never changes with
+    it, so a plain-text session says exactly what a styled one says.
+    """
+    return Console(
+        force_interactive=motion,
+        force_terminal=motion,
+        no_color=not styling_enabled(),
+        theme=rich_theme(),
+    )
 
 
 def _parse_capabilities(answer: str) -> set[str]:
@@ -1128,8 +1140,11 @@ class Dashboard:
             for name in OPTIONAL_CAPABILITIES
             if contract.capabilities[name].state is CapabilityState.ENABLED
         )
+        state, _ = next_workflow_action(self.root)
+        _, _, launch = assistant_launch_status(self.root)
         return (
-            Action("assistant", "Launch assistant or open folder"),
+            Action("next", f"Where the work stands: {state}"),
+            Action("assistant", f"Launch {launch}, or open the folder"),
             Action("settings", "Project Settings"),
             Action("capabilities", f"Optional capabilities: {summary or 'Default Workspace'}"),
             Action("check", "Project Check"),
@@ -1151,7 +1166,9 @@ class Dashboard:
                     style="hint",
                 )
             action = self._menu("Choose an action", actions)
-            if action == "assistant":
+            if action == "next":
+                self._orientation()
+            elif action == "assistant":
                 self._assistant()
             elif action == "settings":
                 self._settings()
@@ -1161,7 +1178,13 @@ class Dashboard:
                 self._check()
             elif action == "help":
                 self.console.print(
-                    "SMAIRT manages project utilities only. Conduct scientific work in your selected assistant."
+                    "SMAIRT manages project utilities only. Conduct scientific work in your "
+                    "selected assistant."
+                )
+                self.console.print(
+                    "The workflow itself is documented in docs/12_STEPS.md, the files to read "
+                    "for a given task in prompts/CONTEXT_INDEX.md, and the helpers in "
+                    "scripts/README.md."
                 )
             elif action == "advanced":
                 self._advanced()
@@ -1229,12 +1252,36 @@ class Dashboard:
                 return answer
             self.console.print("Choose a listed action.", style="caution")
 
+    def _orientation(self) -> None:
+        """Report where the record stands and the command that moves it forward.
+
+        This states what the project contains, never what the science should be. The
+        scientific decisions stay with the researcher; what the tool can honestly supply
+        is that the workflow starts in `docs/12_STEPS.md` and that these files exist,
+        which is otherwise discoverable only by opening `scripts/README.md` unprompted.
+        """
+        state, command = next_workflow_action(self.root)
+        self.console.print(f"[heading]{state}[/]")
+        self.console.print(f"Next: [value]{command}[/]")
+        self.console.print(
+            "Read docs/12_STEPS.md for the workflow and who owns which decision, "
+            "prompts/CONTEXT_INDEX.md for what to read for a given task, and "
+            "scripts/README.md for the helpers.",
+            style="hint",
+        )
+        self.console.print(
+            "SMAIRT reports what the project contains. What to test, and what a result "
+            "means, are yours.",
+            style="hint",
+        )
+
     def _assistant(self) -> None:
         self.console.print(prepare_assistant(self.root))
+        _, _, launch = assistant_launch_status(self.root)
         action = self._menu(
             "Assistant",
             (
-                Action("launch", "Launch the selected assistant here"),
+                Action("launch", f"Launch {launch}"),
                 Action("folder", "Open the project folder"),
                 Action("back", "← Back"),
             ),
@@ -1344,7 +1391,16 @@ class Dashboard:
                     self.console.print(
                         "  Diagnostic is read-only; researcher content is never changed by Project Check."
                     )
-            repairable = [issue for issue in issues if issue.repair is not None]
+            stale = any(issue.code == "scaffold-version-mismatch" for issue in issues)
+            repairable = [] if stale else [issue for issue in issues if issue.repair is not None]
+            if stale:
+                self.console.print(
+                    "This project records an older scaffold version, so repairs and "
+                    "regeneration are refused to protect it. Nothing is wrong with the "
+                    "project; an upgrade flow does not exist yet. Keep working, or create a "
+                    "new project with this version and move work across deliberately.",
+                    style="caution",
+                )
             if repairable:
                 self.console.print("Safe repairs available:")
                 for issue in repairable:
@@ -1666,8 +1722,12 @@ def _created_summary(
     console.print(f"Capabilities: [value]{', '.join(capabilities) or 'Default Workspace'}[/]")
     console.print(f"Git: [value]{'initialized and staged' if options.initialize_git else 'off'}[/]")
     for message in messages:
-        console.print(message, style="hint")
-    console.print("Next: open the Dashboard below to launch your assistant.", style="hint")
+        console.print(message, style="caution" if "failed" in message.lower() else "hint")
+    console.print(
+        "Next: read docs/12_STEPS.md in the project, then start a track with "
+        "scripts/new_track.py. The Dashboard below reports where the work stands.",
+        style="hint",
+    )
 
 
 def _home() -> None:
@@ -1710,8 +1770,14 @@ def _home() -> None:
             try:
                 destination, options = Wizard().run()
                 messages = _generate_with_progress(console, destination, options, motion)
-            except (WizardCancelled, GenerationError, ValidationError, OSError) as error:
-                console.print(f"Project creation cancelled or failed: {error}", style="caution")
+            except WizardCancelled:
+                console.print("Project creation cancelled. No files were written.")
+            except (GenerationError, ValidationError, OSError) as error:
+                console.print(f"Could not create the project: {error}", style="failure")
+                console.print(
+                    "Generation is atomic, so no partial project was left behind.",
+                    style="hint",
+                )
             else:
                 root = destination.resolve()
                 record_recent(root)
@@ -1726,21 +1792,19 @@ def _home() -> None:
                 try:
                     chosen = select_choice(
                         "Recent Projects",
-                        [(str(entry["path"]), str(entry["path"])) for entry in recents],
+                        [(str(entry["path"]), _recent_label(entry)) for entry in recents],
                     )
                 except (BackRequested, SelectionCancelled):
                     continue
-                root = _project_or_exit(Path(chosen))
-                Dashboard(root).run()
+                _open_recent(console, Path(chosen))
                 continue
             for index, entry in enumerate(recents, start=1):
-                console.print(f"{index}. {entry['path']}")
+                console.print(f"{index}. {_recent_label(entry)}")
             selection = session.prompt(
                 "Select a project number, or press Enter to go back: "
             ).strip()
             if selection.isdigit() and 1 <= int(selection) <= len(recents):
-                root = _project_or_exit(Path(recents[int(selection) - 1]["path"]))
-                Dashboard(root).run()
+                _open_recent(console, Path(recents[int(selection) - 1]["path"]))
         elif action == "open":
             try:
                 root = _project_or_exit(Path(session.prompt("Project folder: ").strip()))
@@ -1753,6 +1817,37 @@ def _home() -> None:
             )
         else:
             return
+
+
+def _recent_label(entry: dict[str, str]) -> str:
+    """Return a recent project as its name and location rather than a bare path.
+
+    A list of paths alone makes two projects with similar directory names hard to tell
+    apart, and the name is what the researcher actually calls the project.
+    """
+    path = Path(str(entry["path"]))
+    try:
+        name = load_contract(path).project.name
+    except ProjectError:
+        return f"{path} (no longer a SMAIRT project)"
+    return f"{name} - {path}"
+
+
+def _open_recent(console: Console, path: Path) -> None:
+    """Open a recent project, staying on Home when it can no longer be opened.
+
+    A project that moved is an ordinary situation, not a reason to end the session. The
+    shared `_project_or_exit` raises to leave the process, which is right for a direct
+    command and wrong inside a menu the researcher is still using.
+    """
+    try:
+        root = resolve_project(path)
+    except ProjectError as error:
+        console.print(str(error), style="caution")
+        console.print("It may have moved or been deleted. Choose another project.", style="hint")
+        return
+    record_recent(root)
+    Dashboard(root).run()
 
 
 def _generate_with_progress(
