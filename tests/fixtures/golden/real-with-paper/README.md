@@ -26,17 +26,27 @@ python scripts/new_track.py "The baseline exceeds chance" synthetic
 python scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
 python experiments/01_synthetic/script_01_baseline.py
 
-# 4. Interpret the log it produced
+# 4. Interpret the log it produced, against the criteria you committed in step 2
 cp analysis/ANALYSIS_TEMPLATE.md analysis/ANALYSIS_01.md
 
-# 5. Record the outcome in analysis/ITERATION_LOG.md, then say what you would report
+# 5. Record what the iteration showed, in your own words
+python scripts/record_outcome.py 1 --outcome "Criterion met, 0.71 against a 0.65 target"
+
+# 6. Say which iteration you would report, and what it is evidence for
 python scripts/select_result.py 1 --claim "The baseline exceeds chance"
 ```
+
+Step 5 refuses until `analysis/ANALYSIS_01.md` exists, because an outcome recorded before
+the run was read is a guess wearing a record's clothes. Step 6 reads the iteration log
+rather than the filesystem, so an iteration that was never recorded cannot be reported.
 
 The number ties the four records together, so any one of them leads to the rest:
 hypothesis, script, log, analysis. Every numbered script is an iteration and appears in
 `analysis/ITERATION_LOG.md`; utilities that test nothing live in `scripts/utilities/` and
 take no number.
+
+`smairt open` reports where the project stands and which of these commands comes next, so
+you do not have to hold the sequence in your head.
 
 ## Layout
 

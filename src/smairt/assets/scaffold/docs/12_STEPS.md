@@ -121,8 +121,16 @@ falsifiable.
   what result would be uninformative either way. Do not select the criterion. Do not
   begin the experiment script until the criterion is recorded.
 - **Record:** the `Success criteria` and `Rejection criteria` sections of the
-  hypothesis file, committed before the script exists. The commit order is the
-  evidence that the criterion preceded the result.
+  hypothesis file, committed before the script exists.
+
+Commit the criteria before the script for the same reason you write them first: the
+ordering is what makes the test a test. Be honest about how much that ordering proves.
+Local Git history can be rewritten and dates can be set by hand, so a commit is a record
+you keep for yourself and offer to a collaborator who trusts it, not a proof against
+someone who does not. If you need the stronger claim, timestamp the criteria somewhere you
+do not control — a preregistration, a signed tag pushed to a shared remote, or a message to
+a colleague. What the commit does reliably give you is the thing that matters most often:
+you cannot quietly convince yourself afterwards that this was the criterion all along.
 
 ---
 
@@ -281,6 +289,20 @@ for the field cannot.
 - **Record:** `analysis/ANALYSIS_XX.md`. Interpretation goes here; the raw record in
   `results/logs/` stays unchanged.
 
+Once the analysis exists, record in one line what the iteration showed:
+
+```bash
+python scripts/record_outcome.py 7 --outcome "Criterion met, 0.71 against a 0.65 target"
+```
+
+This refuses until `analysis/ANALYSIS_07.md` exists, because an outcome recorded before the
+run was read is a guess wearing a record's clothes. The wording is yours; the helper holds
+no opinion about what the outcome says. It appends to the `Outcome history` table every
+time, so a conclusion you later revise still shows what it was revised from, and it fills
+the state row's outcome cell only while that cell still holds the placeholder it wrote.
+Revise the row yourself afterwards — `smairt check` reports any row that has drifted from
+the history.
+
 ---
 
 ## Step 11 - Decide whether to revise, advance, or stop
@@ -303,6 +325,19 @@ judgment, and abandoning it is frequently the correct one.
 ```
 ANALYSIS_XX.md -> Next Steps -> HYPOTHESIS_YY.md -> script_YY.py -> ANALYSIS_YY.md
 ```
+
+When you advance or stop, say which iteration you would stand behind and what it is
+evidence for:
+
+```bash
+python scripts/select_result.py 7 --claim "The wider layer exceeds the 0.65 target"
+```
+
+Several attempts at the same question produce competing evidence, and without this the
+question of which one you would report is settled by whoever reads the folder last.
+Selection reads `analysis/ITERATION_LOG.md` rather than the filesystem, so an iteration
+that was never recorded cannot be presented as a result. Selecting again is a revision and
+is recorded as one, not a silent replacement.
 
 ---
 

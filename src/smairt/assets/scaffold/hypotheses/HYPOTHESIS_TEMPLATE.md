@@ -21,9 +21,11 @@ analysis, or experiment records.]
 
 **Rejection criteria**: [Define evidence that would refute or materially weaken the hypothesis.]
 
+Both criteria belong here before any experiment script exists. A criterion written after
+the data is a rationalization.
+
 ## Experimental Design
 
-- **Script**: `experiments/XX_phase/script_XX_description.py`
 - **Phase**: synthetic | downloaded | real
 - **Data**: [Inputs and provenance record]
 - **Controls**: [Baselines, negative controls, or comparison methods]
@@ -32,25 +34,36 @@ analysis, or experiment records.]
 
 ## Sub-Hypotheses
 
-### H_XXA: [First sub-prediction]
+Use these when a panel iteration probes several directions at once, one entry per probe.
+
+### HYPOTHESIS_XXA: [First sub-prediction]
 
 - **Prediction**: [Specific outcome]
 - **Success criteria**: [Measurable threshold]
 
-### H_XXB: [Second sub-prediction]
+### HYPOTHESIS_XXB: [Second sub-prediction]
 
 - **Prediction**: [Specific outcome]
 - **Success criteria**: [Measurable threshold]
 
 ## Dependencies
 
-- [Prior script, analysis, or result]
+- [Prior iteration, analysis, or result]
 - [Data that must be available]
 - [Shared functions or computing resources]
 
+## Iterations
+
+Several iterations usually test one hypothesis, so this is where they accumulate. The
+iteration numbers and this hypothesis number are deliberately separate: iteration 07 may
+well be testing hypothesis 02.
+
+| Iteration | What it tested | Outcome |
+|---|---|---|
+
 ## Results
 
-Complete this after the experiment. Link the raw log, figures, and corresponding
+Complete this after interpreting. Link the raw log, figures, and corresponding
 `analysis/ANALYSIS_XX.md` interpretation rather than copying output into this file.
 
 ## Notes

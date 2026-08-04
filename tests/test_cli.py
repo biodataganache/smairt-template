@@ -21,6 +21,18 @@ def installed_smairt() -> Path:
     return Path(sys.executable).with_name("smairt")
 
 
+def remove_directory(path: Path) -> None:
+    """Delete a generated directory and whatever it contains.
+
+    Named files are not listed, because a test that hardcodes them starts failing the day
+    the scaffold ships one more file into the directory — which is a change to the
+    scaffold, not a break in what the test is checking.
+    """
+    for child in sorted(path.iterdir()):
+        child.unlink()
+    path.rmdir()
+
+
 def test_installed_command_reports_its_version() -> None:
     result = subprocess.run(
         [str(installed_smairt()), "--version"],
@@ -665,8 +677,7 @@ def test_settings_license_check_and_repair_are_guarded(tmp_path: Path) -> None:
         text=True,
     )
     missing_directory = destination / "plans"
-    (missing_directory / "README.md").unlink()
-    missing_directory.rmdir()
+    remove_directory(missing_directory)
     check_before = subprocess.run(
         [str(installed_smairt()), "check", str(destination), "--json"],
         check=False,
@@ -1033,8 +1044,7 @@ def test_standard_dashboard_previews_and_confirms_safe_repairs(tmp_path: Path) -
     destination = tmp_path / "repair-dashboard"
     assert create_project(destination).returncode == 0
     plans = destination / "plans"
-    (plans / "README.md").unlink()
-    plans.rmdir()
+    remove_directory(plans)
 
     dashboard = run_dashboard(destination, "check\ncreate-directory:plans\nyes\nexit\n")
 

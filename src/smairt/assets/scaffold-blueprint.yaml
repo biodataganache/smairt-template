@@ -13,6 +13,7 @@ assets:
   - {id: hypothesis-template, path: hypotheses/HYPOTHESIS_TEMPLATE.md, kind: file, purpose: Reusable hypothesis starter., ownership: editable-starter, condition: always, source: hypotheses/HYPOTHESIS_TEMPLATE.md}
   - {id: plans-directory, path: plans, kind: directory, purpose: Experiment and analysis plans., ownership: researcher-work, condition: always}
   - {id: plans-readme, path: plans/README.md, kind: file, purpose: Research planning guidance., ownership: tool-guidance, condition: always, source: plans/README.md}
+  - {id: plan-template, path: plans/PLAN_TEMPLATE.md, kind: file, purpose: Reusable track plan starter., ownership: editable-starter, condition: always, source: plans/PLAN_TEMPLATE.md}
 
   - {id: analysis-directory, path: analysis, kind: directory, purpose: Interpretation decisions and study synthesis., ownership: researcher-work, condition: always}
   - {id: analysis-readme, path: analysis/README.md, kind: file, purpose: Analysis workflow guidance., ownership: tool-guidance, condition: always, source: analysis/README.md}

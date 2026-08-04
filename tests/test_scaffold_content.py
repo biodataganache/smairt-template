@@ -340,6 +340,21 @@ def test_an_assistant_observation_is_marked_unreviewed_where_it_is_written() -> 
     assert "**Status:** unreviewed" in contribution
 
 
+def test_a_helper_fills_a_shipped_template_rather_than_its_own_copy() -> None:
+    """A helper carrying its own copy of a template makes the shipped one a lie.
+
+    Guidance tells the researcher that `HYPOTHESIS_TEMPLATE.md` and `PLAN_TEMPLATE.md` are
+    the shape of these records, and a researcher may edit either to suit their field. A
+    helper with an inlined duplicate ignores those edits and drifts from the template
+    silently, so the file a reader is told to follow stops matching what they receive.
+    """
+    track = rendered_assets()["scripts/new_track.py"]
+    assert "HYPOTHESIS_TEMPLATE.md" in track
+    assert "PLAN_TEMPLATE.md" in track
+    assert "## Hypothesis Statement" not in track
+    assert "## Risks and mitigations" not in track
+
+
 def test_the_legacy_content_baseline_is_available_to_re_enrich_from() -> None:
     """Re-enrichment copies from the original scaffold, so its absence is a blocker."""
     assert (LEGACY_TEMPLATE / "prompts" / "AI_CONTEXT.md").is_file()

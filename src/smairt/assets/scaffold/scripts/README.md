@@ -60,10 +60,15 @@ hypothesis number is assigned from the files already present, so identifiers sta
 and ordered.
 
 It deliberately does **not** create the first script. Write the prediction and both
-criteria into the hypothesis file and commit them before running `new_iteration.py`. That
-commit order is what shows the criterion preceded the result, which is the difference
-between a test and a rationalization — and a helper that created both in the same instant
-would leave nothing to show it.
+criteria into the hypothesis file and commit them before running `new_iteration.py`.
+Committing the criteria first is what keeps the test a test rather than a
+rationalization — and a helper that created the hypothesis and the script in the same
+instant would leave nothing to show any ordering at all.
+
+How much that commit proves is worth being clear about: local history can be rewritten and
+dates can be set by hand, so it is a record you keep for yourself and offer to someone who
+trusts it, not a proof against someone who does not. `docs/12_STEPS.md` step 4 says what to
+do when you need the stronger claim.
 
 ## new_iteration.py
 

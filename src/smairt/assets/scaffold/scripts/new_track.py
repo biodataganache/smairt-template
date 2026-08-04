@@ -4,11 +4,17 @@
 A track is a direction of inquiry spanning as many iterations as it takes. This helper
 creates the two records a track needs before any work starts.
 
+Both records are filled in from the templates that ship with the project,
+`hypotheses/HYPOTHESIS_TEMPLATE.md` and `plans/PLAN_TEMPLATE.md`, rather than from copies
+kept inside this file. A researcher who edits a template to suit their field then gets
+their own version, and the template a reader is told to follow cannot silently disagree
+with what the helper produces.
+
 It deliberately does not create the first script. The criteria have to be written and
-committed before an experiment exists, because that commit order is the only evidence
-that the criterion preceded the result. A helper that produced an empty-criteria
-hypothesis and a script in the same instant would destroy the thing it was meant to
-protect. Run `new_iteration.py` once the criteria are recorded.
+committed before an experiment exists: committing them first is what keeps the test a test
+rather than a rationalization, and a helper that produced an empty-criteria hypothesis and
+a script in the same instant would leave nothing to show any ordering at all. Run
+`new_iteration.py` once the criteria are recorded.
 
 Nothing is overwritten. If a file is already there, this refuses rather than replacing it.
 """
@@ -46,21 +52,51 @@ def main() -> None:
         if path.exists():
             parser.error(f"refusing to overwrite existing file: {path}")
 
+    hypothesis = _hypothesis(
+        _template(parser, root / "hypotheses" / "HYPOTHESIS_TEMPLATE.md"),
+        hypothesis_id=hypothesis_id,
+        number=hypothesis_number,
+        question=arguments.question,
+        phase=arguments.phase,
+    )
+    plan = _plan(
+        _template(parser, root / "plans" / "PLAN_TEMPLATE.md"),
+        hypothesis_id=hypothesis_id,
+        question=arguments.question,
+    )
+
     hypothesis_path.parent.mkdir(parents=True, exist_ok=True)
-    hypothesis_path.write_text(_hypothesis(hypothesis_id, arguments.question, arguments.phase))
+    hypothesis_path.write_text(hypothesis)
     plan_path.parent.mkdir(parents=True, exist_ok=True)
-    plan_path.write_text(_plan(arguments.question, hypothesis_id))
+    plan_path.write_text(plan)
 
     print(f"Created {hypothesis_path.relative_to(root)}")
     print(f"Created {plan_path.relative_to(root)}")
 
     print()
     print("Next: write the prediction and both criteria in the hypothesis file, and commit")
-    print("them before creating the first iteration. That commit order is what shows the")
-    print("criterion preceded the result, so this helper deliberately stops here:")
+    print("them before creating the first iteration. Committing the criteria first is what")
+    print("keeps the test a test, so this helper deliberately stops here:")
     print(
         f"  python scripts/new_iteration.py baseline {arguments.phase} --hypothesis {hypothesis_id}"
     )
+
+
+def _template(parser: argparse.ArgumentParser, path: Path) -> str:
+    """Return a shipped template, reporting its absence rather than inventing a substitute.
+
+    Falling back to a built-in copy would be worse than stopping: the researcher would get
+    a file that quietly differs from the template the guidance tells them to follow.
+    `smairt regenerate` restores a missing template.
+    """
+    try:
+        return path.read_text()
+    except OSError:
+        parser.error(
+            f"missing template {path.name}; restore it with `smairt regenerate` before "
+            "starting a track"
+        )
+        raise  # `parser.error` exits, and this keeps the return type honest.
 
 
 def _next_hypothesis_number(root: Path) -> int:
@@ -73,119 +109,33 @@ def _next_hypothesis_number(root: Path) -> int:
     return max(numbers, default=0) + 1
 
 
-def _hypothesis(hypothesis_id: str, question: str, phase: str) -> str:
-    return f"""# Hypothesis {hypothesis_id} - {question}
+def _hypothesis(
+    template: str, *, hypothesis_id: str, number: int, question: str, phase: str
+) -> str:
+    """Return the hypothesis template with what this helper actually knows filled in.
 
-## Status
-
-PENDING
-
-## Background
-
-[What question or prior result motivates this? Link the background, analysis, or
-iteration that led here.]
-
-## Hypothesis Statement
-
-**Prediction**: [State a specific, testable prediction.]
-
-**Rationale**: [Why the available evidence makes this prediction plausible.]
-
-**Alternative explanations**: [Other mechanisms that could produce the same observation.]
-
-**Success criteria**: [What result would support this. Write this before running anything.]
-
-**Rejection criteria**: [What result would refute or materially weaken this.]
-
-Both criteria belong here before the experiment script exists. A criterion written after
-the data is a rationalization.
-
-## Experimental Design
-
-- **Phase**: {phase}
-- **Data**: [Inputs and their provenance record]
-- **Controls**: [Baselines, negative controls, or comparison methods]
-- **Key metrics**: [Measurements and uncertainty estimates]
-- **Randomness**: [Seeds, repetitions, or sampling plan]
-
-## Sub-Hypotheses
-
-Use these when a panel iteration probes several directions at once, one entry per probe.
-
-### {hypothesis_id}A: [First sub-prediction]
-
-- **Prediction**: [Specific outcome]
-- **Success criteria**: [Measurable threshold]
-
-## Iterations
-
-| Iteration | What it tested | Outcome |
-|---|---|---|
-
-## Results
-
-Complete after interpreting. Link the log, figures, and `analysis/ANALYSIS_NN.md` rather
-than copying output here.
-
-## Notes
-
-[Caveats, or decisions made before execution.]
-"""
+    Only the identity of the hypothesis is filled: its number, the question it came from,
+    and the phase. Every prediction and criterion is left as a prompt, because those are
+    the researcher's to write and are the whole point of stopping before the script.
+    """
+    filled = template.replace(
+        "# Hypothesis [XX] - [Brief Title]", f"# {hypothesis_id} - {question}"
+    )
+    filled = filled.replace(
+        "PENDING | SUPPORTED | REFUTED | PARTIALLY SUPPORTED | INCONCLUSIVE", "PENDING"
+    )
+    filled = filled.replace("- **Phase**: synthetic | downloaded | real", f"- **Phase**: {phase}")
+    return filled.replace("HYPOTHESIS_XX", f"HYPOTHESIS_{number:02d}")
 
 
-def _plan(question: str, hypothesis_id: str) -> str:
-    return f"""# Plan: {question}
-
-## Status
-
-DRAFT
-
-## Question
-
-{question}
-
-## Hypotheses
-
-- `{hypothesis_id}` - [Short form of the prediction]
-
-## Approach
-
-[How this track answers the question. Name what would make you abandon it.]
-
-## Success criteria
-
-[How you will know the track answered its question, as distinct from the criteria for
-any single hypothesis.]
-
-## Dependencies
-
-- [ ] Data: [What must be available]
-- [ ] Code: [What must exist first]
-- [ ] Results: [Prior iterations that must complete]
-
-## Planned iterations
-
-| # | Kind | What it tests | Depends on |
-|---|---|---|---|
-| 1 | single | [Baseline] | — |
-
-`single` tests one change. `panel (N)` probes N candidate directions at once.
-
-## Expected outputs
-
-- Interpretations: `analysis/ANALYSIS_NN.md`
-- Figures: [Which figures, and the claim each supports]
-
-## Risks
-
-| Risk | Likelihood | Mitigation |
-|---|---|---|
-| [Risk] | High/Medium/Low | [How to handle it] |
-
-## Notes
-
-[Related work, links, or context.]
-"""
+def _plan(template: str, *, hypothesis_id: str, question: str) -> str:
+    """Return the plan template with the track's question and hypothesis filled in."""
+    filled = template.replace("# Plan: [Brief Title]", f"# Plan: {question}")
+    filled = filled.replace("DRAFT | ACTIVE | COMPLETED | ABANDONED", "DRAFT")
+    return filled.replace(
+        "[The hypothesis this track sets out to settle, as `hypotheses/HYPOTHESIS_XX.md`.]",
+        f"`hypotheses/{hypothesis_id}.md`",
+    )
 
 
 if __name__ == "__main__":
