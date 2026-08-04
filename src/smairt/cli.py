@@ -101,6 +101,27 @@ def _parse_capabilities(answer: str) -> set[str]:
     return {item.strip() for item in answer.split(",") if item.strip()}
 
 
+def _requested_capabilities(answer: str, console: Console) -> set[str] | None:
+    """Return the capabilities a typed answer requests, or None when it is refused.
+
+    The mutual exclusion the visual screen enforces by construction has to be
+    enforced by hand here, in one place, so the two presentations cannot drift
+    into disagreeing about what a contradictory answer means.
+    """
+    requested = _parse_capabilities(answer.lower())
+    if _NO_CAPABILITIES in requested and requested != {_NO_CAPABILITIES}:
+        console.print(
+            "None means no optional capabilities, so it cannot be combined with one.",
+            style="caution",
+        )
+        return None
+    requested -= {_NO_CAPABILITIES}
+    if not requested <= _OPTIONAL_CAPABILITIES:
+        console.print("Use paper, hpc, paper,hpc, or none.", style="caution")
+        return None
+    return requested
+
+
 class WizardCancelled(Exception):
     """Raised when the user intentionally leaves guided project creation."""
 
@@ -465,23 +486,15 @@ class Wizard:
         )
         self.console.print("Type paper, hpc, paper,hpc, none, or press Enter to skip.")
         while True:
-            answer = self.session.prompt("Optional capabilities [Enter to skip]: ").strip().lower()
+            answer = self.session.prompt("Optional capabilities [Enter to skip]: ").strip()
             if answer == _CANCEL:
                 raise WizardCancelled
             if answer == _BACK:
                 raise BackRequested
-            requested = _parse_capabilities(answer)
-            if _NO_CAPABILITIES in requested and requested != {_NO_CAPABILITIES}:
-                self.console.print(
-                    "None means no optional capabilities, so it cannot be combined with one.",
-                    style="caution",
-                )
-                continue
-            requested -= {_NO_CAPABILITIES}
-            if requested <= _OPTIONAL_CAPABILITIES:
+            requested = _requested_capabilities(answer, self.console)
+            if requested is not None:
                 self._record_capabilities(requested)
                 return
-            self.console.print("Use paper, hpc, paper,hpc, or none.", style="caution")
 
     def _checked_capabilities(self) -> list[str]:
         """Return the rows to start checked, naming the default workspace explicitly."""
@@ -1289,18 +1302,8 @@ class Dashboard:
         ).strip()
         if answer.lower() in {"back", ""}:
             return None
-        requested = _parse_capabilities(answer.lower())
-        if _NO_CAPABILITIES in requested and requested != {_NO_CAPABILITIES}:
-            self.console.print(
-                "None means no optional capabilities, so it cannot be combined with one.",
-                style="caution",
-            )
-            return None
-        requested -= {_NO_CAPABILITIES}
-        if not requested <= _OPTIONAL_CAPABILITIES:
-            self.console.print("Use paper, hpc, paper,hpc, or none.", style="caution")
-            return None
-        return sorted(requested)
+        requested = _requested_capabilities(answer, self.console)
+        return None if requested is None else sorted(requested)
 
     def _preview_capability_plan(self, plan: CapabilityPlan) -> None:
         """Describe exactly what the pending write would change and create."""
