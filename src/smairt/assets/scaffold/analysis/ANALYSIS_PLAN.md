@@ -1,48 +1,189 @@
 # Analysis Plan
 
-## Project
+## Project: {{ project.name }}
 
-**Name**: {{ project.name }}
+**Author**: {{ researcher.name }}  
+**Created**: [DATE]  
+**Last Updated**: [DATE]
 
-**Description**: {{ project.description }}
+---
 
-**Research question**: {{ project.research_question or "Not yet recorded" }}
+## 1. Overview
 
-## Planned Questions
+{{ project.description }}
 
-| Question | Hypothesis | Data Phase | Analysis | Status |
-|---|---|---|---|---|
-| [Question] | [Hypothesis path] | synthetic / downloaded / real | [Analysis path] | Not started |
+**Research Question**: {{ project.research_question or "Not yet recorded" }}
 
-## Evaluation Framework
+---
 
-| Metric | Meaning | Expected Direction or Target | Limitations |
-|---|---|---|---|
-| [Metric] | [Definition] | [Target] | [Caveat] |
+## 2. Paper Structure Mapping
 
-## Validation
+| Paper Section | Analysis Directory | Status |
+|---------------|-------------------|--------|
+| Results 4.1 | `01_results_section_a/` | Not started |
+| Results 4.2 | `02_results_section_b/` | Not started |
+| Supplementary | `XX_supplementary/` | Not started |
 
-- [ ] Negative and positive controls are identified.
-- [ ] Repetitions, seeds, and uncertainty estimates are planned.
-- [ ] Synthetic assumptions are challenged with downloaded or real data when appropriate.
-- [ ] Data provenance is complete in the phase README.
+---
 
-## Planned Outputs
+## 3. Execution Framework
 
-| Output | Source Experiment | Destination | Purpose |
-|---|---|---|---|
-| [Log / table / figure] | [Script] | [Path] | [Decision supported] |
+### 3.1 Iteration Workflow
 
-## Resources and Risks
+Each analysis follows this structure:
+```
+analysis_name/
+├── iterations/
+│   ├── ITERATION_LOG.md
+│   ├── iter_01/
+│   │   ├── run_analysis_01.py
+│   │   ├── config_01.yaml
+│   │   ├── results/
+│   │   ├── figures/
+│   │   └── NOTES.md
+│   └── iter_02/
+└── final/
+    ├── SELECTED.md
+    ├── results/
+    └── figures/
+```
 
-- **Compute**: [Local, HPC, or other]
-- **Dependencies**: [Software and data]
-- **Risks**: [Failure modes and mitigations]
-- **Sensitive or large outputs**: [Explicit ignore or access plan]
+### 3.2 Shared Library
 
-## Reproducibility Checklist
+Common functions are in `lib/`:
+- `lib/core/` - Core utilities
+- `lib/io/` - Data loading/saving
+- `lib/processing/` - Data processing
+- `lib/visualization/` - Plotting functions
 
-- [ ] Parameters and seeds are recorded.
-- [ ] Scripts use complete execution logging.
-- [ ] Expected data and environment are documented.
-- [ ] Every result is linked to a hypothesis and analysis.
+### 3.3 Computational Resources
+
+- [ ] Local machine
+- [ ] HPC cluster
+- [ ] Cloud (GPU)
+
+---
+
+## 4. Detailed Analysis Plan
+
+### 4.1 [Analysis Section A]
+
+**Directory**: `analysis/01_results_section_a/`
+
+**Purpose**: [What question does this answer?]
+
+**Data Inputs**:
+- [List data files]
+
+**Analysis Steps**:
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+**Expected Iterations**: 2-3
+
+**Outputs**:
+- Results: [Description]
+- Figures: [List figures]
+- Tables: [List tables]
+
+### 4.2 [Analysis Section B]
+
+**Directory**: `analysis/02_results_section_b/`
+
+**Purpose**: [What question does this answer?]
+
+**Data Inputs**:
+- [List data files]
+
+**Analysis Steps**:
+1. [Step 1]
+2. [Step 2]
+
+**Expected Iterations**: 2-3
+
+**Outputs**:
+- Results: [Description]
+- Figures: [List figures]
+
+---
+
+## 5. Evaluation Framework
+
+### 5.1 Metrics
+
+| Metric | Description | Target |
+|--------|-------------|--------|
+| [Metric 1] | [Description] | [Target value] |
+| [Metric 2] | [Description] | [Target value] |
+
+### 5.2 Validation Approaches
+
+- [ ] [Validation method 1]
+- [ ] [Validation method 2]
+- [ ] [Cross-dataset comparison]
+
+---
+
+## 6. Figure Plan
+
+### Main Figures
+
+| Figure | Description | Analysis Source | Status |
+|--------|-------------|-----------------|--------|
+| Fig 1 | [Description] | `01_results_section_a/` | Not started |
+| Fig 2 | [Description] | `02_results_section_b/` | Not started |
+
+### Supplementary Figures
+
+| Figure | Description | Analysis Source | Status |
+|--------|-------------|-----------------|--------|
+| S1 | [Description] | [Source] | Not started |
+
+---
+
+## 7. Timeline
+
+| Week | Tasks | Deliverables |
+|------|-------|--------------|
+| 1 | [Tasks] | [Deliverables] |
+| 2 | [Tasks] | [Deliverables] |
+| 3 | [Tasks] | [Deliverables] |
+
+---
+
+## 8. Data Requirements
+
+| Dataset | Location | Format | Size | Status |
+|---------|----------|--------|------|--------|
+| [Dataset 1] | `data/[path]` | [Format] | [Size] | Available |
+| [Dataset 2] | `data/[path]` | [Format] | [Size] | Needed |
+
+---
+
+## 9. Hypotheses
+
+### H1: [Hypothesis 1]
+- **Statement**: [Clear, testable statement]
+- **Test**: [How will this be tested?]
+- **Analysis**: [Which analysis addresses this?]
+
+### H2: [Hypothesis 2]
+- **Statement**: [Clear, testable statement]
+- **Test**: [How will this be tested?]
+- **Analysis**: [Which analysis addresses this?]
+
+---
+
+## 10. Execution Notes
+
+### Reproducibility
+- Random seed: 1024
+- All parameters documented in config files
+- Environment captured in requirements.txt
+
+### Quality Checklist
+- [ ] All analyses have ITERATION_LOG.md
+- [ ] Final iterations documented in SELECTED.md
+- [ ] Figures saved in multiple formats (PNG, PDF, SVG)
+- [ ] FINAL_MANIFEST.md updated

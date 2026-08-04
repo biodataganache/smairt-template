@@ -86,6 +86,36 @@ def test_no_rendered_guidance_asset_carries_an_unrendered_template_construct() -
     assert offenders == []
 
 
+RETIRED = (
+    "compile_for_ai",
+    "new_experiment.py",
+    "new_iteration.py",
+    "finalize_iteration",
+    "paper_draft/",
+    "paper_driven mode",
+    "paper-driven mode",
+    "workflow mode",
+    "BEST_PRACTICE_SINGLE",
+)
+"""Concepts and helpers the transition record retires, which must stay retired."""
+
+
+def test_no_generated_guidance_describes_a_retired_helper_or_concept() -> None:
+    """Re-enriching from the original must not carry its retired tooling back in.
+
+    The originals were written when a destructive iteration engine and a
+    browser-paste compiler existed. Restoring their prose without rewriting these
+    passages would hand a researcher instructions for tools that are gone.
+    """
+    offenders = sorted(
+        f"{relative}: {term}"
+        for relative, content in rendered_assets().items()
+        for term in RETIRED
+        if term in content
+    )
+    assert offenders == []
+
+
 def test_the_legacy_content_baseline_is_available_to_re_enrich_from() -> None:
     """Re-enrichment copies from the original scaffold, so its absence is a blocker."""
     assert (LEGACY_TEMPLATE / "prompts" / "AI_CONTEXT.md").is_file()

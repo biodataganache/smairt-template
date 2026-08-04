@@ -1,43 +1,72 @@
 # Paper Outline
 
-## Working Title
+## Title
 
-[Title]
-
-## Central Contribution
-
-[What does the current evidence establish, for whom, and within which boundaries?]
+[Your paper title]
 
 ## Abstract
 
-- Background:
-- Question:
-- Methods:
-- Results:
-- Significance and limitations:
+[Brief summary of the paper - typically written last]
 
-## Introduction
+## 1. Introduction
 
-1. [Problem and importance]
-2. [Prior evidence and gap]
-3. [Research question and contribution]
+### 1.1 Background
+[Context and motivation for the research]
 
-## Methods
+### 1.2 Problem Statement
+[What gap or problem does this paper address?]
 
-| Subsection | Source Scripts/Data | Evidence/Analysis | Status |
-|---|---|---|---|
-| [Method] | [Paths] | [Paths] | Draft |
+### 1.3 Contributions
+[What are the main contributions of this paper?]
 
-## Results
+## 2. Related Work
 
-| Result Section | Claim IDs | Figures/Tables | Source Analyses | Status |
-|---|---|---|---|---|
-| [Section] | [C1] | [Fig. 1] | [Paths] | Draft |
+[Review of relevant literature and how this work differs]
 
-## Discussion
+## 3. Methods
 
-- Supported conclusions:
-- Boundaries and negative results:
-- Comparison with prior work:
-- Limitations:
-- Next research questions:
+### 3.1 [Method Section A]
+[Description of approach]
+
+### 3.2 [Method Section B]
+[Description of approach]
+
+## 4. Results
+
+### 4.1 [Results Section A]
+- **Analysis**: [analysis/01_results_section_a/]
+- **Figures**: [List expected figures]
+- **Tables**: [List expected tables]
+
+### 4.2 [Results Section B]
+- **Analysis**: [analysis/02_results_section_b/]
+- **Figures**: [List expected figures]
+- **Tables**: [List expected tables]
+
+## 5. Discussion
+
+### 5.1 Key Findings
+[Summary of main results]
+
+### 5.2 Limitations
+[Limitations of the approach]
+
+### 5.3 Future Work
+[Potential extensions]
+
+## 6. Conclusion
+
+[Summary and final remarks]
+
+## References
+
+[To be populated]
+
+---
+
+## Notes
+
+- Target journal: [Journal name]
+- Word limit: [If applicable]
+- Figure limit: [If applicable]
+- Submission deadline: [If applicable]

@@ -1,17 +1,52 @@
+# HPC Configuration
+# Edit these settings for your cluster. SMAIRT never reads this file and never
+# submits, monitors, or cancels a job; it is here for you and your scripts.
+
 cluster:
-  name: "replace-with-cluster-name"
-  scheduler: "slurm"
+  type: slurm  # slurm, pbs, or sge
+  partition: default
+  account: null  # Your account/allocation
+
 resources:
-  partition: "replace-with-partition"
-  account: "replace-with-account"
-  time: "01:00:00"
-  nodes: 1
-  tasks_per_node: 1
-  cpus_per_task: 1
-  memory: "4G"
+  default:
+    cpus: 4
+    memory: 16G
+    time: "4:00:00"
+
+  large:
+    cpus: 16
+    memory: 64G
+    time: "12:00:00"
+
+  gpu:
+    cpus: 8
+    memory: 32G
+    time: "8:00:00"
+    gpus: 1
+    gpu_type: null  # e.g., v100, a100
+
 environment:
+  # Path to conda environment or virtualenv
+  conda_env: null
+  virtualenv: null
+
+  # Modules to load
   modules: []
-  setup_commands: []
+  # Example:
+  # modules:
+  #   - python/3.10
+  #   - cuda/11.8
+
+paths:
+  # Scratch directory for large files
+  scratch: null  # e.g., /scratch/$USER
+
+  # Project directory on cluster (if different from local)
+  project: null
+
 notifications:
+  # Your cluster emails you directly; fill this in if you want job notices.
   email: null
-  events: []
+  events:
+    - END
+    - FAIL
