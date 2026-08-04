@@ -2,7 +2,23 @@ from __future__ import annotations
 
 import pytest
 
-from smairt.menu import Action, MenuChoice, numbered_lines, resolve_action, tokens_of
+from smairt.menu import (
+    Action,
+    MenuChoice,
+    divider,
+    numbered_lines,
+    resolve_action,
+    tokens_of,
+)
+from smairt.terminal import SEPARATOR
+
+GROUPED = (
+    Action("name", "Project name"),
+    Action("domain", "Domain"),
+    divider("Actions"),
+    Action("create", "Create project"),
+    Action("cancel", "Cancel without creating files"),
+)
 
 DASHBOARD = (
     Action("assistant", "Launch assistant or open folder"),
@@ -89,3 +105,29 @@ def test_a_token_may_not_look_like_a_displayed_number() -> None:
     """A numeric token would collide with the number that addresses another row."""
     with pytest.raises(ValueError):
         tokens_of((Action("2", "Two"),))
+
+
+def test_a_divider_groups_rows_without_becoming_addressable() -> None:
+    """A divider is presentation, so it owns no token and answers to no number."""
+    assert tokens_of(GROUPED) == ("name", "domain", "create", "cancel")
+    assert resolve_action("Actions", GROUPED) is None
+
+
+def test_numbering_counts_only_addressable_rows_across_a_divider() -> None:
+    """A researcher counts choices, not the lines drawn between them."""
+    lines = numbered_lines(GROUPED)
+    assert lines == [
+        "1. Project name [name]",
+        "2. Domain [domain]",
+        "   Actions",
+        "3. Create project [create]",
+        "4. Cancel without creating files [cancel]",
+    ]
+    assert resolve_action("3", GROUPED) == "create"
+    assert resolve_action("4", GROUPED) == "cancel"
+    assert resolve_action("5", GROUPED) is None
+
+
+def test_a_grouped_menu_renders_its_divider_as_a_screen_separator() -> None:
+    """The visual screen needs the sentinel its own list refuses to land on."""
+    assert MenuChoice.rows(GROUPED)[2] == (SEPARATOR, "Actions")

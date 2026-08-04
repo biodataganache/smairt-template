@@ -41,6 +41,9 @@ MULTIPLE_CONTROLS_HINT = (
     "Left/Esc back · Ctrl-C cancel"
 )
 
+SEPARATOR = object()
+"""A divider row that groups options visually and can never be landed on."""
+
 _CHECKED_MARKER = "[x]"
 _UNCHECKED_MARKER = "[ ]"
 _CHOSEN_MARKER = "(*)"
@@ -136,11 +139,22 @@ def viewport_rows(item_count: int, chrome_rows: int, max_rows: int | None = None
 
 @dataclass(frozen=True)
 class Option(Generic[T]):
-    """One row of a screen: either a value to choose or an action to invoke."""
+    """One row of a screen: a value to choose, an action to invoke, or a divider."""
 
     value: T
     label: str
     is_action: bool = False
+    is_separator: bool = False
+
+    @property
+    def is_selectable(self) -> bool:
+        """Report whether the cursor may rest on this row at all."""
+        return not self.is_separator
+
+
+def _as_options(choices: Sequence[tuple[Any, str]]) -> list[Option[Any]]:
+    """Turn caller choices into rows, recognizing the divider sentinel."""
+    return [Option(value, label, is_separator=value is SEPARATOR) for value, label in choices]
 
 
 class _OptionList(Generic[T]):
@@ -155,8 +169,8 @@ class _OptionList(Generic[T]):
         chosen: T | None = None,
         checked: Sequence[T] = (),
     ) -> None:
-        if not options:
-            raise ValueError("a screen requires at least one option")
+        if not any(option.is_selectable for option in options):
+            raise ValueError("a screen requires at least one selectable option")
         self.options = list(options)
         self.multiple = multiple
         self.checked: list[T] = [
@@ -186,9 +200,9 @@ class _OptionList(Generic[T]):
     def _initial_index(self, chosen: T | None) -> int:
         preferred = self.checked[0] if self.checked else chosen
         for index, option in enumerate(self.options):
-            if not option.is_action and option.value == preferred:
+            if option.is_selectable and not option.is_action and option.value == preferred:
                 return index
-        return 0
+        return next(index for index, option in enumerate(self.options) if option.is_selectable)
 
     def _bindings(self) -> KeyBindings:
         bindings = KeyBindings()
@@ -218,12 +232,31 @@ class _OptionList(Generic[T]):
         return bindings
 
     def _move(self, amount: int) -> None:
-        self._index = (self._index + amount) % len(self.options)
+        """Step to the next selectable row, wrapping past dividers and both ends."""
+        step = 1 if amount > 0 else -1
+        index = self._index
+        for _ in range(len(self.options)):
+            index = (index + step) % len(self.options)
+            if self.options[index].is_selectable:
+                self._index = index
+                return
 
     def _page(self, direction: int) -> None:
         """Jump one viewport of rows without wrapping past either end."""
         target = self._index + direction * self._visible_rows
-        self._index = min(max(target, 0), len(self.options) - 1)
+        self._index = self._nearest_selectable(
+            min(max(target, 0), len(self.options) - 1), direction
+        )
+
+    def _nearest_selectable(self, index: int, direction: int) -> int:
+        """Return the closest selectable row to an index, preferring one direction."""
+        for step in (direction, -direction):
+            candidate = index
+            while 0 <= candidate < len(self.options):
+                if self.options[candidate].is_selectable:
+                    return candidate
+                candidate += step
+        return self._index
 
     def toggle_focused(self, exclusive: T | None = None) -> None:
         """Check or uncheck the focused option, keeping an exclusive choice alone."""
@@ -241,7 +274,7 @@ class _OptionList(Generic[T]):
         self.checked.append(option.value)
 
     def _marker(self, option: Option[T], index: int) -> tuple[str, str]:
-        if option.is_action:
+        if option.is_action or option.is_separator:
             return ("class:option", _ACTION_MARKER)
         if self.multiple:
             checked = option.value in self.checked
@@ -255,7 +288,12 @@ class _OptionList(Generic[T]):
         fragments: StyleAndTextTuples = []
         for index, option in enumerate(self.options):
             marker_style, marker = self._marker(option, index)
-            label_style = "class:option-selected" if index == self._index else "class:option"
+            if option.is_separator:
+                label_style = "class:option-separator"
+            elif index == self._index:
+                label_style = "class:option-selected"
+            else:
+                label_style = "class:option"
             if index == self._index:
                 fragments.append(("[SetCursorPosition]", ""))
             fragments.append((marker_style, marker))
@@ -339,7 +377,7 @@ def select_choice(
     if not choices:
         raise ValueError("selection requires at least one choice")
     back = object()
-    options: list[Option[Any]] = [Option(value, label) for value, label in choices]
+    options: list[Option[Any]] = _as_options(choices)
     options.append(Option(back, "← Back", is_action=True))
     selected = _run_choice(
         message,
@@ -364,12 +402,15 @@ def select_menu(
     """Return one menu action from a screen whose own list already offers Back or Exit."""
     if not choices:
         raise ValueError("a menu requires at least one action")
-    return _run_choice(
-        title,
-        [Option(value, label) for value, label in choices],
-        details,
-        default if default is not None else choices[0][0],
-        max_rows,
+    return cast(
+        T,
+        _run_choice(
+            title,
+            _as_options(choices),
+            details,
+            default if default is not None else choices[0][0],
+            max_rows,
+        ),
     )
 
 
@@ -392,7 +433,7 @@ def select_many(
     if not choices:
         raise ValueError("a selection requires at least one choice")
     proceed = object()
-    options: list[Option[Any]] = [Option(value, label) for value, label in choices]
+    options: list[Option[Any]] = _as_options(choices)
     options.append(Option(proceed, continue_label, is_action=True))
     plan = plan_screen(len(options), len(details), max_rows=max_rows)
     option_list = _OptionList(

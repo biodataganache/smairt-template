@@ -65,6 +65,7 @@ _PROMPT_CLASSES: dict[str, str] = {
     "option": "label",
     "option-selected": "selected",
     "option-checked": "checked",
+    "option-separator": "border",
     "radio": "label",
     "radio-selected": "selected",
     "radio-checked": "checked",

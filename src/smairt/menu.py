@@ -9,10 +9,16 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Any
+
+from smairt.terminal import SEPARATOR
 
 _LEAVE_HABITS = frozenset({"q", "quit", "exit"})
 _BACK_HABITS = frozenset({"q", "quit", "back", ""})
 _ESCAPES = ("back", "exit")
+
+_DIVIDER_TOKEN = ""
+"""Reserved for dividers, which are presentation and answer to nothing."""
 
 
 @dataclass(frozen=True)
@@ -22,20 +28,37 @@ class Action:
     token: str
     label: str
 
+    @property
+    def is_divider(self) -> bool:
+        """Report whether this row only groups the rows around it."""
+        return self.token == _DIVIDER_TOKEN
+
+
+def divider(label: str = "") -> Action:
+    """Return a row that groups the rows around it and can never be chosen."""
+    return Action(_DIVIDER_TOKEN, label)
+
+
+def addressable(actions: Sequence[Action]) -> tuple[Action, ...]:
+    """Return only the rows a researcher can actually choose."""
+    return tuple(action for action in actions if not action.is_divider)
+
 
 class MenuChoice:
     """Adapters between a declared menu and the shapes its presentations need."""
 
     @staticmethod
-    def rows(actions: Sequence[Action]) -> list[tuple[str, str]]:
-        """Return token and label pairs in declared order for a framed screen."""
+    def rows(actions: Sequence[Action]) -> list[tuple[Any, str]]:
+        """Return value and label pairs in declared order for a framed screen."""
         tokens_of(actions)
-        return [(action.token, action.label) for action in actions]
+        return [
+            (SEPARATOR if action.is_divider else action.token, action.label) for action in actions
+        ]
 
 
 def tokens_of(actions: Sequence[Action]) -> tuple[str, ...]:
-    """Return every token, refusing a menu that could not be addressed unambiguously."""
-    tokens = tuple(action.token for action in actions)
+    """Return every addressable token, refusing an ambiguously addressed menu."""
+    tokens = tuple(action.token for action in addressable(actions))
     if len(set(tokens)) != len(tokens):
         raise ValueError(f"menu tokens must be unique: {tokens}")
     numeric = [token for token in tokens if token.isdigit()]
@@ -45,10 +68,17 @@ def tokens_of(actions: Sequence[Action]) -> tuple[str, ...]:
 
 
 def numbered_lines(actions: Sequence[Action]) -> list[str]:
-    """Return the deterministic listing, showing both the number and the token."""
-    return [
-        f"{index}. {action.label} [{action.token}]" for index, action in enumerate(actions, start=1)
-    ]
+    """Return the deterministic listing, numbering only the addressable rows."""
+    tokens_of(actions)
+    lines: list[str] = []
+    number = 0
+    for action in actions:
+        if action.is_divider:
+            lines.append(f"   {action.label}")
+            continue
+        number += 1
+        lines.append(f"{number}. {action.label} [{action.token}]")
+    return lines
 
 
 def escape_token(actions: Sequence[Action]) -> str | None:
@@ -70,10 +100,11 @@ def resolve_action(answer: str, actions: Sequence[Action]) -> str | None:
     cleaned = answer.strip().lower()
     if cleaned in tokens:
         return cleaned
+    choices = addressable(actions)
     if cleaned.isdigit():
         position = int(cleaned)
-        if 1 <= position <= len(actions):
-            return actions[position - 1].token
+        if 1 <= position <= len(choices):
+            return choices[position - 1].token
         return None
     escape = escape_token(actions)
     if escape is None:

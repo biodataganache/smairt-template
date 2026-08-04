@@ -843,7 +843,7 @@ def test_assistant_aliases_and_dashboard_are_available_from_installed_command(
     assert create_project(dashboard_project).returncode == 0
     dashboard = subprocess.run(
         [str(installed_smairt())],
-        input="2\n1\nDashboard Project\n11\n7\n",
+        input="settings\nname\nDashboard Project\nback\nexit\n",
         check=False,
         capture_output=True,
         text=True,
@@ -867,7 +867,7 @@ def test_standard_dashboard_previews_and_confirms_safe_repairs(tmp_path: Path) -
     (plans / "README.md").unlink()
     plans.rmdir()
 
-    dashboard = run_dashboard(destination, "5\ncreate-directory:plans\nyes\n7\n")
+    dashboard = run_dashboard(destination, "check\ncreate-directory:plans\nyes\nexit\n")
 
     assert dashboard.returncode == 0, dashboard.stderr
     assert "Safe repairs available:" in dashboard.stdout
@@ -1110,7 +1110,7 @@ def test_advanced_controls_are_local_safe_and_visible_from_installed_command(
     )
     dashboard = subprocess.run(
         [str(installed_smairt())],
-        input="12\n",
+        input="advanced\nback\nexit\n",
         check=False,
         capture_output=True,
         text=True,
@@ -1143,14 +1143,14 @@ def test_advanced_controls_are_local_safe_and_visible_from_installed_command(
     assert (destination / "paper" / "outline.md").read_text().startswith("# Paper Outline\n")
     assert dashboard.returncode == 0, dashboard.stderr
     assert "SMAIRT Advanced Mode: Test Project" in dashboard.stdout
-    assert "Launch assistant or open folder" in dashboard.stdout
-    assert "Project Settings" in dashboard.stdout
-    assert "Paper Support" in dashboard.stdout
-    assert "HPC Support" in dashboard.stdout
-    assert "Project Check" in dashboard.stdout
-    assert "Inspect project contract" in dashboard.stdout
-    assert "Regenerate managed assets" in dashboard.stdout
-    assert "Detected local tools" in dashboard.stdout
+    assert "Launch assistant or open folder [assistant]" in dashboard.stdout
+    assert "Project Settings [settings]" in dashboard.stdout
+    assert "Optional capabilities: Paper [capabilities]" in dashboard.stdout
+    assert "Project Check [check]" in dashboard.stdout
+    assert "Advanced ▸ [advanced]" in dashboard.stdout
+    assert "Inspect project contract [inspect]" in dashboard.stdout
+    assert "Regenerate managed assets [regenerate]" in dashboard.stdout
+    assert "Detected local tools [tools]" in dashboard.stdout
 
 
 def test_advanced_mode_preference_is_local_to_each_project_checkout(tmp_path: Path) -> None:
@@ -1173,7 +1173,7 @@ def test_advanced_mode_preference_is_local_to_each_project_checkout(tmp_path: Pa
     )
     advanced_dashboard = subprocess.run(
         [str(installed_smairt())],
-        input="12\n",
+        input="exit\n",
         check=False,
         capture_output=True,
         text=True,
@@ -1182,7 +1182,7 @@ def test_advanced_mode_preference_is_local_to_each_project_checkout(tmp_path: Pa
     )
     standard_dashboard = subprocess.run(
         [str(installed_smairt())],
-        input="7\n",
+        input="exit\n",
         check=False,
         capture_output=True,
         text=True,
@@ -1197,6 +1197,9 @@ def test_advanced_mode_preference_is_local_to_each_project_checkout(tmp_path: Pa
     assert not (standard_project / ".smairt" / "preferences.yaml").exists()
     assert "SMAIRT Advanced Mode: Test Project" in advanced_dashboard.stdout
     assert "SMAIRT Standard Mode: Test Project" in standard_dashboard.stdout
+    assert "Advanced ▸ [advanced]" in advanced_dashboard.stdout
+    assert "Advanced ▸" not in standard_dashboard.stdout
+    assert "Advanced mode adds contract inspection" in standard_dashboard.stdout
 
 
 def test_interactive_wizard_creates_a_project_from_a_real_input_stream(
@@ -1211,7 +1214,6 @@ def test_interactive_wizard_creates_a_project_from_a_real_input_stream(
                 "2",
                 str(destination.parent),
                 destination.name,
-                "guided_protein_study",
                 "A project created through the guided setup.",
                 "1",
                 ":skip",
@@ -1230,15 +1232,17 @@ def test_interactive_wizard_creates_a_project_from_a_real_input_stream(
     )
 
     assert result.returncode == 0, result.stderr
-    assert "Step 1 of 15" in result.stdout
-    assert "Step 15 of 15" in result.stdout
+    assert "Step 1 of 14" in result.stdout
+    assert "Step 14 of 14" in result.stdout
     assert "Final review" in result.stdout
     assert "Created SMAIRT project at" in result.stdout
     assert "Creating your SMAIRT project" not in result.stdout
+    assert "Folder: guided-project" in result.stdout
+    assert "Identifier: guided_project" in result.stdout
     metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
     assert metadata["project"] == {
         "name": "Guided Protein Study",
-        "slug": "guided_protein_study",
+        "slug": "guided_project",
         "description": "A project created through the guided setup.",
         "domain": "Computational biology",
     }
@@ -1264,8 +1268,7 @@ def test_interactive_wizard_creates_a_new_child_under_a_selected_parent(
                 "Parent Based Study",
                 "2",
                 str(tmp_path),
-                "",
-                "parent_based_study",
+                destination.name,
                 "A project created under a selected parent.",
                 "5",
                 ":skip",
@@ -1299,7 +1302,6 @@ def test_interactive_wizard_creates_a_new_child_in_the_current_workspace(
                 "Workspace Study",
                 "",
                 "",
-                "workspace_study",
                 "A project created in the current workspace.",
                 "5",
                 ":skip",
@@ -1331,12 +1333,11 @@ def test_interactive_wizard_keeps_answers_when_going_back_and_edits_review_answe
         "\n".join(
             [
                 "Original Name",
+                ":back",
+                "Original Name",
                 "2",
                 str(destination.parent),
                 destination.name,
-                "original_name",
-                ":back",
-                "",
                 "A retained description.",
                 "5",
                 ":skip",
@@ -1348,7 +1349,7 @@ def test_interactive_wizard_keeps_answers_when_going_back_and_edits_review_answe
                 "",
                 "yes",
                 "no",
-                "1",
+                "name",
                 "Edited Name",
                 "create",
             ]
@@ -1360,7 +1361,7 @@ def test_interactive_wizard_keeps_answers_when_going_back_and_edits_review_answe
     assert "Back: your earlier answers are kept." in result.stdout
     metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
     assert metadata["project"]["name"] == "Edited Name"
-    assert metadata["project"]["slug"] == "original_name"
+    assert metadata["project"]["slug"] == "edited_project"
     assert metadata["project"]["description"] == "A retained description."
 
 
@@ -1372,7 +1373,7 @@ def test_interactive_wizard_reconfirms_a_license_changed_during_final_review(
     result = run_interactive_new(
         wizard_answers(
             destination,
-            review_action="12\n3\ncreate\nyes",
+            review_action="license\n3\ncreate\nyes",
         )
     )
 
@@ -1394,7 +1395,7 @@ def test_saved_motion_preference_controls_a_project_dashboard_tty(tmp_path: Path
     )
 
     enabled_dashboard = run_interactive_dashboard(enabled_project, "\x1b")
-    disabled_dashboard = run_interactive_dashboard(disabled_project, "7\n")
+    disabled_dashboard = run_interactive_dashboard(disabled_project, "exit\n")
 
     assert configured.returncode == 0, configured.stderr
     assert enabled_dashboard.returncode == 0, enabled_dashboard.stderr
@@ -1406,7 +1407,7 @@ def test_saved_motion_preference_controls_a_project_dashboard_tty(tmp_path: Path
     assert "Up/Down or j/k move" in enabled_screen
     assert "(*) Launch assistant or open folder" in enabled_screen
     assert "Up/Down or j/k move" not in disabled_screen
-    assert "1. Launch assistant or open folder" in disabled_screen
+    assert "1. Launch assistant or open folder [assistant]" in disabled_screen
 
 
 def test_home_offers_a_scrollable_menu_in_a_capable_terminal(tmp_path: Path) -> None:
@@ -1507,6 +1508,11 @@ def test_interactive_wizard_reports_generation_failure_without_exposing_a_projec
 
 
 def wizard_answers(destination: Path, *, review_action: str = "create") -> str:
+    """Return one full pass through the wizard, addressed by tokens where it offers them.
+
+    The location step confirms the folder and derives the identifier from it, so
+    there is no separate identifier answer to supply.
+    """
     return (
         "\n".join(
             [
@@ -1514,7 +1520,6 @@ def wizard_answers(destination: Path, *, review_action: str = "create") -> str:
                 "2",
                 str(destination.parent),
                 destination.name,
-                "test_project",
                 "A test project.",
                 "5",
                 ":skip",

@@ -9,6 +9,7 @@ from smairt.appearance import ROLES, prompt_style, rich_theme
 from smairt.terminal import (
     FRAME_ROWS,
     MINIMUM_MENU_ROWS,
+    SEPARATOR,
     BackRequested,
     SelectionCancelled,
     confirm,
@@ -205,6 +206,16 @@ def test_confirmation_refuses_by_default_and_agrees_only_deliberately() -> None:
         assert confirm("Apply?") is False
         pipe.send_text(DOWN + ENTER)
         assert confirm("Apply?") is True
+
+
+def test_a_separator_row_can_never_be_landed_on_or_chosen() -> None:
+    """A divider groups rows visually, so selecting one would return a non-answer."""
+    choices = [("name", "Project name"), (SEPARATOR, "───"), ("create", "Create project")]
+    with create_pipe_input() as pipe, create_app_session(input=pipe, output=DummyOutput()):
+        pipe.send_text(DOWN + ENTER)
+        assert select_menu("Final review", choices) == "create"
+        pipe.send_text(UP + ENTER)
+        assert select_menu("Final review", choices) == "create"
 
 
 def test_an_empty_screen_is_a_programming_error_rather_than_an_empty_frame() -> None:

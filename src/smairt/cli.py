@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 import re
 import sys
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
@@ -15,9 +17,20 @@ from pydantic import ValidationError
 from rich.console import Console
 
 from smairt import __version__
+from smairt.appearance import rich_theme
 from smairt.generator import GenerationError, generate_project, validate_destination
+from smairt.menu import (
+    Action,
+    MenuChoice,
+    divider,
+    escape_token,
+    numbered_lines,
+    resolve_action,
+    tokens_of,
+)
 from smairt.models import (
     Assistant,
+    CapabilityState,
     CodeConvention,
     License,
     ProjectContract,
@@ -29,8 +42,11 @@ from smairt.models import (
 )
 from smairt.project import (
     LICENSE_EXPLANATIONS,
+    OPTIONAL_CAPABILITIES,
+    CapabilityPlan,
     ProjectError,
     apply_repairs,
+    capability_plan,
     change_license,
     detected_tools,
     disable_capability,
@@ -51,14 +67,17 @@ from smairt.project import (
     repair_previews,
     resolve_project,
     save_local_preferences,
+    set_capabilities,
     update_collaborator,
     update_settings,
 )
 from smairt.terminal import (
     BackRequested,
     SelectionCancelled,
+    confirm,
     navigation_bindings,
     select_choice,
+    select_many,
     select_menu,
 )
 
@@ -67,8 +86,14 @@ app = typer.Typer(no_args_is_help=False, invoke_without_command=True)
 _SKIP = ":skip"
 _BACK = ":back"
 _CANCEL = ":cancel"
-_WIZARD_STEPS = 15
 _OPTIONAL_CAPABILITIES = {"paper", "hpc"}
+_NO_CAPABILITIES = "none"
+"""The mutually exclusive choice meaning a workspace with no optional capabilities."""
+
+
+def _themed_console(motion: bool) -> Console:
+    """Return a console whose styles come from the one semantic palette."""
+    return Console(force_interactive=motion, force_terminal=motion, theme=rich_theme())
 
 
 def _parse_capabilities(answer: str) -> set[str]:
@@ -80,11 +105,21 @@ class WizardCancelled(Exception):
     """Raised when the user intentionally leaves guided project creation."""
 
 
+@dataclass(frozen=True)
+class Step:
+    """One wizard screen: what it is called, how it runs, and how it reviews."""
+
+    token: str
+    title: str
+    run: Callable[[], None]
+    summarize: Callable[[], str]
+
+
 class Wizard:
     def __init__(self) -> None:
         motion = _interactive_motion_enabled()
         self.visual = motion
-        self.console = Console(force_interactive=motion, force_terminal=motion)
+        self.console = _themed_console(motion)
         self.session: PromptSession[str] = PromptSession(
             input=create_input(sys.stdin),
             output=create_output(sys.stdout),
@@ -99,31 +134,45 @@ class Wizard:
             "hpc": False,
             "git": False,
         }
-        self.steps: tuple[tuple[str, Callable[[], None]], ...] = (
-            ("Project name", self._name),
-            ("Location", self._location),
-            ("Project slug", self._slug),
-            ("Description", self._description),
-            ("Domain", self._domain),
-            ("Research question", self._question),
-            ("Primary researcher", self._researcher),
-            ("Email", self._email),
-            ("Optional capabilities", self._capabilities),
-            ("Starting phase", self._phase),
-            ("Coding assistant", self._assistant),
-            ("License", self._license),
-            ("License confirmation", self._confirm_license),
-            ("Git", self._git),
-            ("Final review", self._review),
+        self.steps: tuple[Step, ...] = (
+            Step("name", "Project name", self._name, lambda: self._answer("name")),
+            Step("location", "Location", self._location, self._location_summary),
+            Step("description", "Description", self._description, lambda: self._answer("description")),
+            Step("domain", "Domain", self._domain, lambda: self._answer("domain")),
+            Step("question", "Research question", self._question, lambda: self._answer("question")),
+            Step("researcher", "Primary researcher", self._researcher, lambda: self._answer("researcher")),
+            Step("email", "Email", self._email, lambda: self._answer("email")),
+            Step("capabilities", "Optional capabilities", self._capabilities, self._capability_summary),
+            Step("phase", "Starting phase", self._phase, lambda: _phase_label(self._answer("phase"))),
+            Step(
+                "assistant",
+                "Coding assistant",
+                self._assistant,
+                lambda: _assistant_label(self._answer("assistant")),
+            ),
+            Step("license", "License", self._license, lambda: self._answer("license")),
+            Step(
+                "license_confirmation",
+                "License confirmation",
+                self._confirm_license,
+                lambda: self._answer("license"),
+            ),
+            Step("git", "Git", self._git, lambda: "Yes" if self.answers["git"] else "No"),
         )
+        self.review_step = Step("review", "Final review", self._review, lambda: "")
+
+    @property
+    def total_steps(self) -> int:
+        """Report how many screens a researcher walks through, review included."""
+        return len(self.steps) + 1
 
     def run(self) -> tuple[Path, ProjectOptions]:
         index = 0
-        while index < len(self.steps):
-            title, step = self.steps[index]
-            self._screen(index, title)
+        while index <= len(self.steps):
+            step = self.steps[index] if index < len(self.steps) else self.review_step
+            self._screen(index, step.title)
             try:
-                step()
+                step.run()
             except BackRequested:
                 if index == 0:
                     self.console.print("This is the first screen. Enter :cancel to leave setup.")
@@ -137,9 +186,13 @@ class Wizard:
         return Path(str(self.answers["destination"])).expanduser(), self._options()
 
     def _screen(self, index: int, title: str) -> None:
-        progress = f"Step {index + 1} of {_WIZARD_STEPS}"
-        self.console.rule(f"[bold cyan]{progress}: {title}[/]")
-        self.console.print("You can change every answer during final review.", style="dim")
+        progress = f"Step {index + 1} of {self.total_steps}"
+        self.console.rule(f"[title]{progress}: {title}[/]")
+        self.console.print("You can change every answer during final review.", style="hint")
+
+    def _answer(self, key: str) -> str:
+        """Return a recorded answer, naming an intentionally blank one plainly."""
+        return str(self.answers.get(key, "")) or "Skipped"
 
     def _ask(
         self,
@@ -170,7 +223,7 @@ class Wizard:
                 self.answers[key] = answer
                 return answer
             self.console.print(
-                "Please enter a value, or use :skip for this optional question.", style="yellow"
+                "Please enter a value, or use :skip for this optional question.", style="caution"
             )
 
     def _choose(
@@ -216,9 +269,15 @@ class Wizard:
             if selection:
                 self.answers[key] = selection
                 return selection
-            self.console.print("Choose one of the listed numbers.", style="yellow")
+            self.console.print("Choose one of the listed numbers.", style="caution")
 
     def _location(self) -> None:
+        """Confirm one folder name, deriving the immutable identifier from it.
+
+        The folder and the identifier are two spellings of the same decision, so
+        the researcher confirms the folder once and sees what it derives. Only the
+        two short names are previewed; the absolute path is noise at this point.
+        """
         mode = self._choose(
             "Where should this project live",
             key="location_mode",
@@ -247,49 +306,64 @@ class Wizard:
                 default=str(Path.home() / "Documents"),
             )
             parent = Path(parent_text).expanduser()
-        default_folder = _slugify(str(self.answers["name"])).replace("_", "-")
         while True:
-            folder = self._ask("Project folder", key="folder", default=default_folder)
+            folder = self._ask(
+                "Project folder name",
+                key="folder",
+                default=_folder_name(str(self.answers["name"])),
+            )
             if Path(folder).name != folder or folder in {".", ".."}:
-                self.console.print("Project folder must be one folder name.", style="yellow")
+                self.console.print("Project folder must be one folder name.", style="caution")
                 continue
-            destination = parent / folder
+            identifier = _slugify(folder)
+            if not self._identifier_is_valid(identifier):
+                continue
+            destination = (parent / folder).expanduser()
             try:
-                validate_destination(destination.expanduser())
+                validate_destination(destination)
             except GenerationError as error:
-                self.console.print(f"That location is not safe: {error}", style="yellow")
-            else:
-                self.answers["destination"] = str(destination.expanduser())
-                self.console.print(f"Will create: {destination.expanduser()}")
-                return
+                self.console.print(f"That location is not safe: {error}", style="caution")
+                continue
+            self.answers["destination"] = str(destination)
+            self.answers["slug"] = identifier
+            self.console.print(f"Folder: [value]{folder}[/]")
+            self.console.print(f"Identifier: [value]{identifier}[/]")
+            self.console.print(f"Will create: {destination}")
+            return
+
+    def _identifier_is_valid(self, identifier: str) -> bool:
+        """Report whether a derived identifier satisfies the contract's rules."""
+        try:
+            ProjectIdentity(
+                name=str(self.answers["name"]),
+                slug=identifier,
+                description="placeholder",
+                domain="placeholder",
+            )
+        except ValidationError as error:
+            self.console.print(str(error.errors()[0]["msg"]), style="caution")
+            self.console.print(
+                "Choose a folder name that starts with a letter and uses letters, "
+                "digits, and hyphens.",
+                style="hint",
+            )
+            return False
+        return True
+
+    def _location_summary(self) -> str:
+        return f"{Path(self._answer('destination')).name} ({self._answer('slug')})"
 
     def _name(self) -> None:
-        previous_name = str(self.answers.get("name", ""))
-        previous_default = _slugify(previous_name).replace("_", "-")
-        name = self._ask("What is the human-readable project name", key="name")
-        if self.answers.get("folder") == previous_default:
-            folder = _slugify(name).replace("_", "-")
-            self.answers["folder"] = folder
-            destination = Path(str(self.answers["destination"]))
-            self.answers["destination"] = str(destination.parent / folder)
+        """Record the readable name, offering it as the folder default only.
 
-    def _slug(self) -> None:
-        default = _slugify(str(self.answers.get("name", "project")))
-        while True:
-            slug = self._ask(
-                "Project slug (used in stable identifiers)", key="slug", default=default
-            )
-            try:
-                ProjectIdentity(
-                    name=str(self.answers["name"]),
-                    slug=slug,
-                    description="placeholder",
-                    domain="placeholder",
-                )
-            except ValidationError as error:
-                self.console.print(str(error.errors()[0]["msg"]), style="yellow")
-            else:
-                return
+        The folder is confirmed on its own screen and the identifier derives from
+        it, so renaming the project later never silently moves a chosen folder or
+        rewrites an identifier the researcher has already seen.
+        """
+        previous_default = _folder_name(str(self.answers.get("name", "")))
+        name = self._ask("What is the human-readable project name", key="name")
+        if self.answers.get("folder") in {None, previous_default}:
+            self.answers["folder"] = _folder_name(name)
 
     def _description(self) -> None:
         self._ask("Briefly describe this project", key="description")
@@ -346,34 +420,35 @@ class Wizard:
         self._ask("Researcher email", key="email", optional=True)
 
     def _capabilities(self) -> None:
-        self.console.print(
-            "Paper and HPC support are optional and both start off for a focused workspace."
-        )
+        """Check the capabilities this project expects, or the default workspace.
+
+        Paper and HPC are independent, so the researcher checks each rather than
+        picking from every combination. Default Workspace is mutually exclusive
+        with both by construction, so a contradiction is unreachable.
+        """
         if self.visual:
-            current = (
-                "paper,hpc"
-                if self.answers["paper"] and self.answers["hpc"]
-                else "paper"
-                if self.answers["paper"]
-                else "hpc"
-                if self.answers["hpc"]
-                else "off"
-            )
             try:
-                selection = select_choice(
+                selection = select_many(
                     "Optional capabilities",
                     [
-                        ("off", "Focused workspace (no optional capabilities)"),
-                        ("paper", "Paper support"),
-                        ("hpc", "HPC support"),
-                        ("paper,hpc", "Paper and HPC support"),
+                        (_NO_CAPABILITIES, "Default Workspace (no optional capabilities)"),
+                        ("paper", "Do you expect to write a paper?"),
+                        ("hpc", "Do you expect to use an HPC?"),
                     ],
-                    current,
+                    self._checked_capabilities(),
+                    details=(
+                        "Both are additive and can be enabled or disabled later.",
+                        "Space toggles a capability; choose Next when you are done.",
+                    ),
+                    exclusive=_NO_CAPABILITIES,
                 )
             except SelectionCancelled as error:
                 raise WizardCancelled from error
-            self._record_capabilities(_parse_capabilities(selection) - {"off"})
+            self._record_capabilities(set(selection) - {_NO_CAPABILITIES})
             return
+        self.console.print(
+            "Paper and HPC support are optional and both start off for a default workspace."
+        )
         self.console.print("Type paper, hpc, paper,hpc, or press Enter to skip.")
         while True:
             answer = self.session.prompt("Optional capabilities [Enter to skip]: ").strip().lower()
@@ -381,15 +456,24 @@ class Wizard:
                 raise WizardCancelled
             if answer == _BACK:
                 raise BackRequested
-            requested = _parse_capabilities(answer)
+            requested = _parse_capabilities(answer) - {_NO_CAPABILITIES}
             if requested <= _OPTIONAL_CAPABILITIES:
                 self._record_capabilities(requested)
                 return
-            self.console.print("Use paper, hpc, or paper,hpc.", style="yellow")
+            self.console.print("Use paper, hpc, or paper,hpc.", style="caution")
+
+    def _checked_capabilities(self) -> list[str]:
+        """Return the rows to start checked, naming the default workspace explicitly."""
+        chosen = [name for name in ("paper", "hpc") if self.answers[name]]
+        return chosen or [_NO_CAPABILITIES]
 
     def _record_capabilities(self, requested: set[str]) -> None:
         self.answers["paper"] = "paper" in requested
         self.answers["hpc"] = "hpc" in requested
+
+    def _capability_summary(self) -> str:
+        chosen = [_capability_label(name) for name in ("paper", "hpc") if self.answers[name]]
+        return ", ".join(chosen) if chosen else "Default Workspace"
 
     def _phase(self) -> None:
         self._choose(
@@ -503,7 +587,7 @@ class Wizard:
                 return
             if answer in {"no", "n"}:
                 raise BackRequested
-            self.console.print("Please answer yes or no.", style="yellow")
+            self.console.print("Please answer yes or no.", style="caution")
 
     def _git(self) -> None:
         self.console.print(
@@ -532,96 +616,84 @@ class Wizard:
             if answer in {"yes", "y"}:
                 self.answers["git"] = True
                 return
-            self.console.print("Please answer yes or no.", style="yellow")
+            self.console.print("Please answer yes or no.", style="caution")
+
+    def _review_actions(self) -> tuple[Action, ...]:
+        """Return the review rows: every answer first, then a divider, then the actions.
+
+        Creating the project is kept away from the answers it would act on, so
+        reviewing and committing are never one keystroke apart.
+        """
+        return (
+            *(Action(step.token, f"{step.title}: {step.summarize()}") for step in self.steps),
+            divider("─── Then ───"),
+            Action("create", "Create project"),
+            Action("cancel", "Cancel without creating files"),
+        )
 
     def _review(self) -> None:
+        actions = self._review_actions()
         if self.visual:
             self._visual_review()
             return
-        self._print_review()
-        self.console.print(
-            f"  {_WIZARD_STEPS}. Create project\n"
-            f"  {_WIZARD_STEPS + 1}. Back\n"
-            f"  {_WIZARD_STEPS + 2}. Cancel without creating files"
-        )
         while True:
-            answer = self.session.prompt("Review action: ").strip().lower()
-            if answer in {str(_WIZARD_STEPS + 2), "cancel", _CANCEL}:
+            self._print_review(actions)
+            typed = self.session.prompt("Review action: ").strip()
+            if typed == _CANCEL:
                 raise WizardCancelled
-            if answer in {str(_WIZARD_STEPS), "create", "c"}:
+            if typed == _BACK:
+                raise BackRequested
+            answer = resolve_action(typed, actions)
+            if answer == "cancel":
+                raise WizardCancelled
+            if answer == "create":
                 self._ensure_license_confirmed()
                 return
-            if answer in {str(_WIZARD_STEPS + 1), "back", _BACK}:
-                raise BackRequested
-            if answer.isdigit() and 1 <= int(answer) < _WIZARD_STEPS:
-                self._edit(int(answer) - 1)
-                self._screen(_WIZARD_STEPS - 1, "Final review")
-                self._print_review()
+            if answer is None:
+                self.console.print("Choose one of the listed actions.", style="caution")
                 continue
-            self.console.print("Choose one of the listed actions.", style="yellow")
+            self._edit(answer)
+            self._screen(len(self.steps), "Final review")
 
     def _visual_review(self) -> None:
         while True:
-            choices = [("create", "Create project")]
-            choices.extend(
-                (f"edit:{index}", f"{title}: {self._review_value(index + 1)}")
-                for index, (title, _) in enumerate(self.steps[:-1])
-            )
-            choices.append(("cancel", "Cancel without creating files"))
+            actions = self._review_actions()
             try:
-                action = select_choice("Final review", choices, "create")
-            except SelectionCancelled as error:
+                answer = select_menu(
+                    "Final review",
+                    MenuChoice.rows(actions),
+                    "create",
+                    details=("Choose any answer to edit it, or Create project when ready.",),
+                )
+            except (BackRequested, SelectionCancelled) as error:
                 raise WizardCancelled from error
-            if action == "create":
+            if answer == "create":
                 self._ensure_license_confirmed()
                 return
-            if action == "cancel":
+            if answer == "cancel":
                 raise WizardCancelled
-            self._edit(int(action.removeprefix("edit:")))
-            self._screen(_WIZARD_STEPS - 1, "Final review")
+            self._edit(answer)
+            self._screen(len(self.steps), "Final review")
 
-    def _print_review(self) -> None:
-        self.console.print("[bold]Final review[/]")
-        for index, (title, _) in enumerate(self.steps[:-1], start=1):
-            self.console.print(f"  {index}. {title}: {self._review_value(index)}")
+    def _print_review(self, actions: tuple[Action, ...]) -> None:
+        self.console.print("[heading]Final review[/]")
+        for line in numbered_lines(actions):
+            self.console.print(f"  {line}", markup=False)
 
     def _ensure_license_confirmed(self) -> None:
         if self.answers["license_confirmation"] != self.answers["license"]:
             self.console.print(
                 "Confirm the final selected license before creating the project.",
-                style="yellow",
+                style="caution",
             )
             self._confirm_license()
 
-    def _edit(self, index: int) -> None:
-        title, step = self.steps[index]
-        self._screen(index, f"Edit {title}")
-        step()
-
-    def _review_value(self, index: int) -> str:
-        keys = (
-            "name",
-            "destination",
-            "slug",
-            "description",
-            "domain",
-            "question",
-            "researcher",
-            "email",
+    def _edit(self, token: str) -> None:
+        index, step = next(
+            (index, step) for index, step in enumerate(self.steps) if step.token == token
         )
-        if index <= len(keys):
-            value = str(self.answers.get(keys[index - 1], ""))
-            return value or "Skipped"
-        if index == 9:
-            selected = [name for name in ("paper", "hpc") if self.answers[name]]
-            return ", ".join(selected) if selected else "Off"
-        if index == 10:
-            return _phase_label(str(self.answers["phase"]))
-        if index == 11:
-            return _assistant_label(str(self.answers["assistant"]))
-        if index in {12, 13}:
-            return str(self.answers["license"])
-        return "Yes" if self.answers["git"] else "No"
+        self._screen(index, f"Edit {step.title}")
+        step.run()
 
     def _options(self) -> ProjectOptions:
         return ProjectOptions(
@@ -1005,106 +1077,229 @@ class Dashboard:
         self.root = root
         motion = _interactive_motion_enabled(root)
         self.visual = motion
-        self.console = Console(force_interactive=motion, force_terminal=motion)
+        self.console = _themed_console(motion)
         self.session: PromptSession[str] = PromptSession(
             input=create_input(sys.stdin), output=create_output(sys.stdout)
         )
 
+    def _home_actions(self, contract: ProjectContract, advanced: bool) -> tuple[Action, ...]:
+        """Return the Dashboard rows, folding the advanced tools behind one row.
+
+        Advanced work is one row rather than six, so the everyday menu stays the
+        length of the everyday tasks. The row is only offered when the local
+        preference asks for it, and a hint names it when it is not.
+        """
+        summary = ", ".join(
+            _capability_label(name)
+            for name in OPTIONAL_CAPABILITIES
+            if contract.capabilities[name].state is CapabilityState.ENABLED
+        )
+        return (
+            Action("assistant", "Launch assistant or open folder"),
+            Action("settings", "Project Settings"),
+            Action("capabilities", f"Optional capabilities: {summary or 'Default Workspace'}"),
+            Action("check", "Project Check"),
+            Action("help", "Help"),
+            *((Action("advanced", "Advanced ▸"),) if advanced else ()),
+            Action("exit", "Exit"),
+        )
+
     def run(self) -> None:
         while True:
-            if _interactive_motion_enabled(self.root):
-                with self.console.status("Loading project dashboard...", spinner="dots"):
-                    contract = load_contract(self.root)
-                    advanced = local_preferences(self.root).get("experience") == "advanced"
-            else:
-                contract = load_contract(self.root)
-                advanced = local_preferences(self.root).get("experience") == "advanced"
+            contract, advanced = self._load()
             mode = "Advanced" if advanced else "Standard"
-            actions = [
-                ("1", "Launch assistant or open folder"),
-                ("2", "Project Settings"),
-                ("3", f"Paper Support: {contract.capabilities['paper'].state.value}"),
-                ("4", f"HPC Support: {contract.capabilities['hpc'].state.value}"),
-                ("5", "Project Check"),
-                ("6", "Help"),
-            ]
-            if advanced:
-                actions += [
-                    ("7", "Inspect project contract"),
-                    ("8", "Verbose Project Check"),
-                    ("9", "Regenerate managed assets"),
-                    ("10", "Customize prompt and code conventions"),
-                    ("11", "Detected local tools"),
-                    ("12", "Exit"),
-                ]
-            else:
-                actions.append(("7", "Exit"))
-            self.console.rule(f"[bold cyan]SMAIRT {mode} Mode: {contract.project.name}[/]")
-            action = self._menu("Choose an action", actions, escape=actions[-1][0])
-            if action == "1":
+            actions = self._home_actions(contract, advanced)
+            self.console.rule(f"[title]SMAIRT {mode} Mode: {contract.project.name}[/]")
+            if not advanced:
+                self.console.print(
+                    "Advanced mode adds contract inspection, asset regeneration, and "
+                    "convention controls. Turn it on in Project Settings.",
+                    style="hint",
+                )
+            action = self._menu("Choose an action", actions)
+            if action == "assistant":
                 self._assistant()
-            elif action == "2":
+            elif action == "settings":
                 self._settings()
-            elif action in {"3", "4"}:
-                self._capability("paper" if action == "3" else "hpc")
-            elif action == "5":
+            elif action == "capabilities":
+                self._capabilities()
+            elif action == "check":
                 self._check()
-            elif action == "6":
+            elif action == "help":
                 self.console.print(
                     "SMAIRT manages project utilities only. Conduct scientific work in your selected assistant."
                 )
-            elif advanced and action == "7":
-                self._inspect()
-            elif advanced and action == "8":
-                self._check(verbose=True)
-            elif advanced and action == "9":
-                self._regenerate()
-            elif advanced and action == "10":
-                self._conventions()
-            elif advanced and action == "11":
-                self._tools()
-            elif action in ({"12", "exit", "q"} if advanced else {"7", "exit", "q"}):
+            elif action == "advanced":
+                self._advanced()
+            elif action == "exit":
                 return
-            else:
-                self.console.print("Choose a listed action.", style="yellow")
 
-    def _menu(
-        self,
-        title: str,
-        actions: list[tuple[str, str]],
-        *,
-        escape: str,
-    ) -> str:
-        """Return a chosen action identifier from a scrollable menu or a numbered fallback."""
+    def _load(self) -> tuple[ProjectContract, bool]:
+        """Read the contract and the local experience preference for one pass."""
+        if _interactive_motion_enabled(self.root):
+            with self.console.status("Loading project dashboard...", spinner="dots"):
+                return (
+                    load_contract(self.root),
+                    local_preferences(self.root).get("experience") == "advanced",
+                )
+        return (
+            load_contract(self.root),
+            local_preferences(self.root).get("experience") == "advanced",
+        )
+
+    def _advanced(self) -> None:
+        """Offer the advanced tools as their own screen rather than six home rows."""
+        while True:
+            action = self._menu(
+                "Advanced",
+                (
+                    Action("inspect", "Inspect project contract"),
+                    Action("verbose", "Verbose Project Check"),
+                    Action("regenerate", "Regenerate managed assets"),
+                    Action("conventions", "Customize prompt and code conventions"),
+                    Action("tools", "Detected local tools"),
+                    Action("back", "← Back"),
+                ),
+            )
+            if action == "inspect":
+                self._inspect()
+            elif action == "verbose":
+                self._check(verbose=True)
+            elif action == "regenerate":
+                self._regenerate()
+            elif action == "conventions":
+                self._conventions()
+            elif action == "tools":
+                self._tools()
+            else:
+                return
+
+    def _menu(self, title: str, actions: Sequence[Action]) -> str:
+        """Return a chosen action token from a framed screen or a numbered fallback.
+
+        Tokens are the contract in both presentations. Leaving a menu without
+        choosing resolves to its own escape row, so a caller never sees a
+        non-answer.
+        """
+        escape = escape_token(actions) or tokens_of(actions)[-1]
         if self.visual:
             try:
-                return select_menu(title, actions)
+                return str(select_menu(title, MenuChoice.rows(actions)))
             except (BackRequested, SelectionCancelled):
                 return escape
-        for identifier, label in actions:
-            self.console.print(f"{identifier}. {label}")
-        return self.session.prompt(f"{title}: ").strip()
+        while True:
+            for line in numbered_lines(actions):
+                self.console.print(line, markup=False)
+            answer = resolve_action(self.session.prompt(f"{title}: "), actions)
+            if answer is not None:
+                return answer
+            self.console.print("Choose a listed action.", style="caution")
 
     def _assistant(self) -> None:
-        message = prepare_assistant(self.root)
-        self.console.print(message)
-        action = self.session.prompt("Enter launch, folder, or back: ").strip().lower()
+        self.console.print(prepare_assistant(self.root))
+        action = self._menu(
+            "Assistant",
+            (
+                Action("launch", "Launch the selected assistant here"),
+                Action("folder", "Open the project folder"),
+                Action("back", "← Back"),
+            ),
+        )
         if action == "launch":
             _, message = launch_assistant(self.root)
             self.console.print(message)
         elif action == "folder":
             self.console.print(open_folder(self.root))
 
-    def _capability(self, name: str) -> None:
-        action = (
-            self.session.prompt(f"Enter enable, disable, or back for {_capability_label(name)}: ")
-            .strip()
-            .lower()
-        )
-        if action == "enable":
-            self.console.print(enable_capability(self.root, name))
-        elif action == "disable":
-            self.console.print(disable_capability(self.root, name))
+    def _capabilities(self) -> None:
+        """Choose every capability at once, previewing the change before writing.
+
+        Enabling and disabling are one decision about which capabilities this
+        project has, so they are one screen. Nothing is written until the preview
+        of the real operation has been accepted.
+        """
+        contract = load_contract(self.root)
+        enabled = [
+            name
+            for name in OPTIONAL_CAPABILITIES
+            if contract.capabilities[name].state is CapabilityState.ENABLED
+        ]
+        requested = self._choose_capabilities(enabled)
+        if requested is None:
+            return
+        try:
+            plan = capability_plan(self.root, requested)
+        except ProjectError as error:
+            self.console.print(str(error), style="caution")
+            return
+        if plan.is_empty:
+            self.console.print("No capability changes requested.")
+            return
+        self._preview_capability_plan(plan)
+        if not self._confirmed("Apply these capability changes"):
+            self.console.print("No changes made.")
+            return
+        for message in set_capabilities(self.root, requested):
+            self.console.print(message)
+
+    def _choose_capabilities(self, enabled: Sequence[str]) -> list[str] | None:
+        """Return the requested capabilities, or None when the researcher backs out."""
+        if self.visual:
+            try:
+                selection = select_many(
+                    "Optional capabilities",
+                    [
+                        (_NO_CAPABILITIES, "Default Workspace (no optional capabilities)"),
+                        *((name, _capability_label(name)) for name in OPTIONAL_CAPABILITIES),
+                    ],
+                    list(enabled) or [_NO_CAPABILITIES],
+                    details=(
+                        "Enabling creates only missing files; disabling never removes any.",
+                        "Space toggles a capability; choose Next to preview the change.",
+                    ),
+                    exclusive=_NO_CAPABILITIES,
+                )
+            except (BackRequested, SelectionCancelled):
+                return None
+            return [name for name in selection if name != _NO_CAPABILITIES]
+        self.console.print(f"Currently enabled: {', '.join(enabled) or 'none'}")
+        answer = self.session.prompt(
+            "Capabilities to have enabled [paper, hpc, comma separated, none, or back]: "
+        ).strip()
+        if answer.lower() in {"back", ""}:
+            return None
+        requested = _parse_capabilities(answer.lower()) - {_NO_CAPABILITIES}
+        if not requested <= _OPTIONAL_CAPABILITIES:
+            self.console.print("Use paper, hpc, paper,hpc, or none.", style="caution")
+            return None
+        return sorted(requested)
+
+    def _preview_capability_plan(self, plan: CapabilityPlan) -> None:
+        """Describe exactly what the pending write would change and create."""
+        self.console.print("[heading]Pending capability changes[/]")
+        for change in plan.changes:
+            verb = "Enable" if change.enabling else "Disable"
+            self.console.print(f"- {verb} {change.label} Support")
+        if plan.creates:
+            self.console.print("Files that would be created:")
+            for relative in plan.creates:
+                self.console.print(f"  + {relative}")
+        else:
+            self.console.print("No files would be created.")
+        if any(not change.enabling for change in plan.changes):
+            self.console.print(
+                "Disabling only marks a capability inactive; your files stay exactly as they are.",
+                style="hint",
+            )
+
+    def _confirmed(self, question: str, *, details: Sequence[str] = ()) -> bool:
+        """Return whether the researcher explicitly agreed, defaulting to refusal."""
+        if self.visual:
+            try:
+                return confirm(question, details=details)
+            except (BackRequested, SelectionCancelled):
+                return False
+        return self.session.prompt(f"{question} [yes/no]: ").strip().lower() in {"yes", "y"}
 
     def _check(self, *, verbose: bool = False) -> None:
         issues = project_check(self.root)
@@ -1124,25 +1319,55 @@ class Dashboard:
                 for issue in repairable:
                     assert issue.repair is not None
                     self.console.print(f"- {issue.repair}: {issue.message}")
-                selection = self.session.prompt(
-                    "Enter repair identifiers separated by commas, or back: "
-                ).strip()
-                if selection not in {"", "back"}:
-                    self._repair([item.strip() for item in selection.split(",") if item.strip()])
+                selected = self._select_items(
+                    "Safe repairs",
+                    [
+                        (str(issue.repair), f"{issue.repair}: {issue.message}")
+                        for issue in repairable
+                    ],
+                    details=("Check every repair to apply, then choose Next.",),
+                    prompt="Enter repair identifiers separated by commas, or back",
+                )
+                if selected:
+                    self._repair(selected)
         if verbose:
             self._tools()
+
+    def _select_items(
+        self,
+        title: str,
+        choices: list[tuple[str, str]],
+        *,
+        details: Sequence[str] = (),
+        prompt: str,
+    ) -> list[str]:
+        """Return chosen identifiers from a checkbox screen or a comma-separated answer.
+
+        The visual screen offers only identifiers that actually exist right now, so
+        a typo cannot reach the operation at all.
+        """
+        if not choices:
+            return []
+        if self.visual:
+            try:
+                return [str(value) for value in select_many(title, choices, details=details)]
+            except (BackRequested, SelectionCancelled):
+                return []
+        answer = self.session.prompt(f"{prompt}: ").strip()
+        if answer.lower() in {"", "back"}:
+            return []
+        return [item.strip() for item in answer.split(",") if item.strip()]
 
     def _repair(self, identifiers: list[str]) -> None:
         try:
             preview = repair_previews(self.root, identifiers)
         except ProjectError as error:
-            self.console.print(str(error), style="yellow")
+            self.console.print(str(error), style="caution")
             return
         for issue in preview:
             assert issue.repair is not None
             self.console.print(f"Preview: {issue.repair}: {issue.message}")
-        confirmed = self.session.prompt("Apply these safe repairs [yes/no]: ").strip().lower()
-        if confirmed not in {"yes", "y"}:
+        if not self._confirmed("Apply these safe repairs"):
             self.console.print("No changes made.")
             return
         apply_repairs(self.root, identifiers)
@@ -1159,7 +1384,7 @@ class Dashboard:
             for status in managed_file_statuses(self.root):
                 self.console.print(f"- {status['path']}: {status['status']}")
         except ProjectError as error:
-            self.console.print(str(error), style="yellow")
+            self.console.print(str(error), style="caution")
 
     def _tools(self) -> None:
         self.console.print("Detected local tools:")
@@ -1170,36 +1395,50 @@ class Dashboard:
         try:
             available = managed_asset_paths(self.root)
         except ProjectError as error:
-            self.console.print(str(error), style="yellow")
+            self.console.print(str(error), style="caution")
             return
         self.console.print("Managed assets:")
         for relative in available:
             self.console.print(f"- {relative}")
-        relative = self.session.prompt("Asset path to regenerate, or back: ").strip()
-        if relative in {"", "back"}:
+        selected = self._select_items(
+            "Managed assets",
+            [(relative, relative) for relative in available],
+            details=("Only missing or unmodified assets are restored.",),
+            prompt="Asset paths to regenerate separated by commas, or back",
+        )
+        if not selected:
             return
         try:
-            preview = managed_asset_previews(self.root, [relative])
+            preview = managed_asset_previews(self.root, selected)
         except ProjectError as error:
-            self.console.print(str(error), style="yellow")
+            self.console.print(str(error), style="caution")
             return
-        self.console.print(f"Preview: {preview[0]['path']} is {preview[0]['status']}.")
-        if self.session.prompt("Regenerate this managed asset [yes/no]: ").strip().lower() in {
-            "yes",
-            "y",
-        }:
-            regenerate_managed_assets(self.root, [relative])
+        for entry in preview:
+            self.console.print(f"Preview: {entry['path']} is {entry['status']}.")
+        if self._confirmed("Regenerate these managed assets"):
+            regenerate_managed_assets(self.root, selected)
             self.console.print("Managed asset regenerated.")
         else:
             self.console.print("No changes made.")
 
     def _conventions(self) -> None:
-        prompt = self.session.prompt(
-            "Prompt convention [plan-first/direct-task, Enter to keep]: "
-        ).strip()
-        code = self.session.prompt(
-            "Code convention [typed-python/standard-python, Enter to keep]: "
-        ).strip()
+        contract = load_contract(self.root)
+        prompt = self._choose_value(
+            "Prompt convention",
+            [
+                ("plan-first", "Plan first - draft a plan before complex work"),
+                ("direct-task", "Direct task - act on the request as given"),
+            ],
+            _set_value(contract.conventions.prompt),
+        )
+        code = self._choose_value(
+            "Code convention",
+            [
+                ("typed-python", "Typed Python - annotate public functions"),
+                ("standard-python", "Standard Python - annotations optional"),
+            ],
+            _set_value(contract.conventions.code),
+        )
         try:
             update_settings(
                 self.root,
@@ -1207,58 +1446,84 @@ class Dashboard:
                 code_convention=CodeConvention(code) if code else None,
             )
         except (ProjectError, ValueError):
-            self.console.print("Use only the listed prompt and code conventions.", style="yellow")
+            self.console.print("Use only the listed prompt and code conventions.", style="caution")
         else:
             self.console.print("Conventions updated.")
+
+    def _choose_value(self, title: str, choices: list[tuple[str, str]], current: str) -> str:
+        """Return one value from a finite set, or empty when nothing is to change.
+
+        An unset value is shown as unset rather than defaulted, so the screen never
+        implies a decision the project has not recorded.
+        """
+        if self.visual:
+            try:
+                return str(select_choice(title, choices, current or None))
+            except (BackRequested, SelectionCancelled):
+                return ""
+        values = [value for value, _ in choices]
+        self.console.print(f"Available: {', '.join(values)}")
+        answer = (
+            self.session.prompt(f"{title} [Enter to keep {current or 'unset'}]: ").strip().lower()
+        )
+        if answer in values:
+            return answer
+        if answer:
+            self.console.print(f"Choose one of: {', '.join(values)}.", style="caution")
+        return ""
 
     def _settings(self) -> None:
         while True:
             action = self._menu(
                 "Project Settings",
-                [
-                    ("1", "Project name"),
-                    ("2", "Description"),
-                    ("3", "Domain"),
-                    ("4", "Research question"),
-                    ("5", "Primary researcher"),
-                    ("6", "Assistant"),
-                    ("7", "Current phase"),
-                    ("8", "Collaborator"),
-                    ("9", "License"),
-                    ("10", "Local experience and motion"),
-                    ("11", "Back"),
-                ],
-                escape="11",
+                (
+                    divider("─── Recorded in the project contract ───"),
+                    Action("name", "Project name"),
+                    Action("description", "Description"),
+                    Action("domain", "Domain"),
+                    Action("question", "Research question"),
+                    Action("researcher", "Primary researcher"),
+                    Action("assistant", "Assistant"),
+                    Action("phase", "Current phase"),
+                    Action("collaborator", "Collaborator"),
+                    Action("license", "License"),
+                    divider("─── This checkout only, never committed ───"),
+                    Action("preferences", "Local experience and motion"),
+                    Action("back", "← Back"),
+                ),
             )
             contract = load_contract(self.root)
-            if action == "1":
+            if action == "name":
                 update_settings(self.root, name=self._required("Project name"))
-            elif action == "2":
+            elif action == "description":
                 update_settings(self.root, description=self._required("Description"))
-            elif action == "3":
+            elif action == "domain":
                 update_settings(self.root, domain=self._required("Domain"))
-            elif action == "4":
+            elif action == "question":
                 update_settings(
                     self.root,
                     question=self.session.prompt("Research question (blank clears it): ").strip(),
                 )
-            elif action == "5":
+            elif action == "researcher":
                 update_settings(self.root, researcher=self._required("Primary researcher"))
-            elif action == "6":
-                self.console.print("Available: zoo-code, claude-code, opencode, codex, pi, cursor")
-                try:
-                    update_settings(self.root, assistant=Assistant(self._required("Assistant")))
-                except ValueError:
-                    self.console.print("Choose one of the listed assistants.", style="yellow")
-            elif action == "7":
-                self.console.print(
-                    "Available: synthetic, downloaded, real. Existing directories are never deleted."
+            elif action == "assistant":
+                selected = self._choose_value(
+                    "Assistant",
+                    [(item.value, _assistant_label(item.value)) for item in Assistant],
+                    contract.assistant.value,
                 )
-                try:
-                    update_settings(self.root, phase=StartingPhase(self._required("Current phase")))
-                except ValueError:
-                    self.console.print("Choose synthetic, downloaded, or real.", style="yellow")
-            elif action == "8":
+                if selected:
+                    update_settings(self.root, assistant=Assistant(selected))
+            elif action == "phase":
+                self.console.print("Existing directories are never deleted.", style="hint")
+                selected = self._choose_value(
+                    "Current phase",
+                    [(item.value, _phase_label(item.value)) for item in StartingPhase],
+                    contract.current_phase.value,
+                )
+                if selected:
+                    update_settings(self.root, phase=StartingPhase(selected))
+            elif action == "collaborator":
                 role = self._required("Collaborator role")
                 try:
                     update_collaborator(
@@ -1269,65 +1534,109 @@ class Dashboard:
                         or None,
                     )
                 except ProjectError as error:
-                    self.console.print(str(error), style="yellow")
-            elif action == "9":
+                    self.console.print(str(error), style="caution")
+            elif action == "license":
                 self._license(contract)
-            elif action == "10":
+            elif action == "preferences":
                 self._preferences()
-            elif action in {"11", "back", "q"}:
-                return
             else:
-                self.console.print("Choose a listed setting.", style="yellow")
+                return
 
     def _required(self, label: str) -> str:
         while True:
             value = self.session.prompt(f"{label}: ").strip()
             if value:
                 return value
-            self.console.print(f"{label} is required.", style="yellow")
+            self.console.print(f"{label} is required.", style="caution")
 
     def _license(self, contract: ProjectContract) -> None:
         self.console.print("License changes can affect legal rights. This is not legal advice.")
-        for number, license in enumerate(License, start=1):
-            self.console.print(f"{number}. {license.value} - {LICENSE_EXPLANATIONS[license]}")
-        choice = self.session.prompt("Choose a license or press Enter to cancel: ").strip()
-        if not choice.isdigit() or not 1 <= int(choice) <= len(License):
-            return
-        selected = tuple(License)[int(choice) - 1]
+        if not self.visual:
+            for number, license in enumerate(License, start=1):
+                self.console.print(f"{number}. {license.value} - {LICENSE_EXPLANATIONS[license]}")
+            choice = self.session.prompt("Choose a license or press Enter to cancel: ").strip()
+            if not choice.isdigit() or not 1 <= int(choice) <= len(License):
+                return
+            selected = tuple(License)[int(choice) - 1]
+        else:
+            try:
+                chosen = select_choice(
+                    "Choose a license",
+                    [
+                        (item.value, f"{item.value} - {LICENSE_EXPLANATIONS[item]}")
+                        for item in License
+                    ],
+                    contract.license.value,
+                    details=("Only unmodified legal text is ever replaced.",),
+                )
+            except (BackRequested, SelectionCancelled):
+                return
+            selected = License(chosen)
         self.console.print("Preview:")
         self.console.out(license_preview(self.root, selected), end="")
-        confirmed = self.session.prompt("Replace unmodified legal text [yes/no]: ").strip().lower()
-        if confirmed not in {"yes", "y"}:
+        if not self._confirmed("Replace unmodified legal text"):
             self.console.print("No license change made.")
             return
         try:
             change_license(self.root, selected)
         except ProjectError as error:
-            self.console.print(str(error), style="yellow")
+            self.console.print(str(error), style="caution")
         else:
             self.console.print(f"License changed to {selected.value}.")
 
     def _preferences(self) -> None:
+        """Adjust the preferences that belong to this checkout and are never committed."""
         preferences = local_preferences(self.root)
-        experience = (
-            self.session.prompt("Experience [standard/advanced, Enter to keep]: ").strip().lower()
+        experience = self._choose_value(
+            "Experience",
+            [
+                ("standard", "Standard - the everyday tasks only"),
+                ("advanced", "Advanced - adds contract, asset, and convention tools"),
+            ],
+            str(preferences.get("experience", "standard")),
         )
-        motion = self.session.prompt("Motion [yes/no, Enter to keep]: ").strip().lower()
+        motion = self._choose_value(
+            "Motion",
+            [
+                ("yes", "Yes - framed screens and spinners"),
+                ("no", "No - plain numbered listings"),
+            ],
+            "no" if preferences.get("motion") is False else "yes",
+        )
         if experience:
-            if experience not in {"standard", "advanced"}:
-                self.console.print("Experience must be standard or advanced.", style="yellow")
-                return
             preferences["experience"] = experience
         if motion:
-            if motion not in {"yes", "y", "no", "n"}:
-                self.console.print("Motion must be yes or no.", style="yellow")
-                return
-            preferences["motion"] = motion in {"yes", "y"}
+            preferences["motion"] = motion == "yes"
         save_local_preferences(self.root, preferences)
 
 
 def _capability_label(name: str) -> str:
     return "Paper" if name == "paper" else "HPC"
+
+
+def _created_summary(
+    console: Console, root: Path, options: ProjectOptions, messages: Sequence[str]
+) -> None:
+    """Report what creation actually produced, rather than only that it finished.
+
+    The write itself is atomic and takes well under a second, so a progress bar
+    would be theater. What a researcher needs afterwards is what exists now and
+    what to do next.
+    """
+    files = sum(1 for path in root.rglob("*") if path.is_file())
+    capabilities = [
+        _capability_label(name)
+        for name, enabled in (("paper", options.paper), ("hpc", options.hpc))
+        if enabled
+    ]
+    console.rule("[title]Project created[/]")
+    console.print(f"Location: [value]{root}[/]")
+    console.print(f"Files written: [value]{files}[/]")
+    console.print(f"Capabilities: [value]{', '.join(capabilities) or 'Default Workspace'}[/]")
+    console.print(f"Git: [value]{'initialized and staged' if options.initialize_git else 'off'}[/]")
+    for message in messages:
+        console.print(message, style="hint")
+    console.print("Next: open the Dashboard below to launch your assistant.", style="hint")
 
 
 def _home() -> None:
@@ -1343,39 +1652,41 @@ def _home() -> None:
         input=create_input(sys.stdin), output=create_output(sys.stdout)
     )
     motion = _interactive_motion_enabled()
-    console = Console(force_interactive=motion, force_terminal=motion)
-    actions = [
-        ("1", "Create New Project"),
-        ("2", "Recent Projects"),
-        ("3", "Open Existing Project"),
-        ("4", "Help"),
-        ("5", "Exit"),
-    ]
+    console = _themed_console(motion)
+    actions = (
+        Action("create", "Create New Project"),
+        Action("recents", "Recent Projects"),
+        Action("open", "Open Existing Project"),
+        Action("help", "Help"),
+        Action("exit", "Exit"),
+    )
     while True:
-        console.rule("[bold cyan]SMAIRT Home[/]")
+        console.rule("[title]SMAIRT Home[/]")
         if motion:
             try:
-                action = select_menu("Choose an action", actions)
+                action = str(select_menu("Choose an action", MenuChoice.rows(actions)))
             except (BackRequested, SelectionCancelled):
                 return
         else:
-            for identifier, label in actions:
-                console.print(f"{identifier}. {label}")
-            action = session.prompt("Choose an action: ").strip()
-        if action == "1":
+            for line in numbered_lines(actions):
+                console.print(line, markup=False)
+            resolved = resolve_action(session.prompt("Choose an action: "), actions)
+            if resolved is None:
+                console.print("Choose a listed action.", style="caution")
+                continue
+            action = resolved
+        if action == "create":
             try:
                 destination, options = Wizard().run()
-                messages = generate_project(destination, options)
+                messages = _generate_with_progress(console, destination, options, motion)
             except (WizardCancelled, GenerationError, ValidationError, OSError) as error:
-                console.print(f"Project creation cancelled or failed: {error}", style="yellow")
+                console.print(f"Project creation cancelled or failed: {error}", style="caution")
             else:
                 root = destination.resolve()
                 record_recent(root)
-                console.print(f"Created SMAIRT project at {root}")
-                for message in messages:
-                    console.print(message)
+                _created_summary(console, root, options, messages)
                 Dashboard(root).run()
-        elif action == "2":
+        elif action == "recents":
             recents = recent_projects()
             if not recents:
                 console.print("No recent SMAIRT projects.")
@@ -1399,20 +1710,28 @@ def _home() -> None:
             if selection.isdigit() and 1 <= int(selection) <= len(recents):
                 root = _project_or_exit(Path(recents[int(selection) - 1]["path"]))
                 Dashboard(root).run()
-        elif action == "3":
+        elif action == "open":
             try:
                 root = _project_or_exit(Path(session.prompt("Project folder: ").strip()))
             except (ProjectError, typer.Exit):
                 continue
             Dashboard(root).run()
-        elif action == "4":
+        elif action == "help":
             console.print(
                 "SMAIRT creates and safely manages workspace utilities. It does not conduct scientific work."
             )
-        elif action in {"5", "exit", "q"}:
-            return
         else:
-            console.print("Choose a listed action.", style="yellow")
+            return
+
+
+def _generate_with_progress(
+    console: Console, destination: Path, options: ProjectOptions, motion: bool
+) -> list[str]:
+    """Create the project, showing a spinner only while work is actually running."""
+    if not motion:
+        return generate_project(destination, options)
+    with console.status("Creating your SMAIRT project...", spinner="dots"):
+        return generate_project(destination, options)
 
 
 @app.command()
@@ -1487,18 +1806,18 @@ def new(
                 hpc=hpc,
             )
         assert destination is not None
-        if wizard_mode and _interactive_motion_enabled():
-            console = Console()
-            with console.status("Creating your SMAIRT project...", spinner="dots"):
-                messages = generate_project(destination, options)
-        else:
-            messages = generate_project(destination, options)
+        motion = wizard_mode and _interactive_motion_enabled()
+        console = _themed_console(motion)
+        messages = _generate_with_progress(console, destination, options, motion)
     except (GenerationError, ValidationError, OSError) as error:
         prefix = "Could not create the project" if wizard_mode else "Error"
         typer.echo(f"{prefix}: {error}", err=True)
         raise typer.Exit(code=1) from error
     typer.echo(f"Created SMAIRT project at {destination.resolve()}")
     record_recent(destination.resolve())
+    if motion:
+        _created_summary(console, destination.resolve(), options, messages)
+        return
     for message in messages:
         typer.echo(message)
 
@@ -1511,6 +1830,16 @@ def _optional_answer(answers: dict[str, str | bool], key: str) -> str | None:
 def _slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
     return slug if slug and slug[0].isalpha() else f"project_{slug or 'workspace'}"
+
+
+def _set_value(convention: PromptConvention | CodeConvention | None) -> str:
+    """Return a recorded convention's value, or empty when the project has none."""
+    return convention.value if convention is not None else ""
+
+
+def _folder_name(value: str) -> str:
+    """Return the folder spelling of a name, from which the identifier derives."""
+    return _slugify(value).replace("_", "-")
 
 
 def _phase_label(value: str) -> str:
