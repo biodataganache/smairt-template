@@ -1,12 +1,19 @@
-"""Locate, number, and record iterations.
+"""Locate, number, create, and record iterations.
 
 An iteration is one attempt at moving the work forward: one script, the log it
 produced, and the interpretation of that log. Iterations are numbered across the whole
 project in the order the work happened, so the numbering reads as a timeline rather
 than a filing scheme.
 
+Every numbered script under `experiments/` is an iteration and appears in
+`analysis/ITERATION_LOG.md`. This module is the only place that assigns a number or
+writes such a script, because two independent numbering authorities cannot stay
+consistent: each would hand out a number the other had already used. Utilities that are
+not attempts at the research question belong in `scripts/utilities/` and never take an
+iteration number.
+
 Shared by the `new_track.py`, `new_iteration.py`, and `select_result.py` helpers so all
-three agree on where things live and how they are numbered.
+of them agree on where things live and how they are numbered.
 """
 
 from __future__ import annotations
@@ -68,10 +75,45 @@ def existing_iterations(root: Path) -> list[int]:
     ]
 
 
+def recorded_iterations(root: Path) -> list[int]:
+    """Return every iteration number that appears in the iteration log.
+
+    A script alone is not an iteration; being recorded is what makes it one. Reading the
+    record rather than the filesystem is what lets a caller refuse to treat an
+    unrecorded script as reportable evidence.
+    """
+    log_path = root / "analysis" / "ITERATION_LOG.md"
+    if not log_path.exists():
+        return []
+    return [
+        int(match.group(1))
+        for line in log_path.read_text().splitlines()
+        if (match := re.match(r"\|\s*(\d+)\s*\|", line))
+    ]
+
+
 def find_iteration_script(root: Path, number: int) -> Path | None:
     """Return the script for an iteration, or None when that iteration has none."""
     matches = sorted((root / "experiments").glob(f"*/script_{number:02d}_*.py"))
     return matches[0] if matches else None
+
+
+def iteration_script_path(root: Path, phase: str, script_name: str) -> Path:
+    """Return where an iteration's script belongs, without creating anything."""
+    return root / "experiments" / PHASES[phase] / f"{script_name}.py"
+
+
+def write_new_script(path: Path, body: str) -> None:
+    """Write a script that does not exist yet, refusing to replace one that does.
+
+    The refusal matters more than it first appears. Overwriting destroys an attempt whose
+    log and analysis still reference it, leaving a record that points at code which no
+    longer exists.
+    """
+    if path.exists():
+        raise FileExistsError(f"refusing to overwrite existing script: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body)
 
 
 def append_iteration_row(

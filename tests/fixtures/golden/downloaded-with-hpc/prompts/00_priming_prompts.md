@@ -121,7 +121,7 @@ When an assistant drifts from the project's conventions.
 SMAIRT reminder:
 - The hypothesis is written before the experiment, the analysis after the results
 - Scripts are script_XX_description.py in the phase directory, created by
-  scripts/new_script.py
+  scripts/new_iteration.py, which also records the attempt
 - TeeLogger captures stdout, stderr, warnings, and tracebacks into results/logs/
 - Negative results stay, and state where an approach breaks
 - Reference files by path rather than pasting their contents

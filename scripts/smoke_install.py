@@ -66,9 +66,10 @@ def main() -> None:
     )
     if created.returncode:
         raise SystemExit(created.stderr)
-    script_help = run([str(python), "scripts/new_script.py", "--help"], cwd=destination)
-    if script_help.returncode:
-        raise SystemExit(script_help.stderr or script_help.stdout)
+    for helper in ("new_iteration.py", "new_track.py", "select_result.py", "new_utility.py"):
+        helped = run([str(python), f"scripts/{helper}", "--help"], cwd=destination)
+        if helped.returncode:
+            raise SystemExit(helped.stderr or helped.stdout)
     checked = run([str(smairt), "check", str(destination), "--json"])
     if checked.returncode:
         raise SystemExit(checked.stderr or checked.stdout)

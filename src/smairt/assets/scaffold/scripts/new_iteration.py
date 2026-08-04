@@ -24,9 +24,11 @@ from scripts.shared.iterations import (  # noqa: E402
     PHASES,
     append_iteration_row,
     find_iteration_script,
+    iteration_script_path,
     next_iteration_number,
     project_root,
     slugify,
+    write_new_script,
 )
 
 
@@ -61,9 +63,7 @@ def main() -> None:
 
     number = next_iteration_number(root)
     script_name = f"script_{number:02d}_{description}"
-    target = root / "experiments" / PHASES[arguments.phase] / f"{script_name}.py"
-    if target.exists():
-        parser.error(f"refusing to overwrite existing script: {target}")
+    target = iteration_script_path(root, arguments.phase, script_name)
 
     seed = _seed_script(root, arguments.from_iteration, parser)
     body = (
@@ -78,8 +78,10 @@ def main() -> None:
         if seed is not None
         else _template(script_name, arguments.hypothesis, number, arguments.probes)
     )
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(body)
+    try:
+        write_new_script(target, body)
+    except FileExistsError as error:
+        parser.error(str(error))
 
     kind = "single" if arguments.probes is None else f"panel ({arguments.probes})"
     log_path = append_iteration_row(

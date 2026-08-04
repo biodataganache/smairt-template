@@ -287,11 +287,11 @@ def test_generated_script_captures_stdout_stderr_warnings_and_tracebacks(tmp_pat
     created = subprocess.run(
         [
             sys.executable,
-            "scripts/new_script.py",
-            "synthetic",
+            "scripts/new_iteration.py",
             "capture failure",
+            "synthetic",
             "--hypothesis",
-            "Logging captures a complete execution record.",
+            "HYPOTHESIS_01",
         ],
         cwd=destination,
         check=False,

@@ -45,7 +45,11 @@ golden_synthetic_study/
 ├── prompts/                    # Assistant context and researcher records
 │
 ├── scripts/                    # Helpers
-│   ├── new_script.py
+│   ├── new_track.py
+│   ├── new_iteration.py
+│   ├── select_result.py
+│   ├── new_utility.py
+│   ├── utilities/              # Unnumbered researcher utilities
 │   ├── generate_manifest.py
 │   ├── monitor_template.py
 │   └── shared/                 # Reusable code, including TeeLogger

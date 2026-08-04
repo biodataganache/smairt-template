@@ -8,13 +8,24 @@ Run each from the project root, and use `--help` for the full argument list.
 
 | Helper | What it does |
 |---|---|
-| `new_track.py` | Starts a track: a plan, a hypothesis, and the first iteration |
+| `new_track.py` | Starts a track: a plan and a hypothesis, before any script exists |
 | `new_iteration.py` | Creates the next iteration and records it in the iteration log |
 | `select_result.py` | Records which iteration you would report, and the evidence behind it |
-| `new_script.py` | Creates a numbered experiment script on its own |
+| `new_utility.py` | Creates an unnumbered utility script that is not an iteration |
 | `generate_manifest.py` | Prints or writes an inventory of research artifacts |
 | `monitor_template.py` | Observes a progress file from a long or remote run |
 | `shared/` | Reusable code: logging capture and iteration bookkeeping |
+
+## One numbering authority
+
+Every numbered script under `experiments/` is an iteration, and every iteration appears in
+`analysis/ITERATION_LOG.md`. Only `new_iteration.py` assigns a number, because two helpers
+handing out numbers independently would eventually hand out the same one.
+
+Work that supports the research without testing anything — a downloader, a figure
+regenerator — is a utility. It lives in `scripts/utilities/`, takes no number, and gets no
+row. That keeps the numbering a readable timeline of attempts rather than a mix of attempts
+and errands.
 
 ## The loop these support
 
@@ -23,15 +34,15 @@ Run each from the project root, and use `--help` for the full argument list.
 python scripts/new_track.py "Fitness data predicts response" synthetic
 
 # 2. Write the prediction and both criteria in the hypothesis file, and commit them
-#    before implementing the script
 
-# 3. Implement and run the iteration
+# 3. Create the iteration, then implement and run it
+python scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
 python experiments/01_synthetic/script_01_baseline.py
 
 # 4. Interpret the log in analysis/, then record the outcome in analysis/ITERATION_LOG.md
 
 # 5. Try again, or report the result
-python scripts/new_iteration.py "wider layer" synthetic --hypothesis H01 --from-iteration 1
+python scripts/new_iteration.py "wider layer" synthetic --hypothesis HYPOTHESIS_01 --from-iteration 1
 python scripts/select_result.py 1 --claim "The baseline exceeds chance"
 ```
 
@@ -39,19 +50,17 @@ python scripts/select_result.py 1 --claim "The baseline exceeds chance"
 
 ```bash
 python scripts/new_track.py "Fitness data predicts response" synthetic
-python scripts/new_track.py "A slower schedule generalizes better" real --no-script
 ```
 
-Creates three things: `hypotheses/HYPOTHESIS_XX.md`, `plans/PLAN_<NAME>.md`, and the first
-iteration. The hypothesis number is assigned from the files already present, so
-identifiers stay unique and ordered.
+Creates two things: `hypotheses/HYPOTHESIS_XX.md` and `plans/PLAN_<NAME>.md`. The
+hypothesis number is assigned from the files already present, so identifiers stay unique
+and ordered.
 
-Write the prediction and both criteria into the hypothesis file and commit them **before**
-implementing the script. That commit order is what shows the criterion preceded the
-result, which is the difference between a test and a rationalization.
-
-`--no-script` creates only the plan and hypothesis, for a track that is being designed
-before any code is written.
+It deliberately does **not** create the first script. Write the prediction and both
+criteria into the hypothesis file and commit them before running `new_iteration.py`. That
+commit order is what shows the criterion preceded the result, which is the difference
+between a test and a rationalization — and a helper that created both in the same instant
+would leave nothing to show it.
 
 ## new_iteration.py
 
@@ -131,15 +140,17 @@ already exists.
 With the Paper capability, add the matching entry to `FINAL_MANIFEST.md` by hand. Deciding
 what counts as reportable evidence stays with the researcher.
 
-## new_script.py
+## new_utility.py
 
 ```bash
-python scripts/new_script.py synthetic baseline --hypothesis "The baseline exceeds chance"
+python scripts/new_utility.py "download benchmark" --purpose "Fetch the benchmark archive"
 ```
 
-Creates a numbered script without touching the iteration log. Use `new_iteration.py` for
-work you want recorded as an attempt; use this for a one-off utility or exploratory script
-that is not an iteration.
+Creates `scripts/utilities/<name>.py` with logging already wired. It takes no iteration
+number and adds no row, because a utility is not an attempt at the research question.
+
+If what you are writing tests something, it is an iteration: use `new_iteration.py` so it
+is numbered and recorded.
 
 ## shared/logging.py
 

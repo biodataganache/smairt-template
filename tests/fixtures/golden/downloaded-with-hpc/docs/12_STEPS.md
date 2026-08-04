@@ -177,11 +177,17 @@ dropping back to a case with a known answer is usually the fastest way to find o
 One script, one hypothesis, runnable on its own. Create it from the project root:
 
 ```bash
-python scripts/new_script.py synthetic baseline --hypothesis "The baseline exceeds chance"
+python scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
 ```
 
 The hypothesis argument is required. Naming what a script is meant to settle before
 writing it is the convention.
+
+This is also what records the attempt: the helper appends a row to
+`analysis/ITERATION_LOG.md`, so the sequence of attempts stays readable without opening
+every analysis. Every numbered script is an iteration and is recorded. Code that supports
+the work without testing anything is a utility, created by `scripts/new_utility.py` into
+`scripts/utilities/`, and it takes no number.
 
 Numbering is sequential across the project, so the filenames read as the order the
 work happened:

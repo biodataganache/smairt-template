@@ -65,13 +65,14 @@ assets:
 
   - {id: scripts-directory, path: scripts, kind: directory, purpose: Reusable project helpers., ownership: researcher-work, condition: always}
   - {id: scripts-readme, path: scripts/README.md, kind: file, purpose: Safe helper inventory and usage guidance., ownership: tool-guidance, condition: always, source: scripts/README.md}
-  - {id: new-script, path: scripts/new_script.py, kind: file, purpose: Numbered experiment-script generator., ownership: tool-guidance, condition: always, source: scripts/new_script.py}
-  - {id: new-track, path: scripts/new_track.py, kind: file, purpose: Non-destructive research-track starter creating a plan hypothesis and first iteration., ownership: tool-guidance, condition: always, source: scripts/new_track.py}
+  - {id: new-utility, path: scripts/new_utility.py, kind: file, purpose: Non-destructive unnumbered utility-script generator that takes no iteration number., ownership: tool-guidance, condition: always, source: scripts/new_utility.py}
+  - {id: new-track, path: scripts/new_track.py, kind: file, purpose: Non-destructive research-track starter creating a plan and a hypothesis before any script exists., ownership: tool-guidance, condition: always, source: scripts/new_track.py}
   - {id: new-iteration, path: scripts/new_iteration.py, kind: file, purpose: Non-destructive next-iteration generator recording single-point and panel attempts., ownership: tool-guidance, condition: always, source: scripts/new_iteration.py}
   - {id: select-result, path: scripts/select_result.py, kind: file, purpose: Non-destructive reportable-result record pointing at existing evidence., ownership: tool-guidance, condition: always, source: scripts/select_result.py}
   - {id: monitor-template, path: scripts/monitor_template.py, kind: file, purpose: Non-destructive progress-file observer., ownership: tool-guidance, condition: always, source: scripts/monitor_template.py}
   - {id: generate-manifest, path: scripts/generate_manifest.py, kind: file, purpose: Non-destructive project evidence inventory., ownership: tool-guidance, condition: always, source: scripts/generate_manifest.py}
-  - {id: shared-directory, path: scripts/shared, kind: directory, purpose: Shared experiment utilities., ownership: researcher-work, condition: always}
+  - {id: utilities-directory, path: scripts/utilities, kind: directory, purpose: Researcher utility scripts that are not iterations and take no iteration number., ownership: researcher-work, condition: always}
+  - {id: shared-directory, path: scripts/shared, kind: directory, purpose: Package-maintained shared helpers plus researcher-added modules., ownership: tool-guidance, condition: always}
   - {id: shared-init, path: scripts/shared/__init__.py, kind: file, purpose: Shared helper exports., ownership: tool-guidance, condition: always, source: scripts/shared/__init__.py}
   - {id: shared-logging, path: scripts/shared/logging.py, kind: file, purpose: Complete terminal and execution-log capture., ownership: tool-guidance, condition: always, source: scripts/shared/logging.py}
   - {id: shared-iterations, path: scripts/shared/iterations.py, kind: file, purpose: Shared iteration numbering location and append-only record helpers., ownership: tool-guidance, condition: always, source: scripts/shared/iterations.py}

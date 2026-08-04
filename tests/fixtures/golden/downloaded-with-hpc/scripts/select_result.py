@@ -19,9 +19,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.shared.iterations import (  # noqa: E402
-    existing_iterations,
     find_iteration_script,
     project_root,
+    recorded_iterations,
 )
 
 
@@ -40,12 +40,19 @@ def main() -> None:
 
     root = project_root()
     number = arguments.iteration
+    recorded = sorted(recorded_iterations(root))
+    if number not in recorded:
+        available = ", ".join(f"{value:02d}" for value in recorded)
+        detail = f"recorded iterations: {available}" if available else "no iterations are recorded"
+        parser.error(
+            f"iteration {number:02d} is not recorded in analysis/ITERATION_LOG.md, so it is "
+            f"not a reportable attempt; {detail}"
+        )
     script = find_iteration_script(root, number)
     if script is None:
-        available = ", ".join(f"{value:02d}" for value in sorted(existing_iterations(root)))
         parser.error(
-            f"no script found for iteration {number:02d}"
-            + (f"; iterations present: {available}" if available else "")
+            f"iteration {number:02d} is recorded but its script is missing; the record "
+            "points at code that is not there"
         )
 
     target = root / "analysis" / f"SELECTED_{number:02d}.md"

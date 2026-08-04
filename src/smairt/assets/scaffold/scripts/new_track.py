@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""Start a research track: a plan, a hypothesis, and the first iteration.
+"""Start a research track: a plan and a hypothesis.
 
 A track is a direction of inquiry spanning as many iterations as it takes. This helper
-creates the three records a track needs before work starts, so the hypothesis and its
-criteria exist before any script does.
+creates the two records a track needs before any work starts.
+
+It deliberately does not create the first script. The criteria have to be written and
+committed before an experiment exists, because that commit order is the only evidence
+that the criterion preceded the result. A helper that produced an empty-criteria
+hypothesis and a script in the same instant would destroy the thing it was meant to
+protect. Run `new_iteration.py` once the criteria are recorded.
 
 Nothing is overwritten. If a file is already there, this refuses rather than replacing it.
 """
@@ -12,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import re
-import subprocess
 import sys
 from pathlib import Path
 
@@ -25,11 +29,6 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("question", help="What this track sets out to settle.")
     parser.add_argument("phase", choices=PHASES, help="Data phase the first iteration runs in.")
-    parser.add_argument(
-        "--no-script",
-        action="store_true",
-        help="Create the plan and hypothesis only, leaving the first iteration for later.",
-    )
     arguments = parser.parse_args()
 
     root = project_root()
@@ -55,33 +54,13 @@ def main() -> None:
     print(f"Created {hypothesis_path.relative_to(root)}")
     print(f"Created {plan_path.relative_to(root)}")
 
-    if arguments.no_script:
-        print()
-        print("Next: state the prediction and both criteria, then create the first iteration:")
-        print(
-            f"  python scripts/new_iteration.py baseline {arguments.phase} "
-            f"--hypothesis {hypothesis_id}"
-        )
-        return
-
-    completed = subprocess.run(
-        [
-            sys.executable,
-            str(root / "scripts" / "new_iteration.py"),
-            "baseline",
-            arguments.phase,
-            "--hypothesis",
-            hypothesis_id,
-        ],
-        check=False,
-    )
-    if completed.returncode != 0:
-        raise SystemExit(completed.returncode)
-
     print()
     print("Next: write the prediction and both criteria in the hypothesis file, and commit")
-    print("them before implementing the script. The commit order is what shows the")
-    print("criterion preceded the result.")
+    print("them before creating the first iteration. That commit order is what shows the")
+    print("criterion preceded the result, so this helper deliberately stops here:")
+    print(
+        f"  python scripts/new_iteration.py baseline {arguments.phase} --hypothesis {hypothesis_id}"
+    )
 
 
 def _next_hypothesis_number(root: Path) -> int:

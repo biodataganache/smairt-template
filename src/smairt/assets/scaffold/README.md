@@ -20,21 +20,27 @@ Ready-made prompts for common situations are in `prompts/00_priming_prompts.md`.
 ## One pass through the loop
 
 ```bash
-# 1. Write the hypothesis and its criteria first
-cp hypotheses/HYPOTHESIS_TEMPLATE.md hypotheses/HYPOTHESIS_01.md
+# 1. Start a track: writes the plan and the hypothesis, and no script yet
+python scripts/new_track.py "The baseline exceeds chance" synthetic
 
-# 2. Create the script, naming what it should settle
-python scripts/new_script.py synthetic baseline --hypothesis "The baseline exceeds chance"
+# 2. Write the prediction and both criteria in the hypothesis file, and commit them
+#    before any experiment exists
 
-# 3. Implement it, then run it from the project root
+# 3. Create the iteration, then implement and run it from the project root
+python scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
 python experiments/01_synthetic/script_01_baseline.py
 
 # 4. Interpret the log it produced
 cp analysis/ANALYSIS_TEMPLATE.md analysis/ANALYSIS_01.md
+
+# 5. Record the outcome in analysis/ITERATION_LOG.md, then say what you would report
+python scripts/select_result.py 1 --claim "The baseline exceeds chance"
 ```
 
 The number ties the four records together, so any one of them leads to the rest:
-hypothesis, script, log, analysis.
+hypothesis, script, log, analysis. Every numbered script is an iteration and appears in
+`analysis/ITERATION_LOG.md`; utilities that test nothing live in `scripts/utilities/` and
+take no number.
 
 ## Layout
 

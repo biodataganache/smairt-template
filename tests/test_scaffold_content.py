@@ -89,6 +89,7 @@ def test_no_rendered_guidance_asset_carries_an_unrendered_template_construct() -
 RETIRED = (
     "compile_for_ai",
     "new_experiment.py",
+    "new_script.py",
     "finalize_iteration",
     "paper_draft/",
     "paper_driven mode",
@@ -181,6 +182,56 @@ def test_a_helper_writing_a_record_opens_it_for_append_rather_than_write() -> No
     iterations = rendered_assets()["scripts/shared/iterations.py"]
     assert 'open("a")' in iterations
     assert 'open("w")' not in iterations
+
+
+def test_exactly_one_shipped_helper_assigns_an_iteration_number() -> None:
+    """Two numbering authorities cannot stay consistent, so there must only be one.
+
+    Each would eventually hand out a number the other had already used, and the loser is
+    a script silently overwritten by a later attempt whose log and analysis still point
+    at it. The scan lives in the shared module; a helper that reimplements it is a second
+    authority regardless of how carefully it is written.
+    """
+    scan = 'glob("*/script_*.py")'
+    offenders = sorted(
+        relative
+        for relative, content in rendered_assets().items()
+        if relative.endswith(".py")
+        and relative != "scripts/shared/iterations.py"
+        and scan in content
+    )
+    assert offenders == []
+
+
+def test_no_shipped_helper_writes_a_file_without_first_refusing_an_existing_one() -> None:
+    """Overwriting destroys work that other records still reference.
+
+    The destructive-call guard above does not cover this: an unguarded `write_text` names
+    no deletion function while still discarding researcher work. A helper must either go
+    through the shared script writer, which refuses an existing path, or refuse one
+    itself.
+    """
+    offenders = sorted(
+        relative
+        for relative, content in rendered_assets().items()
+        if relative.endswith(".py")
+        and "write_text" in content
+        and "write_new_script" not in content
+        and "exists()" not in content
+    )
+    assert offenders == []
+
+
+def test_selecting_a_result_is_decided_by_the_record_rather_than_the_filesystem() -> None:
+    """A script that was never recorded is not a reportable attempt.
+
+    Reading the filesystem would let an unrecorded script be selected as evidence, which
+    is exactly the gap that made a second numbering authority dangerous. Selection reads
+    the iteration log instead.
+    """
+    select = rendered_assets()["scripts/select_result.py"]
+    assert "recorded_iterations" in select
+    assert "existing_iterations" not in select
 
 
 def test_the_legacy_content_baseline_is_available_to_re_enrich_from() -> None:

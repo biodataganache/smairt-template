@@ -41,7 +41,8 @@ def test_built_wheel_and_sdist_install_into_clean_environments_and_create_projec
         }
     assert "smairt/assets/scaffold/prompts/AI_CONTEXT.md" in wheel_files
     assert "smairt/assets/scaffold-blueprint.yaml" in wheel_files
-    assert "smairt/assets/scaffold/scripts/new_script.py" in wheel_files
+    assert "smairt/assets/scaffold/scripts/new_iteration.py" in wheel_files
+    assert "smairt/assets/scaffold/scripts/new_utility.py" in wheel_files
     assert "smairt/assets/scaffold/scripts/generate_manifest.py" in wheel_files
     assert "smairt/assets/scaffold/scripts/monitor_template.py" in wheel_files
     assert "smairt/assets/scaffold/scripts/shared/logging.py" in wheel_files
