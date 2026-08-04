@@ -61,6 +61,68 @@ given task, rather than what to say.
 This is the one structural change in the re-enrichment. Existing projects keep their
 copy of the file; an undeclared file does not fail `smairt check`, so nothing breaks.
 
+## Readopted iteration workflow
+
+The original template had three workflow helpers that the first installed version
+dropped: `new_experiment.py`, `new_iteration.py`, and `finalize_iteration.py`. Their jobs
+were sound; their implementations were welded to a nested
+`analysis/<section>/iterations/iter_XX/` tree with a parallel `final/` snapshot, and
+`finalize_iteration.py` deleted prior results with `shutil.rmtree`.
+
+Dropping them left a real gap. `new_script.py` covered only script numbering, and nothing
+recorded what an iteration was or how attempts related to each other.
+
+The jobs are readopted against the current structure rather than the original one.
+
+| Helper | Job it restores | What changed |
+|---|---|---|
+| `scripts/new_track.py` | Start a direction of inquiry with its plan and hypothesis in place | Creates `plans/PLAN_*.md`, `hypotheses/HYPOTHESIS_NN.md`, and the first iteration in the existing flat layout; no per-analysis tree |
+| `scripts/new_iteration.py` | Create the next attempt and make it comparable to the last | Numbers project-wide, appends to `analysis/ITERATION_LOG.md`, and re-heads a seeded copy so it writes its own log |
+| `scripts/select_result.py` | Record which attempt is reportable and why | Writes a pointer to evidence in place; copies and deletes nothing |
+| `scripts/shared/iterations.py` | — | New: numbering, lookup, and the append-only writer the three share |
+
+### What an iteration is
+
+Per the project PI: one attempt at bringing the work closer to the goal, being one
+script, its log, and its interpretation. Numbered across the whole project so the
+numbering is a timeline rather than a filing scheme.
+
+An iteration is either a **single point**, testing one change, or a **panel**, probing
+several candidate directions at once. A panel returns a result per probe and can come
+back mixed. Records therefore carry a `Kind` column and a prose `Outcome`, because
+`SUPPORTED` cannot describe a panel where three of eight candidates helped and one
+regressed, and collapsing it would discard the finding.
+
+### The append rule
+
+Every earlier helper only created files that did not exist. Two of these need to add a
+row to a running record, so the rule is now explicit:
+
+> A helper may create a file that does not exist, and may append a new entry to a record
+> whose format it owns. It may never modify or remove an existing line.
+
+Appending rather than printing a row to paste is deliberate: the paste is the step that
+gets skipped, and a log with gaps cannot be trusted. Two tests hold the line:
+`test_no_shipped_helper_can_delete_or_relocate_researcher_work` bans destructive calls in
+any shipped helper, and
+`test_a_helper_writing_a_record_opens_it_for_append_rather_than_write` requires append
+mode on the iteration log.
+
+### Defect this surfaced
+
+Seven assets still described the retired tree, including a `lib/` package that never
+existed and a styling module `prompts/figure_generation_prompt.md` told readers to import.
+The earlier retired-term check covered retired *helpers* but not retired *paths*, so they
+survived the copy pass.
+`test_no_generated_guidance_directs_a_reader_to_a_path_this_scaffold_never_creates` now
+covers the paths. `new_iteration.py` and `ITERATION_LOG` are deliberately absent from the
+retired terms, since both names return with non-destructive behavior.
+
+Two further corrections came from running the helpers rather than reading them: a seeded
+script inherited the earlier iteration's `SCRIPT_NAME` and would have written its
+evidence into that iteration's log, and the documented log filename used a hyphen where
+`setup_logging` uses an underscore.
+
 ## Template variable mapping
 
 Generation provides exactly two names, `project` and `researcher`, and renders with

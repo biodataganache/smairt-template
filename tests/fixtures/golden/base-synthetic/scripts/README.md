@@ -1,29 +1,78 @@
 # Scripts
 
-Four helpers, all non-destructive. Run each from the project root, and use `--help` on
-any of them for the full argument list.
+Helpers for the research loop. All of them are non-destructive: they create files that do
+not exist and append new lines to records they own. None of them modifies or removes a
+line that is already there.
+
+Run each from the project root, and use `--help` for the full argument list.
 
 | Helper | What it does |
 |---|---|
-| `new_script.py` | Creates the next numbered experiment script in a phase |
-| `shared/logging.py` | Captures a complete execution record to `results/logs/` |
+| `new_track.py` | Starts a track: a plan, a hypothesis, and the first iteration |
+| `new_iteration.py` | Creates the next iteration and records it in the iteration log |
+| `select_result.py` | Records which iteration you would report, and the evidence behind it |
+| `new_script.py` | Creates a numbered experiment script on its own |
 | `generate_manifest.py` | Prints or writes an inventory of research artifacts |
 | `monitor_template.py` | Observes a progress file from a long or remote run |
+| `shared/` | Reusable code: logging capture and iteration bookkeeping |
 
-Nothing here deletes, overwrites, or rewrites researcher work.
-
-## new_script.py
+## The loop these support
 
 ```bash
-python scripts/new_script.py synthetic baseline --hypothesis "The baseline exceeds chance"
+# 1. Start a direction of inquiry
+python scripts/new_track.py "Fitness data predicts response" synthetic
+
+# 2. Write the prediction and both criteria in the hypothesis file, and commit them
+#    before implementing the script
+
+# 3. Implement and run the iteration
+python experiments/01_synthetic/script_01_baseline.py
+
+# 4. Interpret the log in analysis/, then record the outcome in analysis/ITERATION_LOG.md
+
+# 5. Try again, or report the result
+python scripts/new_iteration.py "wider layer" synthetic --hypothesis H01 --from-iteration 1
+python scripts/select_result.py 1 --claim "The baseline exceeds chance"
 ```
 
-The phase is `synthetic`, `downloaded`, or `real`. `--hypothesis` is required, because
-naming what a script should settle before writing it is the convention this project
-runs on. `--iteration` records which iteration the script belongs to.
+## new_track.py
 
-Numbering is sequential across the whole project, not per phase, so filenames read as
-the order the work happened:
+```bash
+python scripts/new_track.py "Fitness data predicts response" synthetic
+python scripts/new_track.py "A slower schedule generalizes better" real --no-script
+```
+
+Creates three things: `hypotheses/HYPOTHESIS_XX.md`, `plans/PLAN_<NAME>.md`, and the first
+iteration. The hypothesis number is assigned from the files already present, so
+identifiers stay unique and ordered.
+
+Write the prediction and both criteria into the hypothesis file and commit them **before**
+implementing the script. That commit order is what shows the criterion preceded the
+result, which is the difference between a test and a rationalization.
+
+`--no-script` creates only the plan and hypothesis, for a track that is being designed
+before any code is written.
+
+## new_iteration.py
+
+An iteration is one attempt: one script, its log, its interpretation.
+
+```bash
+# a single point: does one change help
+python scripts/new_iteration.py "wider layer" synthetic --hypothesis H01
+
+# a panel: do any of these candidates help
+python scripts/new_iteration.py "activation panel" synthetic --hypothesis H01 --probes 8
+
+# continue from an earlier attempt instead of the blank template
+python scripts/new_iteration.py "wider layer" synthetic --hypothesis H01 --from-iteration 3
+```
+
+`--hypothesis` is required, because naming what an attempt should settle before writing
+it is the convention this project runs on.
+
+Numbering is sequential across the whole project rather than per phase, so filenames read
+as the order the work happened:
 
 ```
 experiments/01_synthetic/script_01_baseline.py
@@ -31,14 +80,71 @@ experiments/02_downloaded/script_04_benchmark_sweep.py
 experiments/03_real_data/script_07_validation.py
 ```
 
-The generated script puts the project root on the path, imports `TeeLogger` and
-`setup_logging`, records the hypothesis in its docstring, and leaves a `TODO` where the
-experiment goes. Implement it, then run it from the project root.
+Every run appends one row to `analysis/ITERATION_LOG.md`:
+
+| Iteration | Date | Script | Hypotheses | Kind | Changed from | Outcome |
+|---|---|---|---|---|---|---|
+| 03 | 2024-01-15 | `script_03_baseline` | H01 | single | — | [Record after interpreting] |
+| 04 | 2024-01-18 | `script_04_activation_panel` | H01 | panel (8) | 03 | [Record after interpreting] |
+
+Fill in `Outcome` after interpreting the run. It is prose, not a keyword: a panel that
+improves three of eight candidates and regresses one cannot be described by `SUPPORTED`.
+
+### Panels
+
+`--probes N` seeds the script with a loop over N labelled probes that reports a result for
+each one. A panel result stays broken out from the moment it is produced, which is the
+thing that gets lost when a panel is summarized too early.
+
+Report every probe, including the ones that changed nothing and the ones that made things
+worse. A panel where one of eight candidates helped has told you something about the other
+seven, and that pattern usually transfers better than the winner.
+
+### Continuing from an earlier attempt
+
+`--from-iteration N` copies iteration N's script forward and re-heads it for the new
+iteration, so the new attempt starts from working code. State what changed in the
+`Changed from iteration NN` line: the difference between two iterations is the thing under
+test, and a reader should not have to reconstruct it from a diff.
+
+The copy gets its own `SCRIPT_NAME`, so it writes its own log rather than the earlier
+iteration's.
+
+## select_result.py
+
+```bash
+python scripts/select_result.py 4 --claim "Activation choice drives the gain"
+python scripts/select_result.py 4 --claim "Three activations help" --probes "probe_01,probe_03,probe_07"
+```
+
+Creates `analysis/SELECTED_NN.md` with the claim, the iteration, and every file needed to
+check it. For a panel iteration, `--probes` names which arms support the claim, so a panel
+is never reported as though all of it succeeded.
+
+Nothing is copied and nothing is deleted. The evidence stays in `results/logs/` where it
+was produced, and this record points at it; a duplicate can drift from the original, and a
+pointer cannot.
+
+It refuses when the iteration has no script, when it has not been run, and when a record
+already exists.
+
+With the Paper capability, add the matching entry to `FINAL_MANIFEST.md` by hand. Deciding
+what counts as reportable evidence stays with the researcher.
+
+## new_script.py
+
+```bash
+python scripts/new_script.py synthetic baseline --hypothesis "The baseline exceeds chance"
+```
+
+Creates a numbered script without touching the iteration log. Use `new_iteration.py` for
+work you want recorded as an attempt; use this for a one-off utility or exploratory script
+that is not an iteration.
 
 ## shared/logging.py
 
-`TeeLogger` writes to the console and to a file at once, capturing stdout, stderr,
-warnings, and uncaught tracebacks. A generated script already uses it:
+`TeeLogger` writes to the console and a file at once, capturing stdout, stderr, warnings,
+and uncaught tracebacks. Generated scripts already use it:
 
 ```python
 log_path = setup_logging(SCRIPT_NAME, PROJECT_ROOT / "results" / "logs")
@@ -46,9 +152,19 @@ with TeeLogger(log_path):
     ...
 ```
 
-Everything the run produced ends up in one file named after the script. A traceback
-that appeared only in a terminal is not part of the evidence; this is what stops that
-happening.
+Everything the run produced ends up in one file named `<script_name>_<timestamp>.log`. A
+traceback that appeared only in a terminal is not part of the evidence; this is what stops
+that happening.
+
+## shared/iterations.py
+
+Iteration numbering, path lookup, and the append-only log writer, shared by the three
+workflow helpers so they agree on where things live. Import from it if you write a helper
+of your own:
+
+```python
+from scripts.shared.iterations import next_iteration_number, project_root
+```
 
 ## generate_manifest.py
 
@@ -57,9 +173,8 @@ python scripts/generate_manifest.py
 python scripts/generate_manifest.py --output analysis/MANIFEST_2024-01-15.md
 ```
 
-Prints the inventory it finds. With `--output` it writes to a new file. It never
-modifies an existing manifest, so deciding what counts as final evidence stays with the
-researcher.
+Prints the inventory it finds. With `--output` it writes to a new file, and refuses to
+overwrite an existing one.
 
 ## monitor_template.py
 
@@ -75,3 +190,7 @@ log. It observes only: it does not start, stop, or manage a process or a schedul
 
 Project-specific utilities belong in `scripts/shared/`, imported as
 `from scripts.shared.<module> import ...`. See `scripts/shared/README.md`.
+
+A helper may create a file that does not exist and append an entry to a record whose
+format it owns. It must not modify or remove an existing line. Keeping that rule is what
+makes the audit trail worth reading.

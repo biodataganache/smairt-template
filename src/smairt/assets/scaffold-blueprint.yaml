@@ -17,6 +17,7 @@ assets:
   - {id: analysis-directory, path: analysis, kind: directory, purpose: Interpretation decisions and study synthesis., ownership: researcher-work, condition: always}
   - {id: analysis-readme, path: analysis/README.md, kind: file, purpose: Analysis workflow guidance., ownership: tool-guidance, condition: always, source: analysis/README.md}
   - {id: analysis-plan, path: analysis/ANALYSIS_PLAN.md, kind: file, purpose: Living analysis plan starter., ownership: editable-starter, condition: always, source: analysis/ANALYSIS_PLAN.md}
+  - {id: iteration-log, path: analysis/ITERATION_LOG.md, kind: file, purpose: Living append-only index of every iteration and its outcome., ownership: researcher-work, condition: always, source: analysis/ITERATION_LOG.md}
   - {id: analysis-template, path: analysis/ANALYSIS_TEMPLATE.md, kind: file, purpose: Reusable result interpretation starter., ownership: editable-starter, condition: always, source: analysis/ANALYSIS_TEMPLATE.md}
   - {id: breadcrumb-trail, path: analysis/BREADCRUMB_TRAIL.md, kind: file, purpose: Living index from decisions to evidence., ownership: researcher-work, condition: always, source: analysis/BREADCRUMB_TRAIL.md}
   - {id: repository-plan, path: analysis/REPOSITORY_PLAN.md, kind: file, purpose: Reusable repository organization plan., ownership: editable-starter, condition: always, source: analysis/REPOSITORY_PLAN.md}
@@ -65,11 +66,15 @@ assets:
   - {id: scripts-directory, path: scripts, kind: directory, purpose: Reusable project helpers., ownership: researcher-work, condition: always}
   - {id: scripts-readme, path: scripts/README.md, kind: file, purpose: Safe helper inventory and usage guidance., ownership: tool-guidance, condition: always, source: scripts/README.md}
   - {id: new-script, path: scripts/new_script.py, kind: file, purpose: Numbered experiment-script generator., ownership: tool-guidance, condition: always, source: scripts/new_script.py}
+  - {id: new-track, path: scripts/new_track.py, kind: file, purpose: Non-destructive research-track starter creating a plan hypothesis and first iteration., ownership: tool-guidance, condition: always, source: scripts/new_track.py}
+  - {id: new-iteration, path: scripts/new_iteration.py, kind: file, purpose: Non-destructive next-iteration generator recording single-point and panel attempts., ownership: tool-guidance, condition: always, source: scripts/new_iteration.py}
+  - {id: select-result, path: scripts/select_result.py, kind: file, purpose: Non-destructive reportable-result record pointing at existing evidence., ownership: tool-guidance, condition: always, source: scripts/select_result.py}
   - {id: monitor-template, path: scripts/monitor_template.py, kind: file, purpose: Non-destructive progress-file observer., ownership: tool-guidance, condition: always, source: scripts/monitor_template.py}
   - {id: generate-manifest, path: scripts/generate_manifest.py, kind: file, purpose: Non-destructive project evidence inventory., ownership: tool-guidance, condition: always, source: scripts/generate_manifest.py}
   - {id: shared-directory, path: scripts/shared, kind: directory, purpose: Shared experiment utilities., ownership: researcher-work, condition: always}
   - {id: shared-init, path: scripts/shared/__init__.py, kind: file, purpose: Shared helper exports., ownership: tool-guidance, condition: always, source: scripts/shared/__init__.py}
   - {id: shared-logging, path: scripts/shared/logging.py, kind: file, purpose: Complete terminal and execution-log capture., ownership: tool-guidance, condition: always, source: scripts/shared/logging.py}
+  - {id: shared-iterations, path: scripts/shared/iterations.py, kind: file, purpose: Shared iteration numbering location and append-only record helpers., ownership: tool-guidance, condition: always, source: scripts/shared/iterations.py}
   - {id: shared-readme, path: scripts/shared/README.md, kind: file, purpose: Shared-code extraction guidance., ownership: tool-guidance, condition: always, source: scripts/shared/README.md}
 
   - {id: final-manifest, path: FINAL_MANIFEST.md, kind: file, purpose: Living Paper claim and figure evidence map., ownership: researcher-work, condition: paper, source: paper/FINAL_MANIFEST.md}

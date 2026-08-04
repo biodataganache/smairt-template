@@ -43,7 +43,7 @@ that log. Iterations are numbered across the whole project in the order the work
 happened, so the numbers read as a timeline.
 
 ```
-hypotheses/H01_short_name.md              the prediction and the criteria
+hypotheses/HYPOTHESIS_01.md              the prediction and the criteria
 experiments/01_synthetic/script_04_*.py   the attempt
 results/logs/script_04_*.log              what it produced, unedited
 analysis/ANALYSIS_04.md                   what it means
@@ -81,7 +81,7 @@ of what was done; move only genuinely reusable machinery.
 
 **Question**: [What does this track settle?]
 
-**Hypotheses**: `hypotheses/H01_*.md`
+**Hypotheses**: `hypotheses/HYPOTHESIS_01.md`
 
 **Data inputs**:
 - [Files and their provenance record]
@@ -101,7 +101,7 @@ of what was done; move only genuinely reusable machinery.
 
 **Question**: [What does this track settle?]
 
-**Hypotheses**: `hypotheses/H03_*.md`
+**Hypotheses**: `hypotheses/HYPOTHESIS_03.md`
 
 **Data inputs**:
 - [Files and their provenance record]

@@ -15,15 +15,30 @@ at once.
 | 6 | `background/` | The research question and its context |
 | 7 | Most recent `analysis/ANALYSIS_*.md` | Where the work currently stands |
 
+## Starting a new track
+
+| File | Why |
+|---|---|
+| `analysis/ANALYSIS_PLAN.md` | The tracks already in flight, and what each one settles |
+| `plans/README.md` | What a plan contains |
+| `background/` | Whether the question has already been approached |
+| `scripts/README.md` | `new_track.py` creates the plan, hypothesis, and first iteration |
+
 ## Writing a new experiment
+
+An experiment is an iteration: one script, its log, its interpretation.
 
 | File | Why |
 |---|---|
 | The relevant `hypotheses/HYPOTHESIS_XX.md` | What is being tested, and what would refute it |
+| `analysis/ITERATION_LOG.md` | What has already been attempted, and what came of it |
 | `prompts/CODE_CONVENTIONS.md` | Script structure and naming |
 | `prompts/KNOWN_PATTERNS.md` | Patterns to reuse instead of reinventing |
 | `scripts/shared/__init__.py` | Utilities that already exist |
-| The most recent related script | What to build on |
+| The script named in `Changed from` | What this attempt varies |
+
+Use `scripts/new_iteration.py`, which numbers the script and records the attempt. Add
+`--probes N` when the iteration tests several candidate directions at once rather than one.
 
 ## Interpreting results
 
@@ -33,6 +48,20 @@ at once.
 | The script that produced it | Methodology context |
 | `hypotheses/HYPOTHESIS_XX.md` | The criteria recorded before the run |
 | `analysis/ANALYSIS_TEMPLATE.md` | The structure to write into |
+| `analysis/ITERATION_LOG.md` | Where to record the outcome, and what earlier attempts showed |
+| `prompts/iteration_review_prompt.md` | How to review an attempt, including a panel |
+
+For a panel iteration, report every probe. Three of eight above criterion with one
+regression is the finding; a single verdict would discard it.
+
+## Recording a result you would report
+
+| File | Why |
+|---|---|
+| `analysis/ITERATION_LOG.md` | Which attempt is the one worth reporting |
+| The log behind that attempt | The evidence the claim rests on |
+| `scripts/README.md` | `select_result.py` writes the record and points at the evidence |
+| `FINAL_MANIFEST.md` | With the Paper capability, the claim to evidence map |
 
 ## Planning multi-experiment work
 
@@ -40,6 +69,7 @@ at once.
 |---|---|
 | `plans/README.md` | What a plan contains |
 | `plans/` | Plans already in flight |
+| `analysis/ANALYSIS_PLAN.md` | Tracks, planned iterations, metrics, and figure plan |
 | Recent `analysis/` files | What has been established |
 | `prompts/AI_CONTEXT.md` | Workflow constraints |
 

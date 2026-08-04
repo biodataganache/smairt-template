@@ -48,7 +48,7 @@ by hand as claims settle, since deciding what counts as final evidence is yours.
 - **Claim**: [The specific statement this element supports]
 - **Iteration**: [NN]
 - **Script**: `experiments/[phase]/script_NN_description.py`
-- **Evidence**: `results/logs/script_NN_description-<timestamp>.log`
+- **Evidence**: `results/logs/script_NN_description_<timestamp>.log`
 - **Interpretation**: `analysis/ANALYSIS_NN.md`
 - **Figure or table file**: [path, if applicable]
 - **Recorded**: YYYY-MM-DD

@@ -29,16 +29,51 @@ Continuing this SMAIRT project. Read:
 Then state where the work stands and what the recorded next step is.
 ```
 
-## Before writing an experiment
+## Starting a new track
 
 ```text
-Read prompts/CODE_CONVENTIONS.md and prompts/KNOWN_PATTERNS.md.
+Read analysis/ANALYSIS_PLAN.md, analysis/ITERATION_LOG.md, and background/.
+
+I want to start a track on: [the question]
+
+Tell me whether this overlaps a track already in flight or a direction already ruled
+out. If it is new, propose the hypothesis statement with success and rejection criteria,
+and say what result would be uninformative either way. I will choose the criteria.
+```
+
+Then create the records:
+
+```bash
+python scripts/new_track.py "[the question]" [synthetic|downloaded|real]
+```
+
+## Before writing an experiment
+
+An experiment is an iteration: one script, its log, its interpretation.
+
+```text
+Read prompts/CODE_CONVENTIONS.md, prompts/KNOWN_PATTERNS.md, and
+analysis/ITERATION_LOG.md.
 
 Hypothesis: hypotheses/HYPOTHESIS_[XX].md
 Phase: [synthetic | downloaded | real]
 
-Create the script with scripts/new_script.py, then implement it. Reuse what is already
-in scripts/shared/ rather than writing new equivalents.
+Check the iteration log for what has already been attempted on this hypothesis, then
+implement the script. Reuse what is in scripts/shared/ rather than writing new
+equivalents.
+```
+
+Create the iteration first, so it is numbered and recorded:
+
+```bash
+# one change
+python scripts/new_iteration.py "[description]" [phase] --hypothesis HYPOTHESIS_[XX]
+
+# several candidate directions at once
+python scripts/new_iteration.py "[description]" [phase] --hypothesis HYPOTHESIS_[XX] --probes [N]
+
+# continuing from an earlier attempt
+python scripts/new_iteration.py "[description]" [phase] --hypothesis HYPOTHESIS_[XX] --from-iteration [NN]
 ```
 
 ## Interpreting results

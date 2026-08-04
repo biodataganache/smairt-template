@@ -77,3 +77,11 @@ python_version = "3.11"
 strict = true
 warn_unreachable = true
 show_error_codes = true
+
+# Scaffold helpers import `scripts.shared.*`, which resolves only inside a generated
+# project, where the helper puts the project root on the path. The import is exercised
+# for real by the end-to-end CLI tests; here only its absence is unresolvable, so the
+# helpers stay type-checked without the import being reported.
+[[tool.mypy.overrides]]
+module = "scripts.*"
+ignore_missing_imports = true

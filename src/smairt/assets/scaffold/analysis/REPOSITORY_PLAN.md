@@ -72,9 +72,9 @@ analysis.
 | Artifact | Pattern | Example |
 |---|---|---|
 | Script | `script_NN_description.py` | `experiments/01_synthetic/script_04_activation_panel.py` |
-| Log | `script_NN_description-<timestamp>.log` | `results/logs/script_04_activation_panel-20240115-101500.log` |
+| Log | `script_NN_description_<timestamp>.log` | `results/logs/script_04_activation_panel_20240115_101500.log` |
 | Interpretation | `ANALYSIS_NN.md` | `analysis/ANALYSIS_04.md` |
-| Hypothesis | `HNN_short_name.md` | `hypotheses/H01_baseline_exceeds_chance.md` |
+| Hypothesis | `HYPOTHESIS_XX.md` | `hypotheses/HYPOTHESIS_01.md` |
 
 The log name is produced by `setup_logging()`, so it matches the script without anyone
 maintaining it.
@@ -148,13 +148,13 @@ The `FINAL_MANIFEST.md` file maps each paper element to its source:
 ## Figure 1
 - **Source**: `results/figures/`
 - **Script**: `experiments/01_synthetic/script_03_sweep.py`
-- **Evidence**: `results/logs/script_03_sweep-20240115-101500.log`
+- **Evidence**: `results/logs/script_03_sweep_20240115_101500.log`
 - **Generated**: YYYY-MM-DD
 
 ## Table 1
 - **Source**: `results/`
 - **Script**: `experiments/03_real_data/script_02_validation.py`
-- **Evidence**: `results/logs/script_02_validation-20240118-143000.log`
+- **Evidence**: `results/logs/script_02_validation_20240118_143000.log`
 ```
 
 Naming the log rather than an iteration number is what makes a claim checkable: the

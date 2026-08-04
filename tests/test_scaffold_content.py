@@ -124,6 +124,8 @@ RETIRED_STRUCTURE = (
     "lib/io",
     "lib/processing",
     "lib/visualization",
+    "HNN_",
+    "H0X_",
 )
 """Paths from the original nested analysis tree, which this scaffold does not create.
 
@@ -147,6 +149,38 @@ def test_no_generated_guidance_directs_a_reader_to_a_path_this_scaffold_never_cr
         if term in content
     )
     assert offenders == []
+
+
+DESTRUCTIVE_CALLS = ("shutil.rmtree", "shutil.move", "os.remove", "os.unlink", "Path.unlink")
+"""Operations that would destroy researcher work, which no shipped helper may perform."""
+
+
+def test_no_shipped_helper_can_delete_or_relocate_researcher_work() -> None:
+    """The helpers create and append; destroying evidence is never one of their jobs.
+
+    The original iteration workflow deleted prior results when finalizing an iteration.
+    The replacement records a pointer to evidence instead, so this asserts the property
+    that made the original unsafe cannot return through a later edit.
+    """
+    offenders = sorted(
+        f"{relative}: {call}"
+        for relative, content in rendered_assets().items()
+        if relative.endswith(".py")
+        for call in DESTRUCTIVE_CALLS
+        if call in content
+    )
+    assert offenders == []
+
+
+def test_a_helper_writing_a_record_opens_it_for_append_rather_than_write() -> None:
+    """A record whose earlier lines can be rewritten is not an audit trail.
+
+    Iterations are appended so the sequence of attempts stays intact, including the
+    attempts that failed. Opening the log in write mode would silently discard them.
+    """
+    iterations = rendered_assets()["scripts/shared/iterations.py"]
+    assert 'open("a")' in iterations
+    assert 'open("w")' not in iterations
 
 
 def test_the_legacy_content_baseline_is_available_to_re_enrich_from() -> None:
