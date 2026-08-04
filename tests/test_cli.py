@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 import pty
+import re
 import select
+import struct
 import subprocess
 import sys
+import termios
 import time
 from datetime import datetime
 from pathlib import Path
@@ -1397,10 +1401,12 @@ def test_saved_motion_preference_controls_a_project_dashboard_tty(tmp_path: Path
     assert disabled_dashboard.returncode == 0, disabled_dashboard.stderr
     assert "\x1b[1;36mSMAIRT Standard Mode: Test Project" in enabled_dashboard.stdout
     assert "\x1b[1;36mSMAIRT Standard Mode: Test Project" not in disabled_dashboard.stdout
-    assert "Up/Down or j/k move" in enabled_dashboard.stdout
-    assert "(*) Launch assistant or open folder" in enabled_dashboard.stdout
-    assert "Up/Down or j/k move" not in disabled_dashboard.stdout
-    assert "1. Launch assistant or open folder" in disabled_dashboard.stdout
+    enabled_screen = visible_text(enabled_dashboard.stdout)
+    disabled_screen = visible_text(disabled_dashboard.stdout)
+    assert "Up/Down or j/k move" in enabled_screen
+    assert "(*) Launch assistant or open folder" in enabled_screen
+    assert "Up/Down or j/k move" not in disabled_screen
+    assert "1. Launch assistant or open folder" in disabled_screen
 
 
 def test_home_offers_a_scrollable_menu_in_a_capable_terminal(tmp_path: Path) -> None:
@@ -1415,10 +1421,11 @@ def test_home_offers_a_scrollable_menu_in_a_capable_terminal(tmp_path: Path) -> 
     )
 
     assert home.returncode == 0, home.stdout
-    assert "SMAIRT Home" in home.stdout
-    assert "(*) Create New Project" in home.stdout
-    assert "( ) Recent Projects" in home.stdout
-    assert "Up/Down or j/k move" in home.stdout
+    screen = visible_text(home.stdout)
+    assert "SMAIRT Home" in screen
+    assert "(*) Create New Project" in screen
+    assert "( ) Recent Projects" in screen
+    assert "Up/Down or j/k move" in screen
 
 
 def test_visual_settings_menu_is_reachable_and_returns_to_the_dashboard(tmp_path: Path) -> None:
@@ -1428,9 +1435,9 @@ def test_visual_settings_menu_is_reachable_and_returns_to_the_dashboard(tmp_path
     dashboard = run_interactive_dashboard(destination, "\x1b[B\r\x1b\x03")
 
     assert dashboard.returncode == 0, dashboard.stdout
-    assert "( ) Project Settings" in dashboard.stdout
-    assert "Project Settings" in dashboard.stdout
-    assert "Local experience and motion" in dashboard.stdout
+    screen = visible_text(dashboard.stdout)
+    assert "( ) Project Settings" in screen
+    assert "Local experience and motion" in screen
     assert yaml.safe_load((destination / "smairt.yaml").read_text())["project"]["name"] == (
         "Test Project"
     )
@@ -1581,6 +1588,17 @@ def run_dashboard(root: Path, input_text: str) -> subprocess.CompletedProcess[st
     )
 
 
+def visible_text(output: str) -> str:
+    """Return the words a researcher reads, without terminal control sequences.
+
+    A framed screen positions the cursor while drawing, so a label is not
+    necessarily contiguous bytes in the stream. Assertions belong on the visible
+    text rather than on the escape sequences that happen to produce it.
+    """
+    without_escapes = re.sub(r"\x1b\[[0-9;?]*[a-zA-Z]|\x1b[()][B0]|\x1b[=>]", "", output)
+    return re.sub(r"[ \t]+", " ", without_escapes)
+
+
 def run_interactive_dashboard(
     root: Path,
     input_text: str,
@@ -1591,6 +1609,7 @@ def run_interactive_dashboard(
     environment.pop("CI", None)
     environment.pop("PYTEST_CURRENT_TEST", None)
     master, slave = pty.openpty()
+    fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 50, 200, 0, 0))
     process = subprocess.Popen(
         command,
         stdin=slave,
