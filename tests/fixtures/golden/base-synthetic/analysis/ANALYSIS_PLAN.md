@@ -26,8 +26,8 @@ has one or more hypotheses and produces its own evidence.
 
 | Track | Question it answers | Hypotheses | Phase | Status |
 |---|---|---|---|---|
-| A | [What this direction settles] | H01, H02 | synthetic | Not started |
-| B | [What this direction settles] | H03 | downloaded | Not started |
+| A | [What this direction settles] | HYPOTHESIS_01, HYPOTHESIS_02 | synthetic | Not started |
+| B | [What this direction settles] | HYPOTHESIS_03 | downloaded | Not started |
 
 Status: `Not started`, `Active`, `Paused`, `Complete`, `Abandoned`. An abandoned track
 stays listed with its reason; a direction ruled out is a result.
@@ -166,8 +166,8 @@ The full statement, criteria, and design live in `hypotheses/`. This is the inde
 
 | ID | Statement | Track | Tested by | Status |
 |---|---|---|---|---|
-| H01 | [Short form] | A | Iteration [NN] | PENDING |
-| H02 | [Short form] | A | Not yet | PENDING |
+| HYPOTHESIS_01 | [Short form] | A | Iteration [NN] | PENDING |
+| HYPOTHESIS_02 | [Short form] | A | Not yet | PENDING |
 
 Status: `PENDING`, `SUPPORTED`, `REFUTED`, `PARTIALLY SUPPORTED`, `INCONCLUSIVE`.
 

@@ -49,10 +49,14 @@ Use `scripts/new_iteration.py`, which numbers the script and records the attempt
 | `hypotheses/HYPOTHESIS_XX.md` | The criteria recorded before the run |
 | `analysis/ANALYSIS_TEMPLATE.md` | The structure to write into |
 | `analysis/ITERATION_LOG.md` | Where to record the outcome, and what earlier attempts showed |
-| `prompts/iteration_review_prompt.md` | How to review an attempt, including a panel |
+| `scripts/README.md` | `record_outcome.py` writes the outcome once the analysis exists |
 
 For a panel iteration, report every probe. Three of eight above criterion with one
 regression is the finding; a single verdict would discard it.
+
+With the Paper capability enabled, `prompts/iteration_review_prompt.md` adds a fuller
+review procedure. It is listed here only as an addition, because a project without that
+capability does not have the file.
 
 ## Recording a result you would report
 

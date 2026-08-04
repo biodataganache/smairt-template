@@ -124,8 +124,8 @@ extraction costs more than the duplication it removes.
 ```markdown
 | Iteration | Date | Script | Hypotheses | Kind | Changed from | Outcome |
 |---|---|---|---|---|---|---|
-| 03 | YYYY-MM-DD | `script_03_baseline` | H01 | single | — | Criterion met, 0.71 vs 0.65 target |
-| 04 | YYYY-MM-DD | `script_04_activation_panel` | H01 | panel (8) | 03 | 3 of 8 above criterion, 1 regression |
+| 03 | YYYY-MM-DD | `script_03_baseline` | HYPOTHESIS_01 | single | — | Criterion met, 0.71 vs 0.65 target |
+| 04 | YYYY-MM-DD | `script_04_activation_panel` | HYPOTHESIS_01 | panel (8) | 03 | 3 of 8 above criterion, 1 regression |
 ```
 
 `Kind` is `single` when the iteration tests one change, or `panel (N)` when it probes N

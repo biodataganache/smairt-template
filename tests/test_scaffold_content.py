@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import tempfile
 from pathlib import Path
 
@@ -13,7 +14,7 @@ from smairt.models import (
     StartingPhase,
 )
 from smairt.project import load_contract
-from smairt.scaffold import render_template_assets
+from smairt.scaffold import active_assets, render_template_assets
 
 LEGACY_TEMPLATE = (
     Path(__file__).resolve().parents[1]
@@ -257,6 +258,86 @@ def test_selecting_a_result_is_decided_by_the_record_rather_than_the_filesystem(
     select = rendered_assets()["scripts/select_result.py"]
     assert "recorded_iterations" in select
     assert "existing_iterations" not in select
+
+
+TRACK_PREFIXED_SCRIPT = re.compile(r"script_[A-Za-z]\d")
+"""A track letter standing where the iteration number belongs, as in `script_B01_...`.
+
+Deliberately narrower than `script_[A-Za-z]`, which also matches the `script_NN_name`
+placeholder that guidance legitimately uses to describe the real convention.
+"""
+
+
+def test_no_guidance_encodes_a_track_in_a_script_name() -> None:
+    """A letter-prefixed script name is invisible to the numbering scan.
+
+    `script_B01_...` does not match the scan that finds the next number, so a project
+    following that convention hands the same number out twice. A track belongs in
+    `analysis/ANALYSIS_PLAN.md` and in the hypothesis it tests, never in a filename.
+    """
+    offenders = sorted(
+        f"{relative}: {match.group(0)}"
+        for relative, content in rendered_assets().items()
+        for match in TRACK_PREFIXED_SCRIPT.finditer(content)
+    )
+    assert offenders == []
+
+
+def test_one_hypothesis_identifier_form_is_used_everywhere() -> None:
+    """Two spellings of the same identifier break the trail they exist to preserve.
+
+    A researcher told to reference `H01` and a helper that creates
+    `hypotheses/HYPOTHESIS_01.md` disagree about the name of the same file, so the link
+    from an analysis back to its precommitment is a guess rather than a path.
+    """
+    offenders = sorted(
+        f"{relative}: {match.group(0)}"
+        for relative, content in rendered_assets().items()
+        for match in re.finditer(r"(?<![A-Z_])H\d{2}\b", content)
+    )
+    assert offenders == []
+
+
+def test_no_always_present_guidance_cites_a_capability_only_file() -> None:
+    """Citing a file the project does not have sends a reader to a dead path.
+
+    Paper and HPC guidance is added by a capability, so a base project never receives it.
+    An unconditional file may mention that such guidance exists once the capability is
+    enabled, which is why only a bare path citation counts as a defect here.
+    """
+    contract = _contract(
+        ProjectIdentity(
+            name="Study",
+            slug="study",
+            description="A study.",
+            domain="Computational biology",
+        )
+    )
+    conditional = {
+        asset.path for asset in active_assets(contract, include_inactive=True) if asset.condition
+    }
+    unconditional = {asset.path: asset for asset in active_assets(contract, include_inactive=True)}
+    rendered = rendered_assets()
+    offenders = sorted(
+        f"{relative}: {path}"
+        for relative, content in rendered.items()
+        if not unconditional[relative].condition
+        for path in conditional
+        if f"`{path}`" in content
+    )
+    assert offenders == []
+
+
+def test_an_assistant_observation_is_marked_unreviewed_where_it_is_written() -> None:
+    """An unconfirmed observation that looks like a record becomes one by accident.
+
+    The assistant notices contributions because a researcher often will not recognise
+    their own, but noticing is not confirming. The marking has to live in the file being
+    written, so reading that file alone tells you which entries the researcher accepted.
+    """
+    contribution = rendered_assets()["prompts/intellectual_contribution.md"]
+    assert "Status: unreviewed" in contribution
+    assert "**Status:** unreviewed" in contribution
 
 
 def test_the_legacy_content_baseline_is_available_to_re_enrich_from() -> None:

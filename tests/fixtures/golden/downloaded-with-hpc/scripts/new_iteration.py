@@ -39,7 +39,10 @@ def main() -> None:
     parser.add_argument(
         "--hypothesis",
         required=True,
-        help="Hypothesis this iteration tests, for example H01. Required by design.",
+        help=(
+            "Hypothesis this iteration tests, for example HYPOTHESIS_01. Required, because "
+            "naming what an attempt should settle before writing it is the convention."
+        ),
     )
     parser.add_argument(
         "--probes",

@@ -57,11 +57,18 @@ We follow the scientific method in an iterative loop:
 Background → Hypothesis → Methods/Code → Results → Analysis → Future Directions → (repeat)
 ```
 
-Each iteration produces:
-1. A **hypothesis file** (`hypotheses/HYPOTHESIS_XX.md`)
-2. An **experiment script** (`experiments/XX_phase/script_XX_description.py`)
-3. A **log file** (`results/logs/script_XX_*.log`)
-4. An **analysis file** (`analysis/ANALYSIS_XX.md`)
+An **iteration** is one attempt at moving the work forward: one script, the log it
+produced, and the interpretation of that log. So each iteration produces:
+
+1. An **experiment script** (`experiments/XX_phase/script_NN_description.py`)
+2. A **log file** (`results/logs/script_NN_*.log`)
+3. An **analysis file** (`analysis/ANALYSIS_NN.md`)
+4. A **row and an outcome** in `analysis/ITERATION_LOG.md`
+
+An iteration *references* a hypothesis rather than producing one. A hypothesis usually
+takes several attempts to settle, so `hypotheses/HYPOTHESIS_NN.md` is written once when a
+track starts and its status is updated as attempts accumulate. Numbering the two
+separately is deliberate: iteration 07 may well be testing hypothesis 02.
 
 ---
 
@@ -170,21 +177,21 @@ hpc/               # HPC job scripts and configurations, present when HPC is ena
 
 ## Multi-Track Experimentation
 
-As projects grow, work forks into parallel investigation tracks. Tracks are
-identified by letter prefix:
+As projects grow, work forks into parallel tracks. A **track** is a direction of inquiry
+spanning as many iterations as it takes, and several can be in flight at once.
 
-```
-script_A01_...  — Track A (e.g., initial approach)
-script_B01_...  — Track B (e.g., alternative data type)
-script_C31_...  — Track C (e.g., pretraining experiments)
-script_D01_...  — Track D (e.g., fusion methods)
-script_X1_...   — Track X (e.g., interpretation/diagnostics)
-```
+A track is recorded rather than encoded in filenames. `scripts/new_track.py` creates:
 
-Each track should have:
-- A plan document: `plans/PLAN_TRACK_X_description.md`
-- Hypothesis files: `hypotheses/HYPOTHESIS_X01.md`
-- Analysis files: `analysis/ANALYSIS_X01.md`
+- A plan document: `plans/PLAN_<NAME>.md`
+- A hypothesis file: `hypotheses/HYPOTHESIS_NN.md`
+
+And the track gets a row in the `Tracks` table of `analysis/ANALYSIS_PLAN.md`, which is
+where a reader learns what directions exist and which were abandoned.
+
+Iterations stay numbered across the whole project regardless of track, so the numbers order
+the work in time. Putting a track letter in a script's name would fork the numbering, and a
+forked sequence no longer says what happened when — it also hides the script from the
+helpers, which find iterations by number.
 
 ---
 

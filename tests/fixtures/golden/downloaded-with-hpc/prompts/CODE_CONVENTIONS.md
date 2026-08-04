@@ -6,12 +6,10 @@ When generating code for this project, follow these conventions.
 
 ## Script Naming
 
-### Sequential Numbering (Early Project)
-
-Use numbered scripts for each iteration:
+Every numbered script is an iteration, created by `scripts/new_iteration.py`:
 
 ```
-script_XX_brief_description.py
+script_NN_brief_description.py
 ```
 
 Examples:
@@ -19,30 +17,33 @@ Examples:
 - `script_02_add_noise_robustness.py`
 - `script_03_iris_benchmark.py`
 
-### Track-Based Naming (Mature Project)
+Numbering is sequential across the whole project rather than per phase or per track, so
+the filenames read as the order the work happened. The helper assigns the number, because
+two things handing out numbers independently would eventually hand out the same one.
 
-When the project forks into parallel investigations, use letter-prefixed tracks:
+### Tracks are recorded, not encoded in filenames
 
-```
-script_[TRACK][NN]_brief_description.py
-```
+A track is a direction of inquiry spanning as many iterations as it takes. Several tracks
+can be in flight at once, and an iteration belongs to one of them — but the track is
+recorded in `analysis/ANALYSIS_PLAN.md` and in the iteration's hypothesis, not in the
+script's name.
 
-Examples:
-- `script_A01_baseline_method.py` — Track A: Core approach
-- `script_B01_alternative_data_exploration.py` — Track B: Alternative data source
-- `script_C31_pretraining_baseline.py` — Track C: Pretraining strategy
-- `script_D01_fusion_baseline.py` — Track D: Multi-source fusion
-- `script_X1_embedding_dynamics.py` — Track X: Interpretation & diagnostics
+Naming a script for its track would fork the numbering, and a fork means the numbers no
+longer order the work. It also hides iterations from the helpers, which find them by
+number.
 
-Track assignments should be documented in `plans/`.
+### Utilities
+
+Code that supports the research without testing anything — a downloader, a figure
+regenerator — is not an iteration. Create it with `scripts/new_utility.py`, which writes to
+`scripts/utilities/` and takes no number.
 
 ### HPC Scripts
 
-Scripts designed for HPC execution append `_hpc`:
+An iteration that runs on a cluster keeps its number and appends `_hpc`:
 
 ```
-script_D06_hpc.py
-script_E03_hpc.py
+script_06_hpc.py
 ```
 
 ---
@@ -157,7 +158,7 @@ Log files go in `results/logs/` and include timestamps for uniqueness:
 
 ```
 results/logs/script_01_initial_test_20240115_143022.log
-results/logs/script_B05_multi_source_20240220_091544.log
+results/logs/script_05_multi_source_20240220_091544.log
 ```
 
 The `setup_logging()` function handles this automatically.
@@ -175,13 +176,13 @@ experiments/
 ├── 02_downloaded/         # Phase 2: Benchmark data tests
 │   ├── script_03_xxx.py
 │   └── script_04_xxx.py
-├── 03_real_data/          # Phase 3: Real data tests
-│   ├── script_05_xxx.py
-│   ├── script_B01_xxx.py  # Track B starts here
-│   └── script_D01_xxx.py  # Track D starts here
-└── interpretation/        # Interpretation & diagnostics scripts (Track X)
-    └── script_X1_xxx.py
+└── 03_real_data/          # Phase 3: Real data tests
+    ├── script_05_xxx.py
+    └── script_06_xxx.py
 ```
+
+Numbering continues across phases, so a script's number says when it happened and its
+directory says what data it used.
 
 ---
 
@@ -259,8 +260,7 @@ CONFIG = {
 Place in `hpc/` with naming matching the experiment script:
 
 ```
-hpc/script_D06_hpc.csh
-hpc/script_E03_hpc.csh
+hpc/script_06_hpc.csh
 ```
 
 ### Monitor Scripts

@@ -318,21 +318,36 @@ being handed over, a paper is being drafted, or the work is complete.
 The report synthesizes and does not replace the numbered analyses. It is written as a
 research report, not as an account of how the code was produced.
 
-**Decision: shared for the report. `prompts/intellectual_contribution.md` belongs to
-the researcher alone.**
+**Decision: shared for the report. Every entry in
+`prompts/intellectual_contribution.md` is the researcher's to accept, rewrite, or
+delete.**
 
-- **Researcher:** writes the conclusions and the contribution entries. Records each
-  entry when the decision is made, not reconstructed later.
+- **Researcher:** writes the conclusions. Owns the contribution record: confirm an
+  observation, reword it, or remove it. An entry you did not agree to is not a
+  contribution you made.
 - **Assistant:** assemble the audit trail and results matrix from the project files.
-  Do not write entries in the contribution record, and do not describe the report as a
-  demonstration or a template exercise.
+  Notice contributions as they happen and record them as observations, marked as
+  unreviewed until the researcher confirms them. Do not present an unreviewed observation
+  as the researcher's own account, and do not describe the report as a demonstration or a
+  template exercise.
 - **Record:** `analysis/STUDY_REPORT.md` and `prompts/intellectual_contribution.md`.
 
-The contribution record is not a step-12 chore. Every step above names a decision
-owner, so the record accumulates from following the loop rather than being
-reconstructed at the end. What belongs in it: the framing of the question, choices made
-between presented options, directions the researcher proposed, interpretations that
-went beyond what was drafted, and decisions to pivot or stop.
+The assistant observes here for a reason. A researcher frequently does not recognise their
+own contribution in the moment — rejecting a proposed approach and naming a better one
+feels like ordinary conversation, not a recorded decision. Leaving the record to
+self-reporting means it is written by whoever happens to feel like taking credit, which is
+useless as evidence. An assistant is better placed to notice precisely because it has no
+stake in the answer.
+
+What that does *not* mean is that the assistant decides. It notices and writes down; the
+researcher confirms, corrects, or deletes. An observation that has not been reviewed stays
+visibly unreviewed, so nobody later mistakes an assistant's wording for the researcher's.
+
+The record is not a step-12 chore. Every step above names a decision owner, so it
+accumulates from following the loop rather than being reconstructed at the end. What
+belongs in it: the framing of the question, choices made between presented options,
+directions the researcher proposed, interpretations that went beyond what was drafted, and
+decisions to pivot or stop.
 
 ---
 

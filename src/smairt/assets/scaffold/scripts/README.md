@@ -71,13 +71,13 @@ An iteration is one attempt: one script, its log, its interpretation.
 
 ```bash
 # a single point: does one change help
-python scripts/new_iteration.py "wider layer" synthetic --hypothesis H01
+python scripts/new_iteration.py "wider layer" synthetic --hypothesis HYPOTHESIS_01
 
 # a panel: do any of these candidates help
-python scripts/new_iteration.py "activation panel" synthetic --hypothesis H01 --probes 8
+python scripts/new_iteration.py "activation panel" synthetic --hypothesis HYPOTHESIS_01 --probes 8
 
 # continue from an earlier attempt instead of the blank template
-python scripts/new_iteration.py "wider layer" synthetic --hypothesis H01 --from-iteration 3
+python scripts/new_iteration.py "wider layer" synthetic --hypothesis HYPOTHESIS_01 --from-iteration 3
 ```
 
 `--hypothesis` is required, because naming what an attempt should settle before writing

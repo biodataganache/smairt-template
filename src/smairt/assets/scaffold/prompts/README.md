@@ -21,8 +21,12 @@ both.
 proves reusable belongs in the first; the reasoning behind a decision belongs in the
 second. Neither is a place for raw output, which stays in `results/logs/`.
 
-`intellectual_contribution.md` is written by the researcher alone. An assistant may
-read it for context and does not add entries to it.
+`intellectual_contribution.md` belongs to the researcher, who is the only one who
+accepts, rewrites, or deletes what it says. An assistant may add observations under
+`## AI-Detected Contributions`, each marked `Status: unreviewed` until the researcher
+confirms it. A researcher frequently does not recognise their own contribution in the
+moment, so an assistant noticing it is worth more than self-reporting; the researcher
+still decides whether the observation is true.
 
 ## Paper capability
 
