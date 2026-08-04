@@ -137,13 +137,27 @@ class Wizard:
         self.steps: tuple[Step, ...] = (
             Step("name", "Project name", self._name, lambda: self._answer("name")),
             Step("location", "Location", self._location, self._location_summary),
-            Step("description", "Description", self._description, lambda: self._answer("description")),
+            Step(
+                "description", "Description", self._description, lambda: self._answer("description")
+            ),
             Step("domain", "Domain", self._domain, lambda: self._answer("domain")),
             Step("question", "Research question", self._question, lambda: self._answer("question")),
-            Step("researcher", "Primary researcher", self._researcher, lambda: self._answer("researcher")),
+            Step(
+                "researcher",
+                "Primary researcher",
+                self._researcher,
+                lambda: self._answer("researcher"),
+            ),
             Step("email", "Email", self._email, lambda: self._answer("email")),
-            Step("capabilities", "Optional capabilities", self._capabilities, self._capability_summary),
-            Step("phase", "Starting phase", self._phase, lambda: _phase_label(self._answer("phase"))),
+            Step(
+                "capabilities",
+                "Optional capabilities",
+                self._capabilities,
+                self._capability_summary,
+            ),
+            Step(
+                "phase", "Starting phase", self._phase, lambda: _phase_label(self._answer("phase"))
+            ),
             Step(
                 "assistant",
                 "Coding assistant",
@@ -449,18 +463,25 @@ class Wizard:
         self.console.print(
             "Paper and HPC support are optional and both start off for a default workspace."
         )
-        self.console.print("Type paper, hpc, paper,hpc, or press Enter to skip.")
+        self.console.print("Type paper, hpc, paper,hpc, none, or press Enter to skip.")
         while True:
             answer = self.session.prompt("Optional capabilities [Enter to skip]: ").strip().lower()
             if answer == _CANCEL:
                 raise WizardCancelled
             if answer == _BACK:
                 raise BackRequested
-            requested = _parse_capabilities(answer) - {_NO_CAPABILITIES}
+            requested = _parse_capabilities(answer)
+            if _NO_CAPABILITIES in requested and requested != {_NO_CAPABILITIES}:
+                self.console.print(
+                    "None means no optional capabilities, so it cannot be combined with one.",
+                    style="caution",
+                )
+                continue
+            requested -= {_NO_CAPABILITIES}
             if requested <= _OPTIONAL_CAPABILITIES:
                 self._record_capabilities(requested)
                 return
-            self.console.print("Use paper, hpc, or paper,hpc.", style="caution")
+            self.console.print("Use paper, hpc, paper,hpc, or none.", style="caution")
 
     def _checked_capabilities(self) -> list[str]:
         """Return the rows to start checked, naming the default workspace explicitly."""
@@ -1268,7 +1289,14 @@ class Dashboard:
         ).strip()
         if answer.lower() in {"back", ""}:
             return None
-        requested = _parse_capabilities(answer.lower()) - {_NO_CAPABILITIES}
+        requested = _parse_capabilities(answer.lower())
+        if _NO_CAPABILITIES in requested and requested != {_NO_CAPABILITIES}:
+            self.console.print(
+                "None means no optional capabilities, so it cannot be combined with one.",
+                style="caution",
+            )
+            return None
+        requested -= {_NO_CAPABILITIES}
         if not requested <= _OPTIONAL_CAPABILITIES:
             self.console.print("Use paper, hpc, paper,hpc, or none.", style="caution")
             return None

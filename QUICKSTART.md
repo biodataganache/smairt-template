@@ -66,8 +66,14 @@ the question, the evidence, and the interpretation.
 
 Run the dashboard from the project root with `smairt`. In a capable terminal,
 move with Up/Down or `k`/`j`, scroll long lists with PageUp/PageDown, choose
-with Enter, go back with Left or Escape, and cancel with Ctrl-C. Basic
-terminals, redirected input, and CI show the same options as a numbered list.
+with Enter, toggle checkboxes with Space, go back with Left or Escape, and
+cancel with Ctrl-C. Basic terminals, redirected input, and CI show the same
+options as a numbered list, where each row also carries a stable token such as
+`[settings]` that selects it.
+
+Optional capabilities are one screen. It previews exactly which files enabling
+would create and writes nothing until you accept that preview. Disabling only
+marks a capability inactive; your files stay exactly as they are.
 
 Or use stable commands:
 

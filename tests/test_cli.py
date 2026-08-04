@@ -860,6 +860,50 @@ def test_assistant_aliases_and_dashboard_are_available_from_installed_command(
     )
 
 
+def test_dashboard_capability_changes_are_previewed_before_anything_is_written(
+    tmp_path: Path,
+) -> None:
+    """A researcher sees the real file list and can refuse it without side effects."""
+    destination = tmp_path / "capability-dashboard"
+    assert create_project(destination).returncode == 0
+
+    refused = run_dashboard(destination, "capabilities\npaper\nno\nexit\n")
+    still_inactive = yaml.safe_load((destination / "smairt.yaml").read_text())
+
+    assert refused.returncode == 0, refused.stderr
+    assert "Pending capability changes" in refused.stdout
+    assert "Enable Paper Support" in refused.stdout
+    assert "+ paper/outline.md" in refused.stdout
+    assert "No changes made." in refused.stdout
+    assert still_inactive["capabilities"]["paper"] == {"state": "never_enabled"}
+    assert not (destination / "paper").exists()
+
+    applied = run_dashboard(destination, "capabilities\npaper\nyes\nexit\n")
+    metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
+
+    assert applied.returncode == 0, applied.stderr
+    assert metadata["capabilities"]["paper"] == {"state": "enabled"}
+    assert (destination / "paper" / "outline.md").is_file()
+
+
+def test_dashboard_capability_selection_refuses_a_contradictory_request(
+    tmp_path: Path,
+) -> None:
+    """None and a capability cannot both be requested, so the answer is refused."""
+    destination = tmp_path / "contradictory-capabilities"
+    assert create_project(destination).returncode == 0
+
+    dashboard = run_dashboard(destination, "capabilities\nnone,paper\nexit\n")
+
+    assert dashboard.returncode == 0, dashboard.stderr
+    assert "cannot be combined with one" in dashboard.stdout
+    assert "Pending capability changes" not in dashboard.stdout
+    assert yaml.safe_load((destination / "smairt.yaml").read_text())["capabilities"]["paper"] == {
+        "state": "never_enabled"
+    }
+    assert not (destination / "paper").exists()
+
+
 def test_standard_dashboard_previews_and_confirms_safe_repairs(tmp_path: Path) -> None:
     destination = tmp_path / "repair-dashboard"
     assert create_project(destination).returncode == 0

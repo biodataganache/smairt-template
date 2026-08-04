@@ -36,6 +36,13 @@ Run the guided wizard:
 smairt new
 ```
 
+The wizard walks fourteen screens. You confirm one folder name and it derives
+the immutable project identifier from it, showing both. Optional capabilities
+are checkboxes, so answer `Do you expect to write a paper?` and `Do you expect
+to use an HPC?` independently, or leave `Default Workspace` checked. Every
+answer stays editable on the final review, where `Create project` sits below a
+divider so reviewing and committing are never one keystroke apart.
+
 Or use the complete noninteractive form for scripts and automation:
 
 ```bash
@@ -63,6 +70,7 @@ contains all three phase workspaces:
 
 Add `--paper` for a publication overlay linked to the standard scientific audit trail.
 Add `--hpc` for editable cluster configuration, SLURM templates, and HPC guidance.
+Both are independent and additive, and either can be enabled or disabled later.
 SMAIRT does not submit or manage cluster jobs.
 
 Add `--git` to initialize Git and stage generated files. SMAIRT never commits;
@@ -77,21 +85,40 @@ Mode controls. The dashboard manages workspace utilities only; scientific work
 stays with the selected coding assistant.
 
 In a capable interactive terminal, Home, the dashboard, Project Settings, and
-guided project creation present scrollable keyboard menus:
+guided project creation present framed keyboard screens that repaint in place:
 
 | Control | Action |
 | --- | --- |
 | Up/Down or `k`/`j` | Move the selection, wrapping at both ends |
 | PageUp/PageDown | Scroll one visible viewport without wrapping |
-| Enter | Choose the highlighted item |
+| Enter | Choose the highlighted row |
+| Space | Check or uncheck the highlighted row, where a screen offers checkboxes |
 | Left or Escape | Return to the previous screen |
 | Ctrl-C | Cancel |
 
+Where several answers can hold at once, such as optional capabilities, the
+screen offers checkboxes with a visible `Next →` row. Space and Enter both
+toggle, so advancing is always a deliberate choice of `Next →`. `Default
+Workspace` is mutually exclusive with the capabilities by construction, so a
+contradictory selection cannot be reached.
+
 Long lists stay inside a bounded viewport with a scrollbar rather than printing
-every row, and the highlighted row always remains visible. Menus never take
-over the terminal with an alternate screen. Redirected input, `TERM=dumb`, CI,
-tests, and `--no-motion` use the equivalent numbered text menus instead, so
-scripted transcripts stay deterministic.
+every row, and a screen never exceeds the height of the terminal. Screens never
+take over the terminal with an alternate screen, so scrollback and copy stay
+yours. Styling uses only your terminal's own sixteen ANSI colors, and color is
+never the only signal.
+
+Redirected input, `TERM=dumb`, CI, tests, and `--no-motion` show the same
+options as a numbered listing. Every row carries a stable action token in
+brackets, and either the token or the number selects it:
+
+```text
+1. Launch assistant or open folder [assistant]
+2. Project Settings [settings]
+```
+
+Tokens are the contract; numbers are a convenience that may be renumbered when
+a menu is regrouped, so scripts should prefer tokens.
 
 Stable scriptable commands include:
 
@@ -107,9 +134,16 @@ smairt settings /path/to/project --experience advanced --no-motion
 Project Check is read-only. It exits `0` when no structural or configuration
 issues are found and `1` otherwise. `smairt repair` previews only deterministic
 tool-owned repairs; pass `--select REPAIR --confirm` to apply a reviewed repair.
-Paper and HPC deactivation never deletes project files. Motion is enabled only
-for interactive terminals and can be disabled locally with `--no-motion`; it is
-suppressed for tests, redirected output, JSON, and CI.
+The dashboard's Optional capabilities screen chooses Paper and HPC together. It
+previews exactly which files enabling would create, derived from the same
+rendering the write itself uses, and writes nothing until that preview is
+accepted. Paper and HPC deactivation never deletes project files. Motion is
+enabled only for interactive terminals and can be disabled locally with
+`--no-motion`; it is suppressed for tests, redirected output, JSON, and CI.
+
+Advanced Mode adds one `Advanced ▸` row that opens contract inspection, verbose
+Project Check, managed-asset regeneration, convention controls, and detected
+local tools, rather than lengthening the everyday menu.
 
 `smairt settings` updates approved metadata, collaborators, current phase,
 assistant, project conventions, or local dashboard preferences without
