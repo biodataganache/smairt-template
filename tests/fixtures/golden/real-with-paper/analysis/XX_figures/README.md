@@ -34,10 +34,16 @@ XX_figures/
 
 ## Source Tracking
 
-Each figure should be traceable to its source analysis.
-Check `FINAL_MANIFEST.md` for the mapping.
+Every figure traces to the run that produced it. The log is the link that makes a figure
+checkable, because it records the code, inputs, and output of that run.
 
-| Figure | Source Analysis | Iteration |
-|--------|-----------------|-----------|
-| Fig 1 | 01_first_analysis | iter_02 |
-| Fig 2 | 02_second_analysis | iter_03 |
+| Figure | Claim it supports | Iteration | Script | Log |
+|---|---|---|---|---|
+| Fig 1 | [What the figure is evidence for] | 02 | `script_02_baseline.py` | `results/logs/script_02_baseline-<timestamp>.log` |
+| Fig 2 | [What the figure is evidence for] | 05 | `script_05_sweep.py` | `results/logs/script_05_sweep-<timestamp>.log` |
+
+A figure that cannot name its log is not yet evidence. If a figure was assembled by hand
+from several runs, list each one.
+
+With the Paper capability, `FINAL_MANIFEST.md` carries the same mapping for every paper
+element, not just figures.

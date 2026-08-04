@@ -89,7 +89,6 @@ def test_no_rendered_guidance_asset_carries_an_unrendered_template_construct() -
 RETIRED = (
     "compile_for_ai",
     "new_experiment.py",
-    "new_iteration.py",
     "finalize_iteration",
     "paper_draft/",
     "paper_driven mode",
@@ -111,6 +110,40 @@ def test_no_generated_guidance_describes_a_retired_helper_or_concept() -> None:
         f"{relative}: {term}"
         for relative, content in rendered_assets().items()
         for term in RETIRED
+        if term in content
+    )
+    assert offenders == []
+
+
+RETIRED_STRUCTURE = (
+    "iter_0",
+    "iter_X",
+    "iterations/",
+    "run_analysis_",
+    "lib/core",
+    "lib/io",
+    "lib/processing",
+    "lib/visualization",
+)
+"""Paths from the original nested analysis tree, which this scaffold does not create.
+
+An iteration is now a unit of work numbered project-wide rather than a folder inside a
+per-analysis tree, and shared code lives in `scripts/shared/` rather than a `lib/`
+package. Guidance naming these paths sends a reader to somewhere that does not exist.
+"""
+
+
+def test_no_generated_guidance_directs_a_reader_to_a_path_this_scaffold_never_creates() -> None:
+    """Guidance that names a phantom path is worse than absent guidance.
+
+    A reader who follows it either creates a second competing structure or concludes
+    the project is broken. This is distinct from a retired helper: the tool is gone in
+    that case, whereas here the whole directory layout was replaced.
+    """
+    offenders = sorted(
+        f"{relative}: {term}"
+        for relative, content in rendered_assets().items()
+        for term in RETIRED_STRUCTURE
         if term in content
     )
     assert offenders == []

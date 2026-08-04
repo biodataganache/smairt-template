@@ -2,7 +2,8 @@
 
 ## Project: Golden Paper Study
 
-This document defines the repository organization for the paper-driven project.
+How this repository is organized, and the conventions that keep it navigable as it
+grows. Edit this file when the project's conventions change.
 
 ---
 
@@ -10,114 +11,132 @@ This document defines the repository organization for the paper-driven project.
 
 ```
 golden_paper_study/
-├── paper/                      # Paper documents
-│   ├── outline.md              # Paper outline/structure
-│   ├── drafts/                 # Version-controlled drafts
-│   └── reviewer_feedback/      # Feedback documents
+├── smairt.yaml                 # Project contract: identity, phase, capabilities
+├── README.md                   # Entry point
+├── FINAL_MANIFEST.md           # Paper claim to evidence map (Paper capability)
 │
-├── data/                       # All datasets
-│   ├── README.md               # Data documentation
-│   └── {dataset_name}/         # Organized by source
+├── background/                 # Prior work and constraints
+├── hypotheses/                 # One file per hypothesis, with criteria
+├── plans/                      # Plans written before multi-step work
 │
-├── analysis/                   # All analyses
-│   ├── ANALYSIS_PLAN.md        # Analysis planning
-│   ├── REPOSITORY_PLAN.md      # Repository organization
-│   ├── BREADCRUMB_TRAIL.md     # Running log
-│   ├── 01_{section}/           # Maps to paper section
-│   ├── 02_{section}/
-│   └── XX_figures/             # Final publication figures
+├── experiments/                # Executable experiments, numbered by iteration
+│   ├── 01_synthetic/
+│   ├── 02_downloaded/
+│   └── 03_real_data/
 │
-├── lib/                        # Shared library
-│   ├── __init__.py
-│   ├── core/                   # Core utilities
-│   ├── io/                     # Data I/O
-│   ├── processing/             # Processing functions
-│   └── visualization/          # Plotting
+├── data/                       # Inputs and provenance, by phase
+│   ├── synthetic/
+│   ├── downloaded/
+│   └── real/
 │
-├── prompts/                    # AI prompts & context
-│   ├── InitialPrompt_paper_driven.md
-│   ├── AI_CONTEXT.md
-│   ├── CODE_CONVENTIONS.md
-│   ├── KNOWN_PATTERNS.md
-│   └── ...
+├── results/                    # Durable evidence
+│   ├── logs/                   # Complete captured run records
+│   └── figures/                # Generated figures
 │
-├── plans/                      # AI-generated plans (git-tracked)
-│   └── README.md
+├── analysis/                   # Interpretation and synthesis
+│   ├── ANALYSIS_PLAN.md        # Tracks, iterations, metrics, figure plan
+│   ├── REPOSITORY_PLAN.md      # This file
+│   ├── ITERATION_LOG.md        # One row per iteration
+│   ├── BREADCRUMB_TRAIL.md     # Narrative log of what was learned
+│   ├── ANALYSIS_XX.md          # One interpretation per iteration
+│   └── XX_figures/             # Figure workspaces
 │
-├── hpc/                        # HPC configuration (if needed)
-│   ├── config.yaml
-│   └── templates/
+├── docs/                       # 12_STEPS.md, philosophy, practices
+├── prompts/                    # Assistant context and researcher records
 │
-├── scripts/                    # Utility scripts
+├── scripts/                    # Helpers
 │   ├── new_script.py
 │   ├── generate_manifest.py
 │   ├── monitor_template.py
-│   └── shared/                 # TeeLogger & shared utilities
+│   └── shared/                 # Reusable code, including TeeLogger
 │
-├── results/                    # All output
-│   ├── logs/                   # Auto-captured script output
-│   └── figures/                # Generated figures
-│
-├── FINAL_MANIFEST.md           # Maps results to paper
-└── README.md
+├── paper/                      # Present only with the Paper capability
+└── hpc/                        # Present only with the HPC capability
 ```
+
+Experiments, data, and results are separated by *kind* rather than nested per analysis.
+A script lives with other scripts of its phase; its evidence lives in `results/logs/`;
+its interpretation lives in `analysis/`. One iteration therefore spans four directories,
+and the shared iteration number is what ties them together.
 
 ---
 
 ## 2. Naming Conventions
 
-### Directories
-- Analysis sections: `01_descriptive_name/`, `02_descriptive_name/`
-- Iterations: `iter_01/`, `iter_02/`
+### Iterations
 
-### Files
-- Scripts: `run_analysis_01.py`, `run_analysis_02.py`
-- Configs: `config_01.yaml`, `config_02.yaml`
-- Notes: `NOTES.md` (in each iteration)
+An iteration is one attempt: one script, its log, its interpretation. Numbering runs
+across the whole project in the order the work happened, not per phase and not per
+analysis.
+
+| Artifact | Pattern | Example |
+|---|---|---|
+| Script | `script_NN_description.py` | `experiments/01_synthetic/script_04_activation_panel.py` |
+| Log | `script_NN_description-<timestamp>.log` | `results/logs/script_04_activation_panel-20240115-101500.log` |
+| Interpretation | `ANALYSIS_NN.md` | `analysis/ANALYSIS_04.md` |
+| Hypothesis | `HNN_short_name.md` | `hypotheses/H01_baseline_exceeds_chance.md` |
+
+The log name is produced by `setup_logging()`, so it matches the script without anyone
+maintaining it.
 
 ### Figures
-- Main figures: `fig_01_description.png`
+
+- Main: `fig_01_description.png`
 - Supplementary: `fig_s01_description.png`
-- Save in multiple formats: `.png`, `.pdf`, `.svg`
+- Save the formats the venue needs, typically `.png` plus a vector format
+
+### Directories
+
+Phase directories are fixed: `01_synthetic`, `02_downloaded`, `03_real_data`. Do not add
+parallel per-analysis trees; the iteration number already orders the work.
 
 ---
 
-## 3. Shared Library Functions
+## 3. Shared Code
 
-### lib/core/utils.py
-- `load_config()` - Load YAML/JSON config
-- `ensure_dir()` - Create directory if needed
-- `save_results()` - Save results to file
+Reusable code lives in `scripts/shared/` and is imported as
+`from scripts.shared.<module> import ...`.
 
-### lib/io/data_loader.py
-- `load_data()` - Load dataset by name
-- `save_data()` - Save processed data
+What ships:
 
-### lib/processing/
-- Add domain-specific processing functions
+- `shared/logging.py` - `TeeLogger` and `setup_logging()`, the complete-capture record
 
-### lib/visualization/style.py
-- `setup_plot_style()` - Set publication style
-- `save_figure()` - Save in multiple formats
-- `COLORS` - Consistent color palette
+What to add as the project earns it:
+
+- Data loading that more than one experiment uses
+- Figure styling shared across figures, so panels match without duplication
+- Domain-specific processing that has stabilized
+
+Extract into `shared/` only after a second experiment needs the same thing. An
+experiment script should stay readable as a record of what was done, so premature
+extraction costs more than the duplication it removes.
 
 ---
 
 ## 4. Iteration Tracking
 
-### ITERATION_LOG.md Format
+`analysis/ITERATION_LOG.md` carries one row per iteration:
 
 ```markdown
-| Iter | Date | Description | Key Change | Metrics | Decision |
-|------|------|-------------|------------|---------|----------|
-| 01 | YYYY-MM-DD | Baseline | Initial | metric=X | Revise |
-| 02 | YYYY-MM-DD | Tuned | param change | metric=Y | ACCEPT |
+| Iteration | Date | Script | Hypotheses | Kind | Changed from | Outcome |
+|---|---|---|---|---|---|---|
+| 03 | YYYY-MM-DD | `script_03_baseline` | H01 | single | — | Criterion met, 0.71 vs 0.65 target |
+| 04 | YYYY-MM-DD | `script_04_activation_panel` | H01 | panel (8) | 03 | 3 of 8 above criterion, 1 regression |
 ```
 
-### Decision Options
-- **ACCEPT** - Meets targets, use for paper
-- **REVISE** - Promising, needs tuning
-- **ABANDON** - Fundamental issue
+`Kind` is `single` when the iteration tests one change, or `panel (N)` when it probes N
+candidate directions at once.
+
+`Outcome` is one line of prose rather than a fixed keyword. A panel cannot be described
+by a single verdict: "3 of 8 above criterion, 1 regression" is the finding, and
+`SUPPORTED` would discard it. Full probe-level results belong in the analysis; this row
+is the index into it.
+
+Rows are appended and never rewritten. A row that turned out to be wrong is corrected by
+a later row that says so, because the sequence of attempts is itself evidence.
+
+The decision for an iteration is recorded in its analysis and in the hypothesis status,
+not in this table.
 
 ---
 
@@ -159,8 +178,18 @@ log records the code, inputs, and output of the run that produced the evidence.
 
 ## 7. Documentation Requirements
 
-Each analysis must have:
-- [ ] `README.md` - Purpose, data, methods
-- [ ] `ITERATION_LOG.md` - All iterations
-- [ ] `NOTES.md` - Per-iteration notes
-- [ ] `SELECTED.md` - Final selection rationale
+Each iteration must have:
+
+- [ ] A hypothesis file stating the prediction and the criteria, committed before the
+      script exists
+- [ ] A script whose docstring names the hypothesis it tests
+- [ ] A complete log in `results/logs/`, unedited
+- [ ] An `analysis/ANALYSIS_NN.md` interpretation
+- [ ] A row in `analysis/ITERATION_LOG.md`
+- [ ] For a panel, a result recorded per probe rather than a single summary
+
+Each track must have:
+
+- [ ] A plan in `plans/`
+- [ ] An entry in the `Tracks` table of `analysis/ANALYSIS_PLAN.md`, kept current
+      including when the track is abandoned

@@ -2,8 +2,8 @@
 
 ## Project: {{ project.name }}
 
-**Author**: {{ researcher.name }}  
-**Created**: [DATE]  
+**Researcher**: {{ researcher.name }}
+**Created**: [DATE]
 **Last Updated**: [DATE]
 
 ---
@@ -14,176 +14,183 @@
 
 **Research Question**: {{ project.research_question or "Not yet recorded" }}
 
----
-
-## 2. Paper Structure Mapping
-
-| Paper Section | Analysis Directory | Status |
-|---------------|-------------------|--------|
-| Results 4.1 | `01_results_section_a/` | Not started |
-| Results 4.2 | `02_results_section_b/` | Not started |
-| Supplementary | `XX_supplementary/` | Not started |
+This is a living document. Update it when the plan changes, and record why in the
+`Revisions` section at the bottom rather than silently editing a target.
 
 ---
 
-## 3. Execution Framework
+## 2. Tracks
 
-### 3.1 Iteration Workflow
+A track is a direction of inquiry, spanning as many iterations as it takes. Each track
+has one or more hypotheses and produces its own evidence.
 
-Each analysis follows this structure:
+| Track | Question it answers | Hypotheses | Phase | Status |
+|---|---|---|---|---|
+| A | [What this direction settles] | H01, H02 | synthetic | Not started |
+| B | [What this direction settles] | H03 | downloaded | Not started |
+
+Status: `Not started`, `Active`, `Paused`, `Complete`, `Abandoned`. An abandoned track
+stays listed with its reason; a direction ruled out is a result.
+
+---
+
+## 3. Execution framework
+
+### 3.1 How an iteration works
+
+An iteration is one attempt: one script, the log it produced, and the interpretation of
+that log. Iterations are numbered across the whole project in the order the work
+happened, so the numbers read as a timeline.
+
 ```
-analysis_name/
-├── iterations/
-│   ├── ITERATION_LOG.md
-│   ├── iter_01/
-│   │   ├── run_analysis_01.py
-│   │   ├── config_01.yaml
-│   │   ├── results/
-│   │   ├── figures/
-│   │   └── NOTES.md
-│   └── iter_02/
-└── final/
-    ├── SELECTED.md
-    ├── results/
-    └── figures/
+hypotheses/H01_short_name.md              the prediction and the criteria
+experiments/01_synthetic/script_04_*.py   the attempt
+results/logs/script_04_*.log              what it produced, unedited
+analysis/ANALYSIS_04.md                   what it means
 ```
 
-### 3.2 Shared Library
+`analysis/ITERATION_LOG.md` carries one row per iteration, so the sequence of attempts
+is readable without opening each analysis.
 
-Common functions are in `lib/`:
-- `lib/core/` - Core utilities
-- `lib/io/` - Data loading/saving
-- `lib/processing/` - Data processing
-- `lib/visualization/` - Plotting functions
+### 3.2 Single points and panels
 
-### 3.3 Computational Resources
+A **single point** iteration tests one change and answers one question. A **panel**
+iteration probes several candidate directions at once and returns one result per probe.
+
+A panel is still one iteration. Record each probe separately: a panel of eight that
+yields three improvements, one regression, and four null results has produced three
+findings, not one. Collapsing it into a single verdict discards most of the work.
+
+### 3.3 Shared code
+
+Functions used by more than one experiment belong in `scripts/shared/`, imported as
+`from scripts.shared.<module> import ...`. Keep experiment scripts readable as a record
+of what was done; move only genuinely reusable machinery.
+
+### 3.4 Computational resources
 
 - [ ] Local machine
 - [ ] HPC cluster
-- [ ] Cloud (GPU)
+- [ ] Cloud
 
 ---
 
-## 4. Detailed Analysis Plan
+## 4. Track detail
 
-### 4.1 [Analysis Section A]
+### Track A - [Name]
 
-**Directory**: `analysis/01_results_section_a/`
+**Question**: [What does this track settle?]
 
-**Purpose**: [What question does this answer?]
+**Hypotheses**: `hypotheses/H01_*.md`
 
-**Data Inputs**:
-- [List data files]
+**Data inputs**:
+- [Files and their provenance record]
 
-**Analysis Steps**:
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
+**Planned iterations**:
 
-**Expected Iterations**: 2-3
+| # | Kind | What it tests | Depends on |
+|---|---|---|---|
+| 1 | single | [Baseline] | — |
+| 2 | panel | [Candidate variations] | Iteration 1 |
 
-**Outputs**:
-- Results: [Description]
-- Figures: [List figures]
-- Tables: [List tables]
+**Expected outputs**:
+- Interpretations: `analysis/ANALYSIS_XX.md`
+- Figures: [Which figures, and what each is evidence for]
 
-### 4.2 [Analysis Section B]
+### Track B - [Name]
 
-**Directory**: `analysis/02_results_section_b/`
+**Question**: [What does this track settle?]
 
-**Purpose**: [What question does this answer?]
+**Hypotheses**: `hypotheses/H03_*.md`
 
-**Data Inputs**:
-- [List data files]
+**Data inputs**:
+- [Files and their provenance record]
 
-**Analysis Steps**:
-1. [Step 1]
-2. [Step 2]
+**Planned iterations**:
 
-**Expected Iterations**: 2-3
-
-**Outputs**:
-- Results: [Description]
-- Figures: [List figures]
+| # | Kind | What it tests | Depends on |
+|---|---|---|---|
+| 1 | single | [First attempt] | Track A complete |
 
 ---
 
-## 5. Evaluation Framework
+## 5. Evaluation framework
 
 ### 5.1 Metrics
 
-| Metric | Description | Target |
-|--------|-------------|--------|
-| [Metric 1] | [Description] | [Target value] |
-| [Metric 2] | [Description] | [Target value] |
+| Metric | What it measures | Target | Why this target |
+|---|---|---|---|
+| [Metric] | [Description] | [Value] | [Justification recorded before running] |
 
-### 5.2 Validation Approaches
+A target chosen after seeing the data is not a target. Record the justification when the
+target is set.
 
-- [ ] [Validation method 1]
-- [ ] [Validation method 2]
-- [ ] [Cross-dataset comparison]
+### 5.2 Validation
 
----
-
-## 6. Figure Plan
-
-### Main Figures
-
-| Figure | Description | Analysis Source | Status |
-|--------|-------------|-----------------|--------|
-| Fig 1 | [Description] | `01_results_section_a/` | Not started |
-| Fig 2 | [Description] | `02_results_section_b/` | Not started |
-
-### Supplementary Figures
-
-| Figure | Description | Analysis Source | Status |
-|--------|-------------|-----------------|--------|
-| S1 | [Description] | [Source] | Not started |
+- [ ] [Baseline or negative control]
+- [ ] [Held-out or independent data]
+- [ ] [Repetition across seeds]
 
 ---
 
-## 7. Timeline
+## 6. Figure plan
 
-| Week | Tasks | Deliverables |
-|------|-------|--------------|
-| 1 | [Tasks] | [Deliverables] |
-| 2 | [Tasks] | [Deliverables] |
-| 3 | [Tasks] | [Deliverables] |
+Every figure is evidence for a specific claim. Name the claim, not just the subject.
+
+### Main figures
+
+| Figure | Claim it supports | Iteration | Status |
+|---|---|---|---|
+| Fig 1 | [The claim] | [NN] | Not started |
+
+### Supplementary figures
+
+| Figure | Claim it supports | Iteration | Status |
+|---|---|---|---|
+| S1 | [The claim] | [NN] | Not started |
 
 ---
 
-## 8. Data Requirements
+## 7. Data requirements
 
 | Dataset | Location | Format | Size | Status |
-|---------|----------|--------|------|--------|
-| [Dataset 1] | `data/[path]` | [Format] | [Size] | Available |
-| [Dataset 2] | `data/[path]` | [Format] | [Size] | Needed |
+|---|---|---|---|---|
+| [Name] | `data/[phase]/[path]` | [Format] | [Size] | Available |
+| [Name] | `data/[phase]/[path]` | [Format] | [Size] | Needed |
 
 ---
 
-## 9. Hypotheses
+## 8. Hypotheses
 
-### H1: [Hypothesis 1]
-- **Statement**: [Clear, testable statement]
-- **Test**: [How will this be tested?]
-- **Analysis**: [Which analysis addresses this?]
+The full statement, criteria, and design live in `hypotheses/`. This is the index.
 
-### H2: [Hypothesis 2]
-- **Statement**: [Clear, testable statement]
-- **Test**: [How will this be tested?]
-- **Analysis**: [Which analysis addresses this?]
+| ID | Statement | Track | Tested by | Status |
+|---|---|---|---|---|
+| H01 | [Short form] | A | Iteration [NN] | PENDING |
+| H02 | [Short form] | A | Not yet | PENDING |
+
+Status: `PENDING`, `SUPPORTED`, `REFUTED`, `PARTIALLY SUPPORTED`, `INCONCLUSIVE`.
 
 ---
 
-## 10. Execution Notes
+## 9. Reproducibility
 
-### Reproducibility
-- Random seed: 1024
-- All parameters documented in config files
-- Environment captured in requirements.txt
+- Random seed: [value], recorded in each script that uses randomness
+- Parameters: stated in the script or a config file it reads, not passed ad hoc
+- Environment: captured so a run can be repeated
 
-### Quality Checklist
-- [ ] All analyses have ITERATION_LOG.md
-- [ ] Final iterations documented in SELECTED.md
-- [ ] Figures saved in multiple formats (PNG, PDF, SVG)
-- [ ] FINAL_MANIFEST.md updated
+### Checklist
+
+- [ ] Every iteration has a row in `analysis/ITERATION_LOG.md`
+- [ ] Every numeric claim traces to a specific log file
+- [ ] Panel results are recorded per probe, not summarized
+- [ ] Negative and null results are recorded, not dropped
+- [ ] Figures name the claim they support
+
+---
+
+## 10. Revisions
+
+| Date | What changed | Why |
+|---|---|---|
+| [DATE] | Initial plan | — |

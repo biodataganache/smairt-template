@@ -6,20 +6,23 @@ You are helping generate publication-quality figures for a paper-driven SMAIRT p
 
 ## Project Style
 
-This project uses consistent styling defined in `lib/visualization/style.py`:
+Figures across a paper must look like they belong to the same paper. This project does
+not ship a styling module, so the first figure script establishes the style and later
+ones reuse it.
+
+Once a second figure needs the same styling, extract it to
+`scripts/shared/figure_style.py` and import it:
 
 ```python
-from lib.visualization.style import setup_plot_style, save_figure, COLORS
+from scripts.shared.figure_style import setup_plot_style, save_figure, COLORS
 
-# Set up style before creating figures
 setup_plot_style()
-
-# Use consistent colors
-color = COLORS['primary']  # #2ecc71
-
-# Save in multiple formats
-save_figure(fig, 'figures/fig_01_name')  # Saves .png, .pdf, .svg
+color = COLORS["primary"]
+save_figure(figure, "results/figures/fig_01_name")
 ```
+
+Until that module exists, define the style in the figure script itself rather than
+importing something that is not there. Extract on the second use, not the first.
 
 ## Figure Requirements
 

@@ -31,6 +31,25 @@ and run experiments, the order in which work happened is no longer evidence of t
 reasoning behind it. Only committed files are. Each step names its record so the
 project can show what was concluded, by whom, and in what order.
 
+**Iteration** — one attempt at bringing the work closer to the goal: one script, the
+log it produced, and the interpretation of that log. Iterations are numbered across the
+whole project in the order the work happened, so the numbering is a timeline rather than
+a filing scheme.
+
+An iteration takes one of two shapes. A **single point** tests one change and answers
+one question: does this modification improve performance. A **panel** probes several
+directions at once: do any of these candidate changes improve the model. A panel is one
+iteration because it is one attempt, even though it returns several answers.
+
+**Probe** — one arm of a panel iteration. Each probe carries its own label and its own
+result. A panel of eight probes can come back with three improvements, one regression,
+and four null results, and all three groups are findings. Recording a panel as a single
+verdict discards most of what it produced, so probe-level results stay separated from
+the moment they are written.
+
+**Track** — a direction of inquiry, spanning as many iterations as it takes. A track has
+a plan and one or more hypotheses. An iteration is one attempt within a track.
+
 ---
 
 ## Step 1 - State the research question
