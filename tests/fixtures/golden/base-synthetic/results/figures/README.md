@@ -1,12 +1,18 @@
-# Result Figures
+# Figures
 
-Store ordinary result figures here and track them by default. Every figure should be
-traceable to source code, data, parameters, raw logs, and interpretation.
+Store generated figures and visualizations here.
 
-| Figure | Source Script | Source Log/Data | Analysis | Parameters/Notes |
-|---|---|---|---|---|
-| [Path] | [Path] | [Paths] | [Path] | [Seed, version, transform] |
+## Purpose
 
-Use descriptive names and include units, uncertainty, readable labels, and accessible colors.
-Keep plotting code with the experiment or analysis. Explicitly ignore figures only when size,
-sensitivity, or licensing requires it, and record how they can be regenerated.
+Alongside the 4-part structure (Background, Hypothesis, Methods, Results), maintain visual artifacts: a figure for the results section and possibly a schematic diagram for the methods showing the workflow.
+
+## Naming Convention
+
+Name figures to associate with scripts or iterations:
+script_01_accuracy_plot.png
+iteration_03_comparison.png
+
+
+## Note
+
+Not all figures generated during experimentation will appear in the final product. The final paper will be based on selected results, though you may want to make supplementary figures available alongside the publication.

@@ -1,26 +1,38 @@
 # Hypotheses
 
-Track every testable hypothesis in a separate file copied from `HYPOTHESIS_TEMPLATE.md`.
+Track all hypotheses tested throughout the project.
 
-## Naming
+## The 4-Part Structure
 
-Use sequential, descriptive names such as `H1_noise_threshold.md` and
-`H2_alternative_algorithm.md`.
+The hypothesis is the logical question that is being tested at
+this iteration of the process. Each hypothesis is documented using
+`HYPOTHESIS_TEMPLATE.md` and connects to the audit trail.
 
-## Audit Trail
+## Files
 
-Each hypothesis connects a prediction to methods, evidence, and interpretation:
+- `HYPOTHESIS_TEMPLATE.md` - Template for documenting each hypothesis (copy and rename for each new one)
+- `H1_*.md`, `H2_*.md`, etc. - Individual hypothesis files, named sequentially
 
-```text
-hypotheses/H1_*.md
-  -> experiments/01_synthetic/script_01_*.py
-  -> results/logs/script_01_*.log
-  -> analysis/ANALYSIS_01.md
+## Naming Convention
+
+```
+H1_descriptive_name.md
+H2_descriptive_name.md
+H3_descriptive_name.md
 ```
 
-Write success and rejection criteria before running an experiment. After interpretation,
-update the status to supported, refuted, partially supported, or inconclusive. Preserve
-failed hypotheses and dead ends because they constrain future work.
+## How Hypotheses Connect (The Audit Trail)
 
-Use next steps from one analysis to motivate the next hypothesis. Record patterns that
-apply across experiments in `prompts/KNOWN_PATTERNS.md`.
+Each hypothesis leads to methods (the code), which produce results (auto-captured by TeeLogger to `results/logs/`), which lead to interpretation and next steps—which feed back into the next hypothesis.
+
+```
+hypotheses/H1_*.md → experiments/script_XX_*.py → results/logs/script_XX_*.log → interpretation
+```
+
+## Tips
+
+- Write hypotheses **before** running experiments
+- Be specific and testable
+- Document whether each hypothesis was supported, refuted, or inconclusive
+- The "Next Steps" from each hypothesis result seeds the next hypothesis
+- Track patterns that emerge across hypotheses in `prompts/KNOWN_PATTERNS.md`

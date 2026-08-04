@@ -1,21 +1,43 @@
-# Analysis Figures
+# Final Publication Figures
 
-Use subdirectories here when an analysis needs working or publication-oriented figures
-separate from general `results/figures/` output.
+This directory contains the final, publication-ready figures.
 
-## Naming and Provenance
+## Structure
+
+```
+XX_figures/
+├── main/           # Main paper figures
+│   ├── fig_01_*.pdf
+│   ├── fig_02_*.pdf
+│   └── ...
+└── supplementary/  # Supplementary figures
+    ├── fig_s01_*.pdf
+    └── ...
+```
+
+## Naming Convention
 
 - Main figures: `fig_01_description.{ext}`
-- Supplementary figures: `fig_s01_description.{ext}`
-- Record the source script, log, data, parameters, and generation date.
-- Keep editable source or plotting code with the corresponding experiment or analysis.
-- Save formats appropriate to the scientific use; vector formats are preferred for line art.
+- Supplementary: `fig_s01_description.{ext}`
+- Save in multiple formats: `.png`, `.pdf`, `.svg`
 
-## Figure Record
+## Checklist Before Submission
 
-| Figure | Source Script | Source Log/Data | Analysis | Notes |
-|---|---|---|---|---|
-| [Path] | [Path] | [Path] | [Path] | [What it shows] |
+- [ ] All figures saved at 300 DPI minimum
+- [ ] Font sizes readable (minimum 8pt in final size)
+- [ ] Color scheme consistent across figures
+- [ ] Legends complete and clear
+- [ ] Axis labels include units
+- [ ] PDF versions for vector graphics
+- [ ] PNG versions for raster/photos
+- [ ] Figure captions drafted in paper
 
-When Paper support is active, map manuscript figures to this evidence in
-`FINAL_MANIFEST.md`.
+## Source Tracking
+
+Each figure should be traceable to its source analysis.
+Check `FINAL_MANIFEST.md` for the mapping.
+
+| Figure | Source Analysis | Iteration |
+|--------|-----------------|-----------|
+| Fig 1 | 01_first_analysis | iter_02 |
+| Fig 2 | 02_second_analysis | iter_03 |

@@ -100,8 +100,12 @@ Repeat this section for each iteration or phase that materially changes the conc
 | Metric or Decision | Iteration 1 | Iteration 2 | Iteration 3 | Current Interpretation |
 |---|---:|---:|---:|---|
 | [Shared metric] | [Value] | [Value] | [Value] | [Trend or decision] |
+| [Boundary condition] | [Value] | [Value] | [Value] | [What changed] |
 
-[Describe improvements, regressions, parameter boundaries, and evidence-driven pivots.]
+### Trend Across the Study
+
+[Describe how the research evolved. Note improvements, regressions, parameter
+boundaries, failure modes, and decisions that changed because of evidence.]
 
 ## 7. Key Scientific Conclusions
 

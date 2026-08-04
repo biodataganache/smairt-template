@@ -1,18 +1,28 @@
 # Synthetic Data Experiments
 
-Use synthetic data when controlled ground truth can test assumptions quickly. Not every
-question needs this phase, but the directory remains available throughout the project.
+Some questions (not all) might be amenable to experimentation with synthetic
+data. This is convenient, especially at the start of the process, because it
+makes the scripts self-contained and the data can be synthesized with different
+noise levels, and with different types of structures.
 
-## Scripts
+## Purpose
 
-| Script | Hypothesis | Data/Seed | Result | Analysis | Date |
-|---|---|---|---|---|---|
-| | | | | | |
+- Fast iteration without dependencies
+- Test if code works before committing to real data
+- Very rapid turnaround time
 
-## Conventions
+## Scripts in This Folder
 
-- Name scripts `script_XX_brief_description.py`.
-- Link the hypothesis in the module docstring.
-- Write complete output to `results/logs/` with `TeeLogger`.
-- Store figures in `results/figures/` and link their source log and script.
-- Preserve useful failed runs and explain their implications in analysis.
+| Script | Hypothesis Tested | Result | Date |
+|--------|-------------------|--------|------|
+| | | | |
+
+## Naming Convention
+
+`script_XX_brief_description.py`
+
+## Output Convention
+
+1. Output to console for immediate feedback
+2. Output to log file via `TeeLogger`: `../../results/logs/script_XX_description_TIMESTAMP.log`
+3. Reference hypothesis file in script docstring (audit trail)

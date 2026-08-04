@@ -1,18 +1,46 @@
-# Downloaded Data Experiments
+# Downloaded Benchmark Data Experiments
 
-Use established public or benchmark data to challenge assumptions and compare with prior
-results. This directory is always present even when the project starts in another phase.
+The workspace for experiments on established benchmark data. Every project carries
+this phase, whether or not the work started here.
 
-## Scripts
+## Purpose
 
-| Script | Dataset | Hypothesis | Result | Analysis | Date |
-|---|---|---|---|---|---|
-| | | | | | |
+- Establish baselines on data others have examined, so your result has something
+  to be compared against
+- Test across a deliberate range: easy and hard, clean and messy
+- Show that an approach is robust across datasets rather than tuned to one
+- Build confidence before committing effort to your target data
 
-## Conventions
+For fundamental algorithm development, testing across datasets from different
+disciplines is what demonstrates generalizability rather than asserting it.
 
-- Name scripts `script_XX_brief_description.py`.
-- Link the dataset provenance record and hypothesis in the script.
-- Capture complete output in `results/logs/`.
-- Record dataset version, split, preprocessing, and baseline comparisons.
-- Explain where findings generalize and where they fail.
+If the project started at a later phase, this directory stays available. Working
+backwards into benchmark data is a legitimate move when a real-data result is
+ambiguous and you need a case with a known answer.
+
+## Scripts in This Folder
+
+| Script | Dataset Used | Hypothesis Tested | Result | Date |
+|--------|--------------|-------------------|--------|------|
+| | | | | |
+
+## Naming Convention
+
+`script_XX_brief_description.py`
+
+Create one from the project root, which numbers it for you and wires up logging:
+
+```bash
+python scripts/new_script.py downloaded baseline --hypothesis "The baseline exceeds chance"
+```
+
+The hypothesis is required, not optional. Stating what a script is meant to settle
+before writing it is the point of the convention.
+
+## Output Convention
+
+1. Print to the console for immediate feedback.
+2. Capture the full run through `TeeLogger`, which writes to
+   `results/logs/script_XX_description_TIMESTAMP.log`.
+3. Name the hypothesis file in the script docstring. That reference is what makes
+   the audit trail followable in both directions.

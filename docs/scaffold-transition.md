@@ -2,6 +2,69 @@
 
 This record accounts for the meaningful files recovered from the original Cookiecutter scaffold. `results/.DS_Store` is intentionally excluded as operating-system metadata.
 
+## Content fidelity
+
+"Restored at same path" describes the path only. For a period it stood in for
+"restored in substance" and hid a real gap: the paths existed while the guidance
+they promised did not. Across the retained assets, content moved from **29 percent**
+of the legacy original to **69 percent**.
+
+Byte ratio is a detection heuristic, not the acceptance criterion. Acceptance is
+whether an asset explains its subject well enough to stand alone. Several assets are
+deliberately shorter than their originals because the originals documented retired
+tooling; those are listed as rewritten rather than restored.
+
+| Disposition | Meaning |
+|---|---|
+| Restored | Legacy content carried over, with legacy selections resolved to the branch current behavior always takes. |
+| Rewritten | Legacy content described retired tooling or a layout that no longer exists, so the passage was rewritten to current behavior. |
+| Repaired successor | The current asset is a corrected implementation rather than a thinned copy, and the original is not a recovery source. |
+
+Assets rewritten rather than restored, and why:
+
+| Asset | Reason |
+|---|---|
+| `paper/FINAL_MANIFEST.md` | Described itself as automatically updated by the retired `finalize_iteration.py`. |
+| `analysis/REPOSITORY_PLAN.md` | Listed retired helpers and mapped paper elements to an iteration tree that no longer exists. |
+| `hpc/README.md` | Pointed at a `submit_job.py` and a `slurm_gpu.sh` that were never part of this scaffold. |
+| `hpc/config.yaml` | Interpolated a researcher email that is optional; the notifications block is kept with an empty value the researcher fills in. |
+| `hpc/logs/README.md` | Referenced a per-iteration `NOTES.md` layout that no longer exists. |
+| `prompts/session_log.md` | Was a browser-paste transcript store; it is now a durable decision index. |
+| `experiments/02_downloaded/README.md`, `experiments/03_real_data/README.md` | Selected prose on `starting_phase`; all three phases are now always present. |
+| `scripts/monitor_template.py` | Repaired successor. The original hardcoded placeholder constants instead of accepting arguments. |
+
+Assets still carrying retired references, deferred as rewrites rather than copies:
+`scripts/README.md`, `prompts/CONTEXT_INDEX.md`, `prompts/SESSION_START.md`,
+`results/logs/README.md`, `README.md`, `analysis/README.md`, `docs/12_STEPS.md`, and
+`scripts/generate_manifest.py`.
+
+## Template variable mapping
+
+Generation provides exactly two names, `project` and `researcher`, and renders with
+`StrictUndefined`. A surviving legacy variable is therefore a generation failure, not
+a cosmetic flaw.
+
+| Legacy variable | Current equivalent |
+|---|---|
+| `cookiecutter.project_name` | `project.name` |
+| `cookiecutter.project_slug` | `project.slug` |
+| `cookiecutter.description` | `project.description` |
+| `cookiecutter.domain` | `project.domain` |
+| `cookiecutter.initial_research_question` | `project.research_question`, which may be unset |
+| `cookiecutter.author_name` | `researcher.name` |
+| `cookiecutter.author_email` | `researcher.email`, which may be unset |
+| `cookiecutter.project_mode` | None. Paper is a capability; the asset only ships when it is enabled. |
+| `cookiecutter.workflow_mode` | None. There is one workflow. |
+| `cookiecutter.starting_phase` | None for guidance purposes. All three phases are always present; the contract records `starting_phase` and `current_phase` as data. |
+| `cookiecutter.ai_tool` | None. The assistant pointer is generated from the contract. |
+| `cookiecutter.license` | None. License text is a managed asset. |
+| `cookiecutter.create_git_repo` | None. Recorded in the contract. |
+
+Python assets are copied verbatim rather than rendered, and are exempt from the
+unresolved-token check, so a bad copy there would reach a researcher in silence.
+`tests/test_scaffold_content.py` closes that gap and also asserts that no generated
+guidance names a retired helper or concept.
+
 | Original path | Active disposition | Condition | Ownership | Compatibility correction |
 |---|---|---|---|---|
 | `README.md` | Restored at same path | Always | Tool guidance | Installed CLI, one workflow, direct files, all phases |

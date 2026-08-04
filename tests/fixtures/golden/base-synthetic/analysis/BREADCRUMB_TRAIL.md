@@ -1,24 +1,72 @@
 # Breadcrumb Trail
 
-Maintain a concise index of significant analyses and evidence-driven decisions. Raw output
-belongs in `results/logs/`; this file records what changed and where supporting evidence lives.
+## Project: Golden Synthetic Study
 
-## Entry Template
+This file maintains a running log of all analyses performed, creating a breadcrumb trail for reproducibility and AI context.
 
-### [YYYY-MM-DD] - [Analysis or Decision]
+---
 
-- **Hypothesis**: [Path]
-- **Script**: [Path]
-- **Log**: [Path]
-- **Analysis**: [Path]
-- **Key finding**: [Concise evidence-based statement]
-- **Decision**: CONTINUE / REVISE / PIVOT / STOP
-- **Next step**: [Action and rationale]
+## Log Format
+
+Each entry should include:
+- Date
+- Analysis performed
+- Key findings
+- Next steps
+
+---
+
+## Analysis Log
+
+### [DATE] - Project Setup
+
+**What was done**:
+- Created project structure
+- Added initial data to `data/`
+- Created analysis plan
+
+**Key findings**:
+- [Initial observations about data]
+
+**Next steps**:
+- Begin with analysis in `01_*/`
+
+---
+
+### [DATE] - [Analysis Name]
+
+**What was done**:
+- [Description of analysis]
+- Iteration: [iter_XX]
+- Script: [path to script]
+
+**Key findings**:
+- [Finding 1]
+- [Finding 2]
+
+**Metrics**:
+- [Metric 1]: [Value]
+- [Metric 2]: [Value]
+
+**Decision**: [ACCEPT/REVISE/ABANDON]
+
+**Next steps**:
+- [What to do next]
+
+---
 
 ## Quick Reference
 
-| Date | Analysis | Evidence | Decision | Notes |
-|---|---|---|---|---|
-| YYYY-MM-DD | [Name] | [Path] | [Decision] | [Boundary or insight] |
+| Date | Analysis | Iteration | Decision | Notes |
+|------|----------|-----------|----------|-------|
+| YYYY-MM-DD | [Name] | iter_01 | REVISE | [Brief note] |
 
-Document negative results and dead ends. Link files rather than copying their contents.
+---
+
+## Tips for Maintaining This Log
+
+1. Update after each significant analysis run
+2. Include enough detail for AI to understand context
+3. Link to specific files/iterations
+4. Note any unexpected findings
+5. Document dead ends (they're valuable too!)

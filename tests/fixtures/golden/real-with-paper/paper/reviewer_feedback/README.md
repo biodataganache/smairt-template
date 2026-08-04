@@ -1,8 +1,42 @@
 # Reviewer Feedback
 
-Preserve original reviewer comments, response drafts, decisions, and resulting manuscript or
-analysis changes. Link each response to evidence rather than answering from memory.
+This directory stores reviewer feedback and response documents.
 
-| Comment ID | Reviewer Comment | Response | Evidence | Changed Files | Status |
-|---|---|---|---|---|---|
-| R1 | [Comment] | [Response] | [Paths] | [Paths] | Open |
+## Structure
+
+```
+reviewer_feedback/
+├── round_1/
+│   ├── reviewer_1_comments.md
+│   ├── reviewer_2_comments.md
+│   ├── reviewer_3_comments.md
+│   └── response_to_reviewers.md
+├── round_2/
+│   └── ...
+└── README.md
+```
+
+## Response Template
+
+When responding to reviewers, use this format:
+
+```markdown
+## Reviewer 1
+
+### Comment 1.1
+> [Quote the reviewer's comment]
+
+**Response**: [Your response]
+
+**Changes made**: [List specific changes, with line numbers if applicable]
+
+### Comment 1.2
+...
+```
+
+## Tips
+
+- Be respectful and thorough in responses
+- Reference specific sections/figures/tables
+- Track which analyses need to be re-run
+- Document any new analyses added in response to feedback
