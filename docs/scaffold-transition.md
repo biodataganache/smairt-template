@@ -1,5 +1,31 @@
 # Scientific Scaffold Transition Record
 
+## Scaffold version 0.3.0
+
+The re-enrichment and the readopted iteration workflow both changed what a generated
+project contains while `scaffold_version` stayed at `0.2.0`. Since
+[`project_check()`](../src/smairt/project.py:588) decides whether a project is current by
+comparing that string to the installed version, a project generated before those changes
+and one generated after were indistinguishable, and the check reported a stale project as
+current.
+
+`0.3.0` rather than `0.2.1` because the blueprint gained five declared assets and the
+workflow gained a vocabulary. A researcher on `0.2.0` following current documentation would
+look for `analysis/ITERATION_LOG.md` and three helpers their project does not contain. That
+is a change in what a project is, not a fix.
+
+Consequence, verified rather than assumed: a `0.2.0` project is now told
+`scaffold-version-mismatch`, and capability changes, repair, and regeneration refuse with
+`An explicit upgrade flow is not available yet`. That is the behavior
+[ADR 0001](adr/0001-protect-generated-project-surface.md:21) specifies, and the bump is what
+makes it reachable. A researcher holding a `0.2.0` project who wants the current workflow
+should generate a new project; there is no migration.
+
+The version string appears in ten files. Three are load-bearing: `pyproject.toml`,
+`src/smairt/__init__.py`, and the `scaffold_version` default in `src/smairt/models.py`. The
+CI workflow, the README, and CONTRIBUTING each hardcode the two build artifact filenames,
+so six filename references move with every bump or the build fails on a missing file.
+
 This record accounts for the meaningful files recovered from the original Cookiecutter scaffold. `results/.DS_Store` is intentionally excluded as operating-system metadata.
 
 ## Content fidelity
