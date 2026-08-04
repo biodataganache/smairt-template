@@ -19,6 +19,12 @@ SMAIRT creates and manages readable, file-based scientific research workspaces.
 | Starting phase | Immutable provenance recording where a project began. It does not control which phase directories exist. |
 | Current phase | Mutable project status indicating the phase receiving current attention. It does not control which phase directories exist. |
 | Capability | An additive optional guidance bundle, currently Paper or HPC. Deactivation never removes retained files. |
+| Screen | One unit of terminal interaction presenting a title, a body, and the controls available. Screens replace one another rather than accumulating. |
+| Framed screen | A screen drawn as a bounded region that repaints in place, never entering the alternate screen and never exceeding the terminal's height. |
+| Semantic palette | The single style definition naming interface roles rather than colors, shared by framed screens and printed output, expressed in the terminal's own colors. |
+| Action token | The stable name identifying a menu action. Tokens are the addressing contract; displayed numbers are a renumberable convenience. |
+| Capability selection | A multi-selection of optional capabilities in which a deliberate none is mutually exclusive with any capability. |
+| Diff preview | The statement of exactly which changes an operation would make, derived from the operation itself and shown before anything is written. |
 
 ## Core Relationships
 
@@ -27,6 +33,8 @@ SMAIRT creates and manages readable, file-based scientific research workspaces.
 - The project contract records starting phase, current phase, and capability state.
 - Package-derived checks compare tool guidance with the installed scaffold version while preserving modifications.
 - Golden projects independently record complete representative generated output.
+- Framed screens and printed output both derive their styling from the semantic palette.
+- A capability selection produces a diff preview, and only an explicit confirmation applies it.
 
 ## Invariants
 
@@ -37,3 +45,7 @@ SMAIRT creates and manages readable, file-based scientific research workspaces.
 - Capability deactivation changes contract state only.
 - Researcher work is never overwritten, regenerated, or semantically assessed.
 - A scaffold-version mismatch blocks package-owned mutations until an explicit upgrade flow exists.
+- Interactive presentation never enters the alternate screen and never exceeds the terminal's height.
+- Color is never the only signal; markers and words carry every meaning color carries.
+- A diff preview reflects the operation that would run, never a fixed description of it.
+- Every finite choice is addressable by a stable action token without a capable terminal.

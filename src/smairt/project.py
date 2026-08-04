@@ -6,6 +6,7 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -39,6 +40,7 @@ from smairt.scaffold import (
 
 CONTRACT_PATH = Path("smairt.yaml")
 LOCAL_PREFERENCES_PATH = Path(".smairt") / "preferences.yaml"
+OPTIONAL_CAPABILITIES = ("paper", "hpc")
 REQUIRED_DIRECTORIES = (
     "background",
     "hypotheses",
@@ -201,6 +203,78 @@ def save_local_preferences(root: Path, preferences: dict[str, str | bool]) -> No
     path = root / LOCAL_PREFERENCES_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(yaml.safe_dump(preferences, sort_keys=True))
+
+
+@dataclass(frozen=True)
+class CapabilityChange:
+    """One capability whose state would change, and in which direction."""
+
+    name: str
+    label: str
+    enabling: bool
+
+
+@dataclass(frozen=True)
+class CapabilityPlan:
+    """What a capability selection would change, derived from the real operation."""
+
+    requested: tuple[str, ...]
+    changes: tuple[CapabilityChange, ...]
+    creates: tuple[str, ...]
+
+    @property
+    def is_empty(self) -> bool:
+        """Report whether applying this plan would change nothing at all."""
+        return not self.changes
+
+
+def capability_plan(root: Path, requested: Sequence[str]) -> CapabilityPlan:
+    """Describe what enabling and disabling the requested capabilities would do.
+
+    The created-file list is rendered from the same contract and templates the
+    write itself uses, so a preview cannot describe something else. Enabling
+    creates only missing files; disabling never removes any.
+    """
+    contract = load_contract(root)
+    wanted = {name for name in requested}
+    unknown = wanted - set(OPTIONAL_CAPABILITIES)
+    if unknown:
+        raise ProjectError(f"Unknown capability: {', '.join(sorted(unknown))}")
+    changes: list[CapabilityChange] = []
+    for name in OPTIONAL_CAPABILITIES:
+        enabled = _capability(contract, name).state is CapabilityState.ENABLED
+        if name in wanted and not enabled:
+            changes.append(CapabilityChange(name, _capability_label(name), enabling=True))
+        elif name not in wanted and enabled:
+            changes.append(CapabilityChange(name, _capability_label(name), enabling=False))
+    enabling = [change.name for change in changes if change.enabling]
+    creates: list[str] = []
+    if enabling:
+        projected = contract.model_copy(
+            update={
+                "capabilities": {
+                    **contract.capabilities,
+                    **{name: Capability(state=CapabilityState.ENABLED) for name in enabling},
+                }
+            }
+        )
+        creates = sorted(
+            relative
+            for relative in render_template_assets(projected)
+            if not (root / relative).exists()
+        )
+    return CapabilityPlan(tuple(sorted(wanted)), tuple(changes), tuple(creates))
+
+
+def set_capabilities(root: Path, requested: Sequence[str]) -> list[str]:
+    """Apply a capability selection, reporting what each capability did."""
+    plan = capability_plan(root, requested)
+    return [
+        enable_capability(root, change.name)
+        if change.enabling
+        else disable_capability(root, change.name)
+        for change in plan.changes
+    ]
 
 
 def enable_capability(root: Path, name: str) -> str:

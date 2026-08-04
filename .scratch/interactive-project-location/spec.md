@@ -66,7 +66,7 @@ The noninteractive `smairt new /complete/new/project/path ...` contract will not
 - The wizard will retain the complete destination as derived state for validation, final review, and the generator boundary; parent and folder remain independently editable inputs.
 - Existing destination validation and atomic generation remain authoritative. The interactive adapter will validate the derived destination before advancing, and generation will validate it again before materializing the scaffold.
 - The CLI and terminal interaction remain adapters over shared project operations, consistent with the accepted generated-project-surface decision. The scaffold blueprint, scaffold assets, generated-project contract schema, and capability behavior will not change.
-- A small local Prompt Toolkit selector will render finite choices. It will use a non-full-screen application, avoid the alternate screen, and return a selected value rather than exposing widget state to callers.
+- Superseded by ADR 0002. A small local Prompt Toolkit selector will render finite choices. It will use a non-full-screen application, avoid the alternate screen, and return a selected value rather than exposing widget state to callers. ADR 0002 replaces the non-full-screen requirement with framed screens that repaint in place; avoiding the alternate screen and returning values rather than widget state both remain in force.
 - Visual selector controls will include Up/Down and `k`/`j` movement, Enter acceptance, a visible Back item, Escape/Left back navigation, and Ctrl-C cancellation. Navigation wraps at the first and last items.
 - A selector accepts a retained default value and initially focuses that value when revisited.
 - The wizard will decide once whether visual interaction is supported using terminal streams and environment state. CI, pytest, redirected input/output, absent or dumb terminal types, and an explicitly disabled motion preference use deterministic text choices.
@@ -84,7 +84,7 @@ The noninteractive `smairt new /complete/new/project/path ...` contract will not
 - The primary seam is the installed `smairt new` command. Existing PTY and subprocess helpers provide prior art for complete wizard transcripts, destination safety, retained answers, final-review edits, cancellation, generation failure, and the generated project contract.
 - Installed-command fallback tests will cover creation under the current workspace, creation under a selected parent, the project-folder default, occupied and missing destinations, review edits, Back and Cancel, and continued noninteractive complete-path behavior.
 - The supporting seam is the narrow selector function running through Prompt Toolkit's real input processing with pipe input, an application session, and dummy output. Prior art exists in the related SMAIRT terminal UI tests and follows Prompt Toolkit's documented unit-testing guidance.
-- Selector tests will cover Up/Down, `j`/`k`, Enter, selectable Back, Escape, Left Arrow, Ctrl-C, wrapping navigation, retained focus, and avoidance of the alternate screen.
+- Selector tests will cover Up/Down, `j`/`k`, Enter, selectable Back, Escape, Left Arrow, Ctrl-C, wrapping navigation, retained focus, and avoidance of the alternate screen. Under ADR 0002 these tests assert avoidance of the alternate screen only, not avoidance of full-screen rendering.
 - Fallback-selection tests will verify deterministic numbered input and equivalent Back/Cancel outcomes without a capable terminal.
 - Destination tests will verify the derived child path rather than treating the selected parent as the target. A symlinked parent will be included where the platform supports symlinks.
 - Existing generator safety tests remain the authority for atomic creation and refusal to overwrite an existing destination.
@@ -100,7 +100,7 @@ The noninteractive `smairt new /complete/new/project/path ...` contract will not
 - Changing the generated-project contract schema.
 - Changing the scaffold blueprint, scaffold assets, golden projects, scientific lifecycle, starting phase, current phase, or capability semantics.
 - Porting environment management, safety modes, coding-harness configuration, contributor registration, collaborator workflows, appearance customization, or the broader schema from `smairt-toolkit`.
-- Replacing all dashboard and settings menus with visual selectors.
+- Superseded by ADR 0002. Replacing all dashboard and settings menus with visual selectors was out of scope for this change; ADR 0002 adopts it deliberately.
 - Adding a general-purpose terminal UI framework or reusable cross-application design system.
 
 ## Further Notes
