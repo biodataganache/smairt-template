@@ -224,7 +224,6 @@ def test_generated_project_restores_the_scientific_workflow_surface(tmp_path: Pa
         "hypotheses/README.md",
         "prompts/00_priming_prompts.md",
         "prompts/README.md",
-        "prompts/SESSION_START.md",
         "prompts/session_log.md",
         "scripts/generate_manifest.py",
         "scripts/monitor_template.py",

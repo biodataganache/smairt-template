@@ -13,12 +13,26 @@ The next steps from an analysis feed into the next background update, plan, or h
 
 ## Files
 
-- `ANALYSIS_TEMPLATE.md` interprets one experiment.
+- `ANALYSIS_TEMPLATE.md` interprets one experiment. Copy it per experiment as
+  `ANALYSIS_XX.md`; the number matches the script and its hypothesis.
 - `ANALYSIS_PLAN.md` records planned comparisons, metrics, and outputs.
 - `BREADCRUMB_TRAIL.md` indexes analyses and decisions.
 - `REPOSITORY_PLAN.md` records project-specific organization decisions.
 - `STUDY_REPORT_TEMPLATE.md` creates a project-level synthesis at a major checkpoint.
 - `XX_figures/README.md` explains figure provenance.
+
+## One number, one chain
+
+An experiment's number ties its four records together, so any one of them leads to the
+other three:
+
+```
+hypotheses/HYPOTHESIS_04.md  ->  experiments/*/script_04_*.py
+                             ->  results/logs/script_04_*.log
+                             ->  analysis/ANALYSIS_04.md
+```
+
+Interpretation belongs here. The log it interprets stays unedited in `results/logs/`.
 
 ## Study Report Checkpoints
 

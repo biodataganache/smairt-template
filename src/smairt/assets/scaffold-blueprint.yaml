@@ -59,7 +59,6 @@ assets:
   - {id: code-conventions, path: prompts/CODE_CONVENTIONS.md, kind: file, purpose: Scientific code and audit-trail conventions., ownership: tool-guidance, condition: always, source: prompts/CODE_CONVENTIONS.md}
   - {id: context-index, path: prompts/CONTEXT_INDEX.md, kind: file, purpose: Task-oriented project file index., ownership: tool-guidance, condition: always, source: prompts/CONTEXT_INDEX.md}
   - {id: known-patterns, path: prompts/KNOWN_PATTERNS.md, kind: file, purpose: Living record of project patterns and pitfalls., ownership: researcher-work, condition: always, source: prompts/KNOWN_PATTERNS.md}
-  - {id: session-start, path: prompts/SESSION_START.md, kind: file, purpose: Direct-file context refresh and task start guidance., ownership: tool-guidance, condition: always, source: prompts/SESSION_START.md}
   - {id: session-log, path: prompts/session_log.md, kind: file, purpose: Living index of session decisions and durable artifacts., ownership: researcher-work, condition: always, source: prompts/session_log.md}
   - {id: intellectual-contribution, path: prompts/intellectual_contribution.md, kind: file, purpose: Living human and assistant contribution record., ownership: researcher-work, condition: always, source: prompts/intellectual_contribution.md}
 

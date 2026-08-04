@@ -33,10 +33,33 @@ Assets rewritten rather than restored, and why:
 | `experiments/02_downloaded/README.md`, `experiments/03_real_data/README.md` | Selected prose on `starting_phase`; all three phases are now always present. |
 | `scripts/monitor_template.py` | Repaired successor. The original hardcoded placeholder constants instead of accepting arguments. |
 
-Assets still carrying retired references, deferred as rewrites rather than copies:
-`scripts/README.md`, `prompts/CONTEXT_INDEX.md`, `prompts/SESSION_START.md`,
-`results/logs/README.md`, `README.md`, `analysis/README.md`, `docs/12_STEPS.md`, and
-`scripts/generate_manifest.py`.
+The re-enrichment is complete. No generated asset now references a retired helper or
+concept, and `tests/test_scaffold_content.py` fails if one reappears.
+
+The eight assets that could not be copied were written rather than restored, because
+their originals documented tooling that no longer exists:
+
+| Asset | Why it was written rather than copied |
+|---|---|
+| `docs/12_STEPS.md` | The original's step 7 was a page on the retired `compile_for_ai.py`, and its ten steps were a filing discipline rather than the reasoning sequence the loop now follows. Rewritten so each step names its decision owner, what each party does, and the file that records it. |
+| `prompts/CONTEXT_INDEX.md` | Nine task tables were sound; the cross-tool transfer section instructed a researcher to run the retired compiler. |
+| `prompts/00_priming_prompts.md` | Now carries the merged content of `SESSION_START.md` as one prompt per situation. |
+| `prompts/README.md` | Listed three prompt files with overlapping descriptions, which is what allowed them to drift. Each file's job is now stated. |
+| `scripts/README.md` | The original documented four helpers that are retired. Rewritten for the four that exist, with every command verified against a generated project. |
+| `README.md` | The original's file tree and browser-paste section described a layout and workflow that no longer exist. |
+| `analysis/README.md` | Labelled three files as belonging to a workflow mode that was retired. |
+| `results/logs/README.md` | Described logs as feeding the retired compiler. |
+
+## Merged assets
+
+`prompts/SESSION_START.md` is merged into `prompts/00_priming_prompts.md` and no longer
+declared in the blueprint. Both files held ready-made prompts and were not
+distinguishable in practice, which is how they drifted apart. `prompts/CONTEXT_INDEX.md`
+remains separate because it answers a different question: which files to open for a
+given task, rather than what to say.
+
+This is the one structural change in the re-enrichment. Existing projects keep their
+copy of the file; an undeclared file does not fail `smairt check`, so nothing breaks.
 
 ## Template variable mapping
 
