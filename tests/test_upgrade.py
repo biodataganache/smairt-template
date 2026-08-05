@@ -267,5 +267,7 @@ def test_upgrading_a_current_project_is_a_clear_no_op(tmp_path: Path) -> None:
 def test_upgrade_reports_a_missing_project_rather_than_failing_obscurely(tmp_path: Path) -> None:
     result = run("upgrade", str(tmp_path))
 
-    assert result.returncode == 1
+    # Exit 2 rather than 1: there is no project to operate on, which is a different outcome
+    # from an operation that ran against a real project and failed.
+    assert result.returncode == 2
     assert "Not a SMAIRT project" in result.stderr

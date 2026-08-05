@@ -24,8 +24,14 @@ class GenerationError(Exception):
 
 def generate_project(destination: Path, options: ProjectOptions) -> list[str]:
     """Render a complete project into a temporary sibling then rename it into place."""
+    # Made absolute before anything else looks at it, because a relative path like `.` has no
+    # usable name and reports itself as its own parent — which put the temporary directory
+    # *inside* the destination and made the rename impossible.
+    #
+    # Deliberately not `resolve()`: that follows symlinks, so a destination that is a symlink
+    # would arrive here already replaced by its target and the refusal below could never fire.
+    destination = absolute_destination(destination)
     validate_destination(destination)
-    destination = destination.resolve()
     temporary = Path(
         tempfile.mkdtemp(prefix=f".{destination.name}.smairt-", dir=destination.parent)
     )
@@ -47,13 +53,46 @@ def generate_project(destination: Path, options: ProjectOptions) -> list[str]:
     return messages
 
 
+def absolute_destination(destination: Path) -> Path:
+    """Return an absolute, normalized path that still points at any symlink itself.
+
+    `resolve()` cannot be used here: it follows symlinks, which would silently retarget a
+    destination and defeat the refusal in `validate_destination`. The parent is resolved
+    instead, so `.` and `..` in the path a researcher typed are still normalized away.
+    """
+    if destination.is_absolute():
+        return destination
+    absolute = Path.cwd() / destination
+    return absolute.parent.resolve() / absolute.name
+
+
 def validate_destination(destination: Path) -> None:
-    if destination.is_symlink() or destination.exists():
-        if destination.is_dir() and not any(destination.iterdir()):
-            raise GenerationError(f"Destination already exists: {destination}")
-        raise GenerationError(f"Destination is not empty: {destination}")
+    """Refuse a destination that could not be created without risking existing files.
+
+    An existing empty directory is allowed. It is the most common shape a researcher arrives
+    in — make a folder, `cd` into it, run `smairt new .` — and refusing it with "Destination
+    already exists" told them something they knew and nothing they could act on.
+
+    Allowing it is safe rather than merely convenient: `os.replace` replaces an empty
+    directory atomically, and the operating system itself refuses to replace a non-empty one,
+    so a directory that gains a file mid-generation still cannot be overwritten.
+    """
+    if destination.is_symlink():
+        # A symlink is never followed, because replacing it would write through to whatever it
+        # points at, which may be anywhere.
+        raise GenerationError(
+            f"Destination is a symbolic link, which SMAIRT will not replace: {destination}"
+        )
+    reported = absolute_destination(destination)
+    if destination.exists():
+        if not destination.is_dir():
+            raise GenerationError(f"Destination is a file, not a directory: {reported}")
+        if any(destination.iterdir()):
+            raise GenerationError(
+                f"Destination already contains files, so SMAIRT will not write into it: {reported}"
+            )
     if not destination.parent.is_dir():
-        raise GenerationError(f"Destination parent does not exist: {destination.parent}")
+        raise GenerationError(f"Destination parent does not exist: {reported.parent}")
 
 
 def _generate_into(root: Path, options: ProjectOptions) -> None:

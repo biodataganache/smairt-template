@@ -120,6 +120,15 @@ brackets, and either the token or the number selects it:
 Tokens are the contract; numbers are a convenience that may be renumbered when
 a menu is regrouped, so scripts should prefer tokens.
 
+Every command uses the same three exit codes, so a script can tell the cases
+apart without reading messages:
+
+| Code | Meaning |
+| --- | --- |
+| `0` | The command did what it said. |
+| `1` | The project was found, and the operation failed or reported findings. |
+| `2` | The command could not be carried out: no project there, or unusable arguments. |
+
 Stable scriptable commands include:
 
 ```bash

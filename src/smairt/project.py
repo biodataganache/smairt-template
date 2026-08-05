@@ -17,6 +17,7 @@ from platformdirs import user_data_path
 from pydantic import ValidationError
 
 from smairt import __version__
+from smairt.messages import describe_validation_error
 from smairt.models import (
     Assistant,
     Capability,
@@ -32,6 +33,7 @@ from smairt.models import (
 )
 from smairt.scaffold import (
     ASSISTANT_POINTERS,
+    ScaffoldConflict,
     active_assets,
     asset_ownership,
     asset_path,
@@ -198,8 +200,17 @@ def load_contract(root: Path) -> ProjectContract:
             if match is not None:
                 data["license_year"] = int(match.group(1))
         return ProjectContract.model_validate(data)
-    except (OSError, ValidationError, yaml.YAMLError) as error:
-        raise ProjectError(f"Invalid smairt.yaml: {error}") from error
+    except ValidationError as error:
+        # A contract can be unreadable for a dozen structural reasons at once. Reporting them
+        # as pydantic does means a researcher reads ten stanzas of type tags and a URL to find
+        # out that one file is malformed.
+        raise ProjectError(describe_validation_error(error, source="smairt.yaml")) from error
+    except yaml.YAMLError as error:
+        raise ProjectError(
+            f"smairt.yaml is not valid YAML, so SMAIRT cannot read this project: {error}"
+        ) from error
+    except OSError as error:
+        raise ProjectError(f"Could not read smairt.yaml: {error}") from error
 
 
 def save_contract(root: Path, contract: ProjectContract) -> None:
@@ -360,7 +371,7 @@ def enable_capability(root: Path, name: str) -> str:
             }
         }
     )
-    materialize_template_assets(root, updated, missing_only=True)
+    _materialize(root, updated)
     save_contract(root, updated)
     return f"{_capability_label(name)} support enabled; existing project files were retained."
 
@@ -390,13 +401,26 @@ def _capability_label(name: str) -> str:
     return "Paper" if name == "paper" else "HPC"
 
 
+def _materialize(root: Path, contract: ProjectContract, *, missing_only: bool = True) -> None:
+    """Write the contract's scaffold, reporting a project-side conflict as a project error.
+
+    A file sitting where the scaffold needs a directory is the researcher's own file and a
+    situation they can fix. Letting the scaffold layer's exception travel unchanged made it
+    surface as an unexplained traceback in the middle of enabling a capability.
+    """
+    try:
+        materialize_template_assets(root, contract, missing_only=missing_only)
+    except ScaffoldConflict as error:
+        raise ProjectError(str(error)) from error
+
+
 def _create_paper_assets_safely(root: Path) -> None:
-    materialize_template_assets(root, load_contract(root), missing_only=True)
+    _materialize(root, load_contract(root))
 
 
 def _create_hpc_assets_safely(root: Path, slug: str) -> None:
     del slug
-    materialize_template_assets(root, load_contract(root), missing_only=True)
+    _materialize(root, load_contract(root))
 
 
 def hpc_asset_contents(slug: str) -> dict[str, str]:
@@ -1115,7 +1139,7 @@ def apply_upgrade(root: Path) -> UpgradePlan:
         path = root / change.path
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(assets[change.path])
-    materialize_template_assets(root, projected, missing_only=True)
+    _materialize(root, projected)
     save_contract(root, projected)
     return plan
 

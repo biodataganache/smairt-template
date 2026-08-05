@@ -14,6 +14,15 @@ AssetOwnership = Literal[
 AssetCondition = Literal["always", "paper", "hpc", "rigor"]
 
 
+class ScaffoldConflict(Exception):
+    """Raised when the project on disk cannot hold the scaffold the contract asks for.
+
+    Distinct from the blueprint's own validation errors: those mean the package is
+    misbuilt, which no researcher can act on, while this one names a file in the
+    researcher's own project that they can move or rename.
+    """
+
+
 class ScaffoldAsset(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -139,7 +148,10 @@ def materialize_template_assets(
         path = root / asset_path(asset, contract)
         if asset.kind == "directory":
             if path.exists() and not path.is_dir():
-                raise ValueError(f"cannot create scaffold directory because a file exists: {path}")
+                raise ScaffoldConflict(
+                    f"SMAIRT needs {asset_path(asset, contract)}/ to be a directory, but a "
+                    f"file exists there. Move or rename that file, then try again."
+                )
             path.mkdir(parents=True, exist_ok=True)
     for relative, content in render_template_assets(
         contract, include_inactive=include_inactive

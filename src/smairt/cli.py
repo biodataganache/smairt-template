@@ -18,7 +18,12 @@ from rich.console import Console
 
 from smairt import __version__
 from smairt.appearance import rich_theme, styling_enabled
-from smairt.generator import GenerationError, generate_project, validate_destination
+from smairt.generator import (
+    GenerationError,
+    absolute_destination,
+    generate_project,
+    validate_destination,
+)
 from smairt.menu import (
     Action,
     MenuChoice,
@@ -27,6 +32,12 @@ from smairt.menu import (
     numbered_lines,
     resolve_action,
     tokens_of,
+)
+from smairt.messages import (
+    describe_slug_rejection,
+    describe_unexpected_error,
+    describe_validation_error,
+    slug_rejection_in,
 )
 from smairt.models import (
     Assistant,
@@ -391,7 +402,13 @@ class Wizard:
                 domain="placeholder",
             )
         except ValidationError as error:
-            self.console.print(str(error.errors()[0]["msg"]), style="caution")
+            rejected = slug_rejection_in(error)
+            self.console.print(
+                describe_slug_rejection(rejected)
+                if rejected is not None
+                else describe_validation_error(error),
+                style="caution",
+            )
             self.console.print(
                 "Choose a folder name that starts with a letter and uses letters, "
                 "digits, and hyphens.",
@@ -767,12 +784,22 @@ def smairt(
         _home()
 
 
+# Exit codes are a contract with scripts, so they mean one thing each across every command:
+#   0  the command did what it said
+#   1  the project was found, and the operation failed or reported findings
+#   2  the command could not be carried out as asked: no project, or unusable arguments
+# `check` established this split deliberately, and every other command now follows it, so a
+# script can tell "this is not a project" from "this project has problems" without parsing text.
+CANNOT_PROCEED = 2
+OPERATION_FAILED = 1
+
+
 def _project_or_exit(path: Path | None, *, remember: bool = True) -> Path:
     try:
         root = resolve_project(path)
     except ProjectError as error:
         typer.echo(f"Error: {error}", err=True)
-        raise typer.Exit(code=1) from error
+        raise typer.Exit(code=CANNOT_PROCEED) from error
     if remember:
         record_recent(root)
     return root
@@ -780,7 +807,7 @@ def _project_or_exit(path: Path | None, *, remember: bool = True) -> Path:
 
 def _command_error(error: ProjectError) -> None:
     typer.echo(f"Error: {error}", err=True)
-    raise typer.Exit(code=1) from error
+    raise typer.Exit(code=OPERATION_FAILED) from error
 
 
 @app.command()
@@ -797,7 +824,7 @@ def open(
         success, message = launch_assistant(root)
         typer.echo(message)
         if not success:
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=OPERATION_FAILED)
     elif folder:
         typer.echo(open_folder(root))
     else:
@@ -813,11 +840,8 @@ def check(
     verbose: bool = typer.Option(False, help="Explain diagnostics and show detected local tools."),
 ) -> None:
     """Read-only Project Check for structural and configuration issues."""
-    try:
-        root = resolve_project(path)
-    except ProjectError as error:
-        typer.echo(f"Error: {error}", err=True)
-        raise typer.Exit(code=2) from error
+    # A read-only diagnostic does not count as opening a project, so it is not remembered.
+    root = _project_or_exit(path, remember=False)
     issues = project_check(root)
     payload = {
         "issues": [issue.as_dict() for issue in issues],
@@ -844,7 +868,7 @@ def check(
         for label, executable in detected_tools(root).items():
             typer.echo(f"- {label}: {executable}")
     if issues:
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=OPERATION_FAILED)
 
 
 paper_app = typer.Typer(help="Enable or deactivate additive Paper support.")
@@ -930,7 +954,14 @@ def repair(
     if not confirm:
         typer.echo("No changes made. Re-run with the same --select values and --confirm to apply.")
         return
-    apply_repairs(root, select)
+    # Guarded, because this is the write. A disk-full or permissions failure here used to
+    # produce a traceback at the exact moment a researcher most needs to know what state their
+    # project is in.
+    try:
+        apply_repairs(root, select)
+    except (ProjectError, OSError) as error:
+        typer.echo(f"Error: repair failed partway; run `smairt check` to see the result: {error}")
+        raise typer.Exit(code=OPERATION_FAILED) from error
     typer.echo("Selected safe repairs applied.")
 
 
@@ -1131,7 +1162,7 @@ def upgrade(
         apply_upgrade(root)
     except (ProjectError, OSError) as error:
         typer.echo(f"Error: upgrade failed and the project stays on {plan.from_version}: {error}")
-        raise typer.Exit(code=1) from error
+        raise typer.Exit(code=OPERATION_FAILED) from error
     typer.echo(f"Project upgraded to scaffold {plan.to_version}.")
 
 
@@ -1187,7 +1218,15 @@ def regenerate(
             "No changes made. Re-run with the same --select values and --confirm to regenerate."
         )
         return
-    regenerate_managed_assets(root, select)
+    # Guarded for the same reason as repair: this is the write, and a failure here needs to
+    # say what to do rather than print a traceback.
+    try:
+        regenerate_managed_assets(root, select)
+    except (ProjectError, OSError) as error:
+        typer.echo(
+            f"Error: regeneration failed partway; run `smairt check` to see the result: {error}"
+        )
+        raise typer.Exit(code=OPERATION_FAILED) from error
     typer.echo("Selected managed assets regenerated.")
 
 
@@ -2052,7 +2091,7 @@ def new(
             destination, options = Wizard().run()
         except WizardCancelled:
             typer.echo("Project creation cancelled. No files were written.")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=OPERATION_FAILED)
     if not wizard_mode and (
         name is None or slug is None or description is None or researcher is None or domain is None
     ):
@@ -2060,13 +2099,13 @@ def new(
             "Error: --name, --slug, --description, --researcher, and --domain are required with a destination.",
             err=True,
         )
-        raise typer.Exit(code=2)
+        raise typer.Exit(code=CANNOT_PROCEED)
     if not wizard_mode and not accept_license:
         typer.echo(
             "Error: review the selected license and pass --accept-license to create the project.",
             err=True,
         )
-        raise typer.Exit(code=2)
+        raise typer.Exit(code=CANNOT_PROCEED)
     try:
         if options is None:
             assert destination is not None
@@ -2092,20 +2131,40 @@ def new(
                 hpc=hpc,
             )
         assert destination is not None
+        # Resolved before generation, not after. Creation replaces the destination directory,
+        # so when the destination is the working directory itself — `smairt new .` — the
+        # process's own cwd is swapped out and a later `.resolve()` raises FileNotFoundError
+        # on a project that was in fact created successfully.
+        created = absolute_destination(destination)
         motion = wizard_mode and _interactive_motion_enabled()
         console = _themed_console(motion)
         messages = _generate_with_progress(console, destination, options, motion)
-    except (GenerationError, ValidationError, OSError) as error:
+    except (GenerationError, OSError) as error:
         prefix = "Could not create the project" if wizard_mode else "Error"
         typer.echo(f"{prefix}: {error}", err=True)
-        raise typer.Exit(code=1) from error
-    typer.echo(f"Created SMAIRT project at {destination.resolve()}")
-    record_recent(destination.resolve())
+        raise typer.Exit(code=OPERATION_FAILED) from error
+    except ValidationError as error:
+        typer.echo(_describe_rejected_input(error), err=True)
+        raise typer.Exit(code=CANNOT_PROCEED) from error
+    typer.echo(f"Created SMAIRT project at {created}")
+    record_recent(created)
     if motion:
-        _created_summary(console, destination.resolve(), options, messages)
+        _created_summary(console, created, options, messages)
         return
     for message in messages:
         typer.echo(message)
+
+
+def _describe_rejected_input(error: ValidationError) -> str:
+    """Return why supplied values were rejected, in one voice for every command.
+
+    A rejected slug is answered with the rule and a usable suggestion, because it is the most
+    common way creation fails and a rule alone leaves the researcher guessing.
+    """
+    rejected_slug = slug_rejection_in(error)
+    if rejected_slug is not None:
+        return f"Error: {describe_slug_rejection(rejected_slug)}"
+    return f"Error: {describe_validation_error(error)}"
 
 
 def _optional_answer(answers: dict[str, str | bool], key: str) -> str | None:
@@ -2160,4 +2219,27 @@ def _interactive_motion_enabled(root: Path | None = None) -> bool:
 
 
 def main() -> None:
-    app()
+    """Run the CLI, translating any unanticipated failure into something actionable.
+
+    This is the console-script entry point, so it sits outside Click's own exception handling
+    and has to exit the process itself rather than raise `typer.Exit` — raising here would
+    escape as the very traceback this boundary exists to prevent.
+
+    `SystemExit` passes through, because that is how every command has already reported its
+    own outcome by the time control returns here. `KeyboardInterrupt` is the researcher
+    deliberately stopping, and is not an error. Everything else is a failure SMAIRT did not
+    anticipate, where a traceback is the worst available answer: it implies the project may be
+    damaged while offering no way to find out. Full detail stays behind SMAIRT_DEBUG.
+    """
+    try:
+        app()
+    except SystemExit:
+        raise
+    except KeyboardInterrupt:
+        typer.echo("Cancelled.", err=True)
+        sys.exit(130)
+    except Exception as error:
+        if os.environ.get("SMAIRT_DEBUG"):
+            raise
+        typer.echo(describe_unexpected_error(error), err=True)
+        sys.exit(OPERATION_FAILED)

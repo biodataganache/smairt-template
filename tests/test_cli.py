@@ -73,8 +73,12 @@ def test_invalid_slug_exits_cleanly_without_creating_a_project(tmp_path: Path) -
         text=True,
     )
 
-    assert result.returncode == 1
-    assert "Slug must start with a lowercase letter" in result.stderr
+    # Exit 2: the command could not be carried out as asked, rather than an operation that
+    # ran and failed. The message states the rule and offers a slug that would work.
+    assert result.returncode == 2
+    assert "cannot be a project slug" in result.stderr
+    assert "starts with a lowercase letter" in result.stderr
+    assert "Try: invalid_slug" in result.stderr
     assert not destination.exists()
 
 
@@ -495,7 +499,10 @@ def test_existing_destination_is_never_overwritten_or_partially_exposed(
     result = create_project(destination)
 
     assert result.returncode == 1
-    assert result.stderr == f"Error: Destination is not empty: {destination}\n"
+    assert result.stderr == (
+        f"Error: Destination already contains files, so SMAIRT will not write into it: "
+        f"{destination}\n"
+    )
     assert preserved.read_text() == "do not overwrite"
     assert "smairt.yaml" not in paths(destination)
     assert not list(tmp_path.glob(".occupied.smairt-*"))
@@ -508,7 +515,7 @@ def test_dangling_symlink_destination_is_never_replaced(tmp_path: Path) -> None:
     result = create_project(destination)
 
     assert result.returncode == 1
-    assert "Destination is not empty" in result.stderr
+    assert "symbolic link" in result.stderr
     assert destination.is_symlink()
 
 
@@ -2047,7 +2054,7 @@ def test_interactive_wizard_validates_destination_before_final_review(tmp_path: 
     )
 
     assert result.returncode == 1
-    assert "Destination is not empty" in result.stdout
+    assert "already contains files" in result.stdout
     assert preserved.read_text() == "keep this"
     assert not (destination / "smairt.yaml").exists()
 
