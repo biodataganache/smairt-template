@@ -30,7 +30,9 @@ changed.
   read-only: `settings`, `paper`, `hpc`, `repair`, and `regenerate` all refused with "An
   explicit upgrade flow is not available yet", and the documented answer was to generate a new
   project. `smairt upgrade` previews which tool-owned guidance would change, which files would
-  be created, and which are kept untouched, then writes only with `--confirm`.
+  be created, and which are kept untouched, then writes only with `--confirm`. It never writes
+  researcher-owned records, never follows a symbolic link out of the project, and replaces each
+  file atomically so an interruption cannot truncate one.
 - Every refusal now names `smairt upgrade`, including the Project Check diagnostic.
 - `smairt repair` no longer prints "No safe repairs are available" and exits `0` on an
   out-of-date project while every repair is in fact blocked.
@@ -58,9 +60,9 @@ changed.
   helpers' own output, and the dashboard's suggested next action.
 - **An existing empty directory is now a valid destination**, so `smairt new .` works from
   inside a folder you have already made. A destination holding files is still refused.
-- **Project metadata containing `{{` or `}}` is refused at entry.** Such a project used to be
-  created successfully and then fail its own Project Check with unresolved template tokens in
-  files you never touched.
+- **Project metadata containing a template marker (`{{`, `}}`, `{%`, `%}`) is refused at
+  entry.** Such a project used to be created successfully and then fail its own Project Check
+  with unresolved template tokens in files you never touched.
 - `new_iteration.py` refuses a `--hypothesis` with no matching file, and lists the ones that
   exist. A typo previously wrote an iteration row pointing at nothing while the project still
   reported clean.

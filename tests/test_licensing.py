@@ -8,6 +8,8 @@ once shipped as real project licenses, hidden inside escaped single-line strings
 
 from __future__ import annotations
 
+import hashlib
+
 from smairt.models import License
 from smairt.project import LICENSE_EXPLANATIONS, LICENSE_TEXT
 
@@ -70,3 +72,39 @@ def test_a_license_is_not_offered_unless_its_full_text_is_short_enough_to_ship_i
     """
     assert "Apache-2.0" not in {license.value for license in License}
     assert "GPL-3.0" not in {license.value for license in License}
+
+
+# SHA-256 of each license's complete text with the copyright line normalized away, so the
+# digest covers the license body rather than the holder. Guards the middle of a license, which
+# a closing-clause assertion cannot see: a clause silently dropped from the centre of
+# BSD-3-Clause would still end correctly.
+LICENSE_BODY_DIGESTS = {
+    License.MIT: "ac94220a7c120581bae3b5b6aadbb476ee91d124f7ac81d5bd28ee8dad2c6d65",
+    License.BSD_3_CLAUSE: "53f6d3c8195318969ad6ee797d69ec2f98914dc157ec302e8a0e45fa7a2dd4da",
+}
+
+
+def license_body(license: License) -> str:
+    """Return the license text with the holder and year removed."""
+    rendered = LICENSE_TEXT[license].format(year=2026, holder="Example Holder")
+    return "\n".join(
+        line
+        for line in rendered.splitlines()
+        if "Example Holder" not in line and "2026" not in line
+    )
+
+
+def test_every_license_body_is_stable_and_covered_by_a_digest() -> None:
+    """A license body cannot change without someone updating a digest deliberately.
+
+    This is the check that would catch a clause removed from the middle of a license. It does
+    not assert what the official text is — no test can, without shipping a second copy — but it
+    makes any edit to shipped legal text a visible, intentional act.
+    """
+    assert set(LICENSE_BODY_DIGESTS) == set(License)
+    for license in License:
+        digest = hashlib.sha256(license_body(license).encode()).hexdigest()
+        assert digest == LICENSE_BODY_DIGESTS[license], (
+            f"{license.value} legal text changed; its digest is now {digest}. "
+            "Update the digest only if the change is a deliberate correction to the license."
+        )

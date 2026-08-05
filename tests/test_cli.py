@@ -76,9 +76,9 @@ def test_invalid_slug_exits_cleanly_without_creating_a_project(tmp_path: Path) -
     # Exit 2: the command could not be carried out as asked, rather than an operation that
     # ran and failed. The message states the rule and offers a slug that would work.
     assert result.returncode == 2
-    assert "cannot be a project slug" in result.stderr
-    assert "starts with a lowercase letter" in result.stderr
-    assert "Try: invalid_slug" in result.stderr
+    assert "project slug" in result.stderr
+    assert "lowercase letter" in result.stderr
+    assert "For the slug, try: invalid_slug" in result.stderr
     assert not destination.exists()
 
 

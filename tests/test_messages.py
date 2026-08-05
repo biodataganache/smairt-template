@@ -9,6 +9,7 @@ script tell "this is not a project" from "this project has problems".
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -114,7 +115,8 @@ def test_creating_a_project_with_a_bad_slug_says_what_to_do(tmp_path: Path) -> N
     )
 
     assert result.returncode == CANNOT_PROCEED
-    assert "Try: my_bad_slug" in result.stderr
+    assert "my_bad_slug" in result.stderr
+    assert "lowercase letter" in result.stderr
     assert "pydantic" not in result.stderr
     assert "[type=" not in result.stderr
     assert "validation error" not in result.stderr
@@ -149,6 +151,53 @@ def test_every_reported_contract_problem_is_named_in_words() -> None:
     assert "errors.pydantic.dev" not in message
 
 
+def test_a_nested_contract_field_is_still_named_in_words(tmp_path: Path) -> None:
+    """A contract reports a bad researcher name as `people.researcher.name`.
+
+    Only the exact location and a model-qualified guess were consulted, so nested paths fell
+    through to the raw YAML key — exactly the library-shaped output this translation exists to
+    remove.
+    """
+    destination = tmp_path / "nested_project"
+    create_project(destination)
+    contract = destination / "smairt.yaml"
+    contract.write_text(contract.read_text().replace("name: Ada Researcher", "name: ''"))
+
+    result = run("check", str(destination))
+
+    assert result.returncode == OPERATION_FAILED
+    assert "researcher name: cannot be empty" in result.stdout
+    assert "people.researcher.name" not in result.stdout
+
+
+def test_a_rejected_slug_does_not_hide_the_other_problems(tmp_path: Path) -> None:
+    """Answering only the slug forced a correct-one-thing-and-retry loop.
+
+    Every failure is reported, and the slug suggestion is added rather than substituted.
+    """
+    result = run(
+        "new",
+        str(tmp_path / "several"),
+        "--name",
+        "Study {{ x }}",
+        "--slug",
+        "Bad Slug",
+        "--description",
+        "d",
+        "--researcher",
+        "R",
+        "--domain",
+        "b",
+        "--accept-license",
+        "--no-git",
+    )
+
+    assert result.returncode == CANNOT_PROCEED
+    assert "project slug" in result.stderr
+    assert "project name" in result.stderr
+    assert "For the slug, try: bad_slug" in result.stderr
+
+
 def test_malformed_yaml_names_the_file_rather_than_the_parser(tmp_path: Path) -> None:
     destination = tmp_path / "malformed_project"
     create_project(destination)
@@ -165,9 +214,12 @@ def test_an_unexpected_failure_says_what_it_means_for_the_project() -> None:
 
     assert "unexpected error" in message
     assert "RuntimeError: something gave way" in message
-    assert "were not deleted" in message
     assert "smairt check" in message
     assert "SMAIRT_DEBUG=1" in message
+    # No promise about the files: the boundary cannot know how far an operation got, so a
+    # reassurance here would be a guess presented to a non-expert as a guarantee.
+    assert "were not deleted" not in message
+    assert "may be incomplete" in message
 
 
 def test_a_file_where_a_directory_must_go_is_reported_not_raised(tmp_path: Path) -> None:
@@ -189,22 +241,52 @@ def test_a_file_where_a_directory_must_go_is_reported_not_raised(tmp_path: Path)
     assert (destination / "hpc").read_text() == "my own notes\n"
 
 
-def test_debug_mode_still_exposes_the_full_detail(tmp_path: Path) -> None:
-    """The boundary must not make a real bug harder to report."""
-    destination = tmp_path / "debug_project"
-    create_project(destination)
-    (destination / "hpc").write_text("my own notes\n")
+def test_an_unexpected_exception_is_translated_but_debug_shows_the_traceback(
+    tmp_path: Path,
+) -> None:
+    """The boundary must not make a real bug harder to report.
 
-    result = subprocess.run(
-        [str(installed_smairt()), "hpc", "enable", str(destination)],
+    Driven through a genuinely unanticipated failure — a corrupt recents file that makes
+    `record_recent` raise — rather than an error the domain already translates, so this
+    actually reaches the handler in `main()`.
+    """
+    destination = tmp_path / "boundary_project"
+    create_project(destination)
+    data_home = tmp_path / "data"
+    recents = data_home / "smairt"
+    recents.mkdir(parents=True)
+    # A directory where a file is expected: reading tolerates it, writing does not.
+    (recents / "recent-projects.json").mkdir()
+    environment = {
+        "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+        "HOME": str(tmp_path),
+        "XDG_DATA_HOME": str(data_home),
+    }
+
+    translated = subprocess.run(
+        [str(installed_smairt()), "open", str(destination)],
         check=False,
         capture_output=True,
         text=True,
-        env={"PATH": "/usr/bin:/bin", "SMAIRT_DEBUG": "1", "HOME": str(tmp_path)},
+        env=environment,
     )
 
-    assert result.returncode != 0
-    assert "hpc/ to be a directory" in result.stderr
+    assert translated.returncode == OPERATION_FAILED, translated.stdout
+    assert "unexpected error" in translated.stderr
+    assert "Traceback" not in translated.stderr
+    assert "SMAIRT_DEBUG=1" in translated.stderr
+
+    detailed = subprocess.run(
+        [str(installed_smairt()), "open", str(destination)],
+        check=False,
+        capture_output=True,
+        text=True,
+        env={**environment, "SMAIRT_DEBUG": "1"},
+    )
+
+    assert detailed.returncode != 0
+    assert "unexpected error" not in detailed.stderr
+    assert "IsADirectoryError" in detailed.stderr or "Traceback" in detailed.stderr
 
 
 def test_creating_a_project_in_an_existing_empty_directory_succeeds(tmp_path: Path) -> None:

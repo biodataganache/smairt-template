@@ -93,12 +93,23 @@ def describe_validation_error(error: ValidationError, *, source: str | None = No
 
 
 def _label_for(location: str, model: str) -> str:
-    """Return how to name the rejected field, qualifying a bare key by its owning model."""
+    """Return how to name the rejected field, in the words a researcher would use.
+
+    Resolution goes from most specific to least: the exact location, then the location
+    qualified by the model that rejected it, then the longest recognized suffix. The suffix
+    step is what handles nesting — a contract reports a bad researcher name as
+    `people.researcher.name`, and only its tail is meaningful to the reader.
+    """
     if location in _FIELD_LABELS:
         return _FIELD_LABELS[location]
     prefix = _MODEL_PREFIXES.get(model)
     if prefix is not None and f"{prefix}.{location}" in _FIELD_LABELS:
         return _FIELD_LABELS[f"{prefix}.{location}"]
+    parts = location.split(".")
+    for start in range(1, len(parts)):
+        suffix = ".".join(parts[start:])
+        if suffix in _FIELD_LABELS:
+            return _FIELD_LABELS[suffix]
     return location or "value"
 
 
@@ -151,15 +162,18 @@ def describe_unexpected_error(error: BaseException) -> str:
     """Return what to tell a researcher about a failure SMAIRT did not anticipate.
 
     A traceback tells them their work may be damaged and gives them nothing to do about it.
-    This says what happened, what it means for their files, and how to get the detail a bug
-    report needs.
+    This says what happened and how to find out where the project stands.
+
+    It deliberately makes no promise about the files. The boundary has no idea how far an
+    operation got, so "your files were not deleted" would be a guess presented as a guarantee —
+    which for a non-expert reader is worse than the traceback it replaced.
     """
     return "\n".join(
         [
             f"SMAIRT stopped because of an unexpected error: {type(error).__name__}: {error}",
             "",
-            "Your project files were not deleted. If a write was in progress, run",
-            "`smairt check` to see what the project looks like now.",
+            "Run `smairt check` to see what the project looks like now. If the command was",
+            "writing files, some of that work may be incomplete.",
             "",
             "Re-run with SMAIRT_DEBUG=1 for the full technical detail, and include that",
             "output when reporting this.",

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -1024,7 +1025,7 @@ class UpgradeChange:
 
     path: str
     action: str
-    """One of `update`, `create`, `unchanged`, or `preserve`."""
+    """One of `update`, `create`, `unchanged`, `preserve`, or `outside`."""
 
     @property
     def writes(self) -> bool:
@@ -1057,8 +1058,18 @@ class UpgradePlan:
 
     @property
     def preserved(self) -> tuple[UpgradeChange, ...]:
-        """Researcher-modified assets the upgrade refuses to touch."""
+        """Assets that differ from the installed version and are kept exactly as they are.
+
+        Deliberately not called "researcher-modified": a difference in an editable starter may
+        be the researcher's edit or a change the newer scaffold made to the starter itself, and
+        SMAIRT cannot tell those apart.
+        """
         return tuple(change for change in self.changes if change.action == "preserve")
+
+    @property
+    def outside(self) -> tuple[UpgradeChange, ...]:
+        """Managed paths that resolve outside the project and are therefore never touched."""
+        return tuple(change for change in self.changes if change.action == "outside")
 
     @property
     def unchanged(self) -> tuple[UpgradeChange, ...]:
@@ -1072,9 +1083,10 @@ class UpgradePlan:
 def upgrade_plan(root: Path) -> UpgradePlan:
     """Describe what upgrading this project to the installed version would change.
 
-    Only tool-owned assets are considered, and a modified one is reported as preserved
-    rather than rewritten. Researcher work is never in this plan at all: the blueprint
-    classifies it as `researcher-work`, and `managed_asset_contents()` excludes it.
+    Only tool-owned assets are considered, and a difference in anything the package does not
+    own is reported as kept rather than rewritten. Researcher work is never in this plan and
+    is never written by an upgrade: the blueprint classifies it as `researcher-work`, and
+    `_managed_assets_for()` excludes it.
 
     This exists because tying a project to its recorded scaffold version, as ADR 0001
     requires, left every project created by an earlier release unable to change its own
@@ -1090,27 +1102,70 @@ def upgrade_plan(root: Path) -> UpgradePlan:
     changes: list[UpgradeChange] = []
     for relative, expected in sorted(assets.items()):
         path = root / relative
+        if _escapes_project(root, relative):
+            # A managed path that reaches outside the project, through a symlinked file or a
+            # symlinked parent, is never written or read. Following it would let an upgrade
+            # modify a file that is not part of this project at all.
+            changes.append(UpgradeChange(relative, "outside"))
+            continue
         if not path.exists():
             changes.append(UpgradeChange(relative, "create"))
             continue
         current = path.read_text()
         if current == expected:
             changes.append(UpgradeChange(relative, "unchanged"))
-        elif ownership.get(relative) == "tool-guidance":
+        elif ownership[relative] == "tool-guidance":
             changes.append(UpgradeChange(relative, "update"))
         else:
-            # An editable starter is meant to be edited, so a difference is the researcher's
-            # work rather than drift to correct.
+            # Anything the package does not own is kept. An editable starter is meant to be
+            # edited, so a difference may be the researcher's work or a change the newer
+            # scaffold made to the starter; SMAIRT cannot tell those apart, and keeping the
+            # file is correct either way.
             changes.append(UpgradeChange(relative, "preserve"))
     return UpgradePlan(contract.scaffold_version, __version__, tuple(changes))
+
+
+def _escapes_project(root: Path, relative: str) -> bool:
+    """Report whether a managed path resolves outside the project directory.
+
+    Blueprint paths are validated as lexically safe, which says nothing about the filesystem:
+    a researcher, a sync client, or a build step can replace any managed file or one of its
+    parent directories with a symlink. `write_text` follows both, so without this check an
+    upgrade could rewrite an arbitrary file elsewhere on the machine — verified by pointing
+    `docs/12_STEPS.md` at an unrelated file and watching an upgrade destroy it.
+
+    A path that does not exist yet is judged by its nearest existing ancestor, so a dangling
+    symlink cannot be used to create a file outside the project either.
+    """
+    try:
+        anchor = root.resolve(strict=True)
+    except OSError:
+        return True
+    candidate = root / relative
+    existing = candidate
+    while not existing.exists() and existing != root:
+        existing = existing.parent
+    try:
+        resolved = existing.resolve(strict=True)
+    except OSError:
+        return True
+    return resolved != anchor and anchor not in resolved.parents
 
 
 def apply_upgrade(root: Path) -> UpgradePlan:
     """Move the project onto the installed scaffold version.
 
-    Writes only what the plan reports as a write, then records the new version. The contract
-    is saved last so an interrupted upgrade leaves the project on its old version and the
-    same upgrade can simply be run again.
+    Writes exactly what the plan reports as a write, and nothing else. Earlier this also ran
+    a general materialize pass afterwards, which created any missing active asset — including
+    the blueprint's `researcher-work` records. That meant a researcher who had deliberately
+    deleted `analysis/BREADCRUMB_TRAIL.md` silently got a fresh package template back, from an
+    operation whose preview never mentioned the file. A preview that omits a write is not a
+    preview, so the pass is gone.
+
+    Each file is written to a temporary neighbour and moved into place, so an interruption or
+    a full disk leaves the previous content intact rather than a half-written file. The
+    contract is saved last, so an interrupted upgrade stays on its old version and the same
+    command can simply be run again.
     """
     contract = load_contract(root)
     plan = upgrade_plan(root)
@@ -1123,12 +1178,27 @@ def apply_upgrade(root: Path) -> UpgradePlan:
     for change in plan.changes:
         if not change.writes:
             continue
-        path = root / change.path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(assets[change.path])
-    _materialize(root, projected)
+        if _escapes_project(root, change.path):
+            # Re-checked immediately before writing, because the plan was built earlier and a
+            # path can be replaced with a symlink in between.
+            raise ProjectError(
+                f"{change.path} resolves outside the project, so SMAIRT will not write it. "
+                "Replace the symbolic link with an ordinary file and run the upgrade again."
+            )
+        _replace_atomically(root / change.path, assets[change.path])
     save_contract(root, projected)
     return plan
+
+
+def _replace_atomically(path: Path, content: str) -> None:
+    """Write content to path so that a failure leaves the previous file intact."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.smairt-tmp")
+    try:
+        temporary.write_text(content)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _managed_assets_for(contract: ProjectContract) -> dict[str, str]:

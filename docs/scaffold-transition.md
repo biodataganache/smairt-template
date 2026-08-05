@@ -84,8 +84,9 @@ What it does, and deliberately does not do:
 | `tool-guidance`, unmodified | Rewritten to the installed version |
 | `tool-guidance`, modified | Rewritten; the package owns this text |
 | `editable-starter`, differing | **Kept as it is** |
-| `researcher-work` | Never read, rewritten, or judged |
-| Missing declared asset | Created |
+| `researcher-work` | Never read, rewritten, created, or judged |
+| Missing `tool-guidance` asset | Created |
+| Any path resolving outside the project | Reported and never touched |
 
 An editable starter that differs from the installed text is kept rather than rewritten, and
 the preview says only that it differs. It deliberately does not claim the researcher modified
@@ -102,8 +103,22 @@ iteration log — was byte-identical afterward, and the project then passed `sma
 accepted the settings and capability changes the mismatch had blocked.
 
 The preview is rendered from the same projected contract the write uses, so it cannot describe
-a different operation. The contract is saved last, so an interrupted upgrade leaves the project
-on its old version and the same command can simply be run again.
+a different operation, and the upgrade writes nothing the preview did not list. An earlier
+version finished with a general materialize pass that created every missing active asset,
+including the blueprint's `researcher-work` records — so a researcher who had deliberately
+deleted `analysis/BREADCRUMB_TRAIL.md` silently got a fresh template back from an operation
+whose preview never named the file. A preview that omits a write is not a preview.
+
+Containment is checked per path, not assumed from the blueprint. Blueprint paths are validated
+as lexically safe, which says nothing about the filesystem: any managed file or parent directory
+can be replaced with a symbolic link, and writing follows both. Pointing `docs/12_STEPS.md` at
+an unrelated file and upgrading destroyed that file. Such paths are now reported as resolving
+outside the project and never read or written, including dangling links, which could otherwise
+be used to create a file elsewhere.
+
+Each asset is written to a temporary neighbour and moved into place, so a full disk or a killed
+process cannot leave a truncated guidance file. The contract is saved last, so an interrupted
+upgrade stays on its old version and the same command can simply be run again.
 
 Every refusal now names the route. `smairt check` reports the mismatch and says what to run,
 and the two commands that previously misreported their state were corrected: `smairt repair`

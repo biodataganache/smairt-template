@@ -166,9 +166,14 @@ The preview lists exactly which tool-owned guidance would be rewritten, which
 files would be created, and which files are kept untouched. It is rendered from
 the same contract the write uses, so it cannot describe a different operation.
 Researcher work is never read, rewritten, or judged, and a starter file that
-differs from the installed text is kept as it is. The project version moves
-last, so an interrupted upgrade leaves the project on its old version and the
-same command can be run again.
+differs from the installed text is kept as it is.
+
+A managed path that resolves outside the project, through a symbolic link on the
+file or on one of its parent directories, is reported and never written. Each
+file is replaced atomically, so a failure partway leaves the previous content
+intact rather than a half-written file, and the project version moves last, so an
+interrupted upgrade stays on its old version and the same command can be run
+again.
 
 Advanced Mode adds one `Advanced ▸` row that opens contract inspection, verbose
 Project Check, managed-asset regeneration, convention controls, and detected

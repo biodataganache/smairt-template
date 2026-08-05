@@ -38,6 +38,7 @@ from smairt.messages import (
     describe_unexpected_error,
     describe_validation_error,
     slug_rejection_in,
+    suggest_slug,
 )
 from smairt.models import (
     Assistant,
@@ -1151,6 +1152,13 @@ def upgrade(
         typer.echo("Differs from the installed version, so kept exactly as it is:")
         for change in plan.preserved:
             typer.echo(f"- {change.path}")
+    if plan.outside:
+        typer.echo("Resolves outside the project, so left untouched:")
+        for change in plan.outside:
+            typer.echo(f"- {change.path}")
+        typer.echo(
+            "  Replace each with an ordinary file inside the project to have SMAIRT manage it."
+        )
     typer.echo(
         f"Already current: {len(plan.unchanged)} file(s). "
         "Researcher work is never read, rewritten, or judged by an upgrade."
@@ -2167,13 +2175,18 @@ def new(
 def _describe_rejected_input(error: ValidationError) -> str:
     """Return why supplied values were rejected, in one voice for every command.
 
-    A rejected slug is answered with the rule and a usable suggestion, because it is the most
-    common way creation fails and a rule alone leaves the researcher guessing.
+    A rejected slug additionally gets a usable suggestion, because it is the most common way
+    creation fails and a rule alone leaves the researcher guessing. The suggestion is added to
+    the full report rather than replacing it: hiding the other failures would force a
+    correct-one-thing-and-retry loop, which is its own kind of unhelpful.
     """
+    lines = [f"Error: {describe_validation_error(error)}"]
     rejected_slug = slug_rejection_in(error)
     if rejected_slug is not None:
-        return f"Error: {describe_slug_rejection(rejected_slug)}"
-    return f"Error: {describe_validation_error(error)}"
+        suggestion = suggest_slug(rejected_slug)
+        if suggestion and suggestion != rejected_slug:
+            lines.append(f"  For the slug, try: {suggestion}")
+    return "\n".join(lines)
 
 
 def _optional_answer(answers: dict[str, str | bool], key: str) -> str | None:

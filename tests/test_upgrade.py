@@ -12,10 +12,12 @@ tool-owned guidance and never touches researcher work or an edited starter.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 from smairt import __version__
@@ -57,7 +59,16 @@ def create_project(destination: Path) -> None:
 
 
 def age_project(destination: Path) -> None:
-    """Record an older scaffold version, as a project from an earlier release would."""
+    """Record an older scaffold version, as a project from an earlier release would.
+
+    This edits only the recorded version, so the project's files are current. That is enough to
+    exercise the refusal, routing, and containment behavior, and deliberately not enough to
+    stand in for a real inter-release upgrade: file contents, ownership, and the set of declared
+    assets all move between versions. A genuine 0.3.0 project built with a real 0.3.0 install
+    was carried through a track, two iterations, a run, and an interpretation, then upgraded
+    with this build; the result is recorded in docs/scaffold-transition.md. Reproducing that
+    here would mean shipping and building a second release inside the test suite.
+    """
     contract = destination / "smairt.yaml"
     contract.write_text(
         contract.read_text().replace(
@@ -271,3 +282,144 @@ def test_upgrade_reports_a_missing_project_rather_than_failing_obscurely(tmp_pat
     # from an operation that ran against a real project and failed.
     assert result.returncode == 2
     assert "Not a SMAIRT project" in result.stderr
+
+
+def researcher_work_files() -> list[str]:
+    """Return every file the blueprint declares as researcher-owned.
+
+    Read from the blueprint rather than listed here, so an asset reclassified as
+    researcher-work is protected by these tests the moment it is declared.
+    """
+    blueprint = yaml.safe_load(
+        (
+            Path(__file__).parents[1] / "src" / "smairt" / "assets" / "scaffold-blueprint.yaml"
+        ).read_text()
+    )
+    return [
+        asset["path"]
+        for asset in blueprint["assets"]
+        if asset["kind"] == "file" and asset["ownership"] == "researcher-work"
+    ]
+
+
+def test_an_upgrade_never_recreates_researcher_work_the_preview_did_not_mention(
+    tmp_path: Path,
+) -> None:
+    """A deleted researcher record must stay deleted, and the preview must be complete.
+
+    The upgrade used to finish with a general materialize pass that created every missing
+    active asset, including the blueprint's researcher-work records. A researcher who had
+    deliberately removed `analysis/BREADCRUMB_TRAIL.md` silently got a fresh package template
+    back from an operation whose preview never named the file. A preview that omits a write is
+    not a preview.
+    """
+    destination = tmp_path / "deleted_records_project"
+    create_project(destination)
+    removed = []
+    for relative in researcher_work_files():
+        path = destination / relative
+        if path.is_file():
+            path.unlink()
+            removed.append(relative)
+    assert removed, "no researcher-work files were present to delete"
+    age_project(destination)
+
+    preview = run("upgrade", str(destination))
+    assert preview.returncode == 0, preview.stderr
+    for relative in removed:
+        assert relative not in preview.stdout, f"preview mentions researcher work: {relative}"
+
+    upgraded = run("upgrade", str(destination), "--confirm")
+
+    assert upgraded.returncode == 0, upgraded.stderr
+    for relative in removed:
+        assert not (destination / relative).exists(), f"upgrade recreated {relative}"
+
+
+def test_an_upgrade_will_not_write_through_a_symlinked_file(tmp_path: Path) -> None:
+    """A managed path pointing outside the project must never be written.
+
+    Blueprint paths are validated as lexically safe, which says nothing about the filesystem.
+    Pointing `docs/12_STEPS.md` at an unrelated file and upgrading used to overwrite that file
+    with scaffold guidance, destroying data outside the project entirely.
+    """
+    destination = tmp_path / "symlinked_project"
+    create_project(destination)
+    outside = tmp_path / "unrelated_notes.txt"
+    outside.write_text("data that has nothing to do with SMAIRT\n")
+    guidance = destination / "docs" / "12_STEPS.md"
+    guidance.unlink()
+    guidance.symlink_to(outside)
+    age_project(destination)
+
+    preview = run("upgrade", str(destination))
+    assert preview.returncode == 0, preview.stderr
+    assert "Resolves outside the project" in preview.stdout
+    assert "docs/12_STEPS.md" in preview.stdout
+
+    upgraded = run("upgrade", str(destination), "--confirm")
+
+    assert upgraded.returncode == 0, upgraded.stderr
+    assert outside.read_text() == "data that has nothing to do with SMAIRT\n"
+
+
+def test_an_upgrade_will_not_create_a_file_outside_through_a_dangling_symlink(
+    tmp_path: Path,
+) -> None:
+    """A missing managed file must not be created somewhere else via a broken link."""
+    destination = tmp_path / "dangling_project"
+    create_project(destination)
+    outside = tmp_path / "should_not_be_created.txt"
+    guidance = destination / "docs" / "12_STEPS.md"
+    guidance.unlink()
+    guidance.symlink_to(outside)
+    age_project(destination)
+
+    upgraded = run("upgrade", str(destination), "--confirm")
+
+    assert upgraded.returncode == 0, upgraded.stderr
+    assert not outside.exists(), "upgrade created a file outside the project"
+
+
+def test_an_upgrade_will_not_write_through_a_symlinked_parent_directory(tmp_path: Path) -> None:
+    """Containment has to hold for parent directories, not only for the file itself."""
+    destination = tmp_path / "symlinked_parent_project"
+    create_project(destination)
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    (elsewhere / "12_STEPS.md").write_text("not SMAIRT's to rewrite\n")
+    shutil.rmtree(destination / "docs")
+    (destination / "docs").symlink_to(elsewhere, target_is_directory=True)
+    age_project(destination)
+
+    upgraded = run("upgrade", str(destination), "--confirm")
+
+    assert upgraded.returncode == 0, upgraded.stderr
+    assert (elsewhere / "12_STEPS.md").read_text() == "not SMAIRT's to rewrite\n"
+
+
+def test_a_failed_write_leaves_the_previous_file_intact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Each asset is replaced atomically, so an interruption cannot truncate a file.
+
+    Writing directly would empty the file first and then fill it, so a full disk or a killed
+    process left a truncated guidance file behind. The content goes to a neighbour and is moved
+    into place, which either succeeds completely or not at all.
+    """
+    from smairt import project as project_module  # noqa: PLC0415
+
+    target = tmp_path / "guidance.md"
+    target.write_text("original content\n")
+
+    def fail(*args: object, **kwargs: object) -> None:
+        raise OSError("no space left on device")
+
+    monkeypatch.setattr("smairt.project.os.replace", fail)
+
+    with pytest.raises(OSError):
+        project_module._replace_atomically(target, "replacement content\n")
+
+    assert target.read_text() == "original content\n"
+    # The neighbour is cleaned up even when the move fails, so a retry is not blocked by it.
+    assert not list(tmp_path.glob(".guidance.md.smairt-tmp"))
