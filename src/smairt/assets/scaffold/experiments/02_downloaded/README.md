@@ -31,7 +31,7 @@ ambiguous and you need a case with a known answer.
 Create one from the project root, which numbers it for you and wires up logging:
 
 ```bash
-python scripts/new_iteration.py baseline downloaded --hypothesis HYPOTHESIS_01
+python3 scripts/new_iteration.py baseline downloaded --hypothesis HYPOTHESIS_01
 ```
 
 The hypothesis is required, not optional. Stating what a script is meant to settle

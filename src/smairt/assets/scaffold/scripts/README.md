@@ -32,27 +32,27 @@ and errands.
 
 ```bash
 # 1. Start a direction of inquiry
-python scripts/new_track.py "Fitness data predicts response" synthetic
+python3 scripts/new_track.py "Fitness data predicts response" synthetic
 
 # 2. Write the prediction and both criteria in the hypothesis file, and commit them
 
 # 3. Create the iteration, then implement and run it
-python scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
-python experiments/01_synthetic/script_01_baseline.py
+python3 scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
+python3 experiments/01_synthetic/script_01_baseline.py
 
 # 4. Interpret the log, then record what the iteration showed
 cp analysis/ANALYSIS_TEMPLATE.md analysis/ANALYSIS_01.md
-python scripts/record_outcome.py 1 --outcome "Criterion met, 0.71 against a 0.65 target"
+python3 scripts/record_outcome.py 1 --outcome "Criterion met, 0.71 against a 0.65 target"
 
 # 5. Try again, or report the result
-python scripts/new_iteration.py "wider layer" synthetic --hypothesis HYPOTHESIS_01 --from-iteration 1
-python scripts/select_result.py 1 --claim "The baseline exceeds chance"
+python3 scripts/new_iteration.py "wider layer" synthetic --hypothesis HYPOTHESIS_01 --from-iteration 1
+python3 scripts/select_result.py 1 --claim "The baseline exceeds chance"
 ```
 
 ## new_track.py
 
 ```bash
-python scripts/new_track.py "Fitness data predicts response" synthetic
+python3 scripts/new_track.py "Fitness data predicts response" synthetic
 ```
 
 Creates two things: `hypotheses/HYPOTHESIS_XX.md` and `plans/PLAN_<NAME>.md`. The
@@ -90,13 +90,13 @@ An iteration is one attempt: one script, its log, its interpretation.
 
 ```bash
 # a single point: does one change help
-python scripts/new_iteration.py "wider layer" synthetic --hypothesis HYPOTHESIS_01
+python3 scripts/new_iteration.py "wider layer" synthetic --hypothesis HYPOTHESIS_01
 
 # a panel: do any of these candidates help
-python scripts/new_iteration.py "activation panel" synthetic --hypothesis HYPOTHESIS_01 --probes 8
+python3 scripts/new_iteration.py "activation panel" synthetic --hypothesis HYPOTHESIS_01 --probes 8
 
 # continue from an earlier attempt instead of the blank template
-python scripts/new_iteration.py "wider layer" synthetic --hypothesis HYPOTHESIS_01 --from-iteration 3
+python3 scripts/new_iteration.py "wider layer" synthetic --hypothesis HYPOTHESIS_01 --from-iteration 3
 ```
 
 `--hypothesis` is required, because naming what an attempt should settle before writing
@@ -145,7 +145,7 @@ iteration's.
 ## record_outcome.py
 
 ```bash
-python scripts/record_outcome.py 4 --outcome "3 of 8 above criterion, 1 regression"
+python3 scripts/record_outcome.py 4 --outcome "3 of 8 above criterion, 1 regression"
 ```
 
 Records what an iteration turned out to show. It refuses until `analysis/ANALYSIS_NN.md`
@@ -165,11 +165,11 @@ the latest history line, which is your cue to update it.
 ## select_result.py
 
 ```bash
-python scripts/select_result.py 4 --claim "Activation choice drives the gain"
-python scripts/select_result.py 4 --claim "Three activations help" --probes "probe_01,probe_03,probe_07"
+python3 scripts/select_result.py 4 --claim "Activation choice drives the gain"
+python3 scripts/select_result.py 4 --claim "Three activations help" --probes "probe_01,probe_03,probe_07"
 
 # With the Paper capability, append the same selection to FINAL_MANIFEST.md
-python scripts/select_result.py 4 --claim "Three activations help" --probes "probe_01,probe_03,probe_07" --paper
+python3 scripts/select_result.py 4 --claim "Three activations help" --probes "probe_01,probe_03,probe_07" --paper
 ```
 
 Creates `analysis/SELECTED_NN.md` with the claim, the iteration, and every file needed to
@@ -193,7 +193,7 @@ entry.
 ## new_utility.py
 
 ```bash
-python scripts/new_utility.py "download benchmark" --purpose "Fetch the benchmark archive"
+python3 scripts/new_utility.py "download benchmark" --purpose "Fetch the benchmark archive"
 ```
 
 Creates `scripts/utilities/<name>.py` with logging already wired. It takes no iteration
@@ -243,8 +243,8 @@ from scripts.shared.iterations import next_iteration_number, project_root
 ## generate_manifest.py
 
 ```bash
-python scripts/generate_manifest.py
-python scripts/generate_manifest.py --output analysis/MANIFEST_2024-01-15.md
+python3 scripts/generate_manifest.py
+python3 scripts/generate_manifest.py --output analysis/MANIFEST_2024-01-15.md
 ```
 
 Prints the inventory it finds. With `--output` it writes to a new file, and refuses to
@@ -253,8 +253,8 @@ overwrite an existing one.
 ## monitor_template.py
 
 ```bash
-python scripts/monitor_template.py results/progress.json --log results/logs/script_01_baseline_*.log
-python scripts/monitor_template.py results/progress.json --watch --interval 60
+python3 scripts/monitor_template.py results/progress.json --log results/logs/script_01_baseline_*.log
+python3 scripts/monitor_template.py results/progress.json --watch --interval 60
 ```
 
 Reads a JSON progress file an experiment writes, and optionally summarizes the tail of a

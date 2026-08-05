@@ -66,6 +66,8 @@ def main() -> None:
     if not description:
         parser.error("description must contain a letter or number")
 
+    _require_existing_hypothesis(root, arguments.hypothesis, parser)
+
     number = next_iteration_number(root)
     script_name = f"script_{number:02d}_{description}"
     target = iteration_script_path(root, arguments.phase, script_name)
@@ -115,6 +117,31 @@ def main() -> None:
         print(f"Seeded from {seed.relative_to(root)}; state what changed in the docstring")
     if arguments.probes is not None:
         print(f"Panel of {arguments.probes} probes; report a result for every probe")
+
+
+def _require_existing_hypothesis(
+    root: Path, hypothesis: str, parser: argparse.ArgumentParser
+) -> None:
+    """Refuse an iteration that names a hypothesis file the project does not contain.
+
+    The number is what ties hypothesis, script, log, and analysis into one chain, so a typo
+    here silently breaks a link: the row is written, the reference points at nothing, and
+    `smairt check` reported the project as clean. Refusing costs one comparison and keeps the
+    record joinable.
+
+    This checks that the file exists, and nothing about what it says. Whether a hypothesis is
+    any good is the researcher's judgment, not the tool's.
+    """
+    directory = root / "hypotheses"
+    candidate = directory / f"{hypothesis}.md"
+    if candidate.is_file():
+        return
+    available = sorted(path.stem for path in directory.glob("HYPOTHESIS_[0-9]*.md"))
+    listed = ", ".join(available) if available else "none yet"
+    parser.error(
+        f"no hypothesis file at hypotheses/{hypothesis}.md; existing hypotheses: {listed}. "
+        "Create one with new_track.py, or correct the --hypothesis value."
+    )
 
 
 def _seed_script(

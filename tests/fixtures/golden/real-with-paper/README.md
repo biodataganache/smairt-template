@@ -17,23 +17,23 @@ Ready-made prompts for common situations are in `prompts/00_priming_prompts.md`.
 
 ```bash
 # 1. Start a track: writes the plan and the hypothesis, and no script yet
-python scripts/new_track.py "The baseline exceeds chance" synthetic
+python3 scripts/new_track.py "The baseline exceeds chance" synthetic
 
 # 2. Write the prediction and both criteria in the hypothesis file, and commit them
 #    before any experiment exists
 
 # 3. Create the iteration, then implement and run it from the project root
-python scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
-python experiments/01_synthetic/script_01_baseline.py
+python3 scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
+python3 experiments/01_synthetic/script_01_baseline.py
 
 # 4. Interpret the log it produced, against the criteria you committed in step 2
 cp analysis/ANALYSIS_TEMPLATE.md analysis/ANALYSIS_01.md
 
 # 5. Record what the iteration showed, in your own words
-python scripts/record_outcome.py 1 --outcome "Criterion met, 0.71 against a 0.65 target"
+python3 scripts/record_outcome.py 1 --outcome "Criterion met, 0.71 against a 0.65 target"
 
 # 6. Say which iteration you would report, and what it is evidence for
-python scripts/select_result.py 1 --claim "The baseline exceeds chance"
+python3 scripts/select_result.py 1 --claim "The baseline exceeds chance"
 ```
 
 Step 5 refuses until `analysis/ANALYSIS_01.md` exists, because an outcome recorded before

@@ -19,6 +19,11 @@ from collections.abc import Mapping
 from pydantic import ValidationError
 
 # Field names as a researcher would say them, rather than as the contract spells them.
+#
+# Keyed by the fully qualified location wherever a bare key would be ambiguous. `name` belongs
+# to both the project and the researcher, so a bare `name` is qualified using the model that
+# rejected it rather than guessed at — labelling a rejected researcher name "project name"
+# points the reader at the wrong input.
 _FIELD_LABELS = {
     "project.name": "project name",
     "project.slug": "project slug",
@@ -27,12 +32,10 @@ _FIELD_LABELS = {
     "project.research_question": "research question",
     "researcher.name": "researcher name",
     "researcher.email": "researcher email",
-    "name": "project name",
     "slug": "project slug",
     "description": "project description",
     "domain": "research domain",
     "research_question": "research question",
-    "email": "researcher email",
     "people": "project people",
     "assistant": "coding assistant",
     "starting_phase": "starting phase",
@@ -46,6 +49,14 @@ _FIELD_LABELS = {
     "rigor": "rigor declarations",
     "scaffold_version": "scaffold version",
     "schema_version": "contract schema version",
+}
+
+# How each validated model refers to itself when one of its own fields is reported bare.
+_MODEL_PREFIXES = {
+    "ProjectIdentity": "project",
+    "Researcher": "researcher",
+    "ProjectOptions": "project",
+    "ProjectContract": "project",
 }
 
 
@@ -73,13 +84,22 @@ def describe_validation_error(error: ValidationError, *, source: str | None = No
     lines: list[str] = []
     for entry in error.errors():
         location = ".".join(str(part) for part in entry["loc"])
-        label = _FIELD_LABELS.get(location, location or "value")
-        lines.append(f"- {label}: {_describe_one(entry)}")
+        lines.append(f"- {_label_for(location, error.title)}: {_describe_one(entry)}")
     if source is not None:
         heading = f"{source} could not be read:"
     else:
         heading = "Some values could not be accepted:"
     return "\n".join([heading, *lines])
+
+
+def _label_for(location: str, model: str) -> str:
+    """Return how to name the rejected field, qualifying a bare key by its owning model."""
+    if location in _FIELD_LABELS:
+        return _FIELD_LABELS[location]
+    prefix = _MODEL_PREFIXES.get(model)
+    if prefix is not None and f"{prefix}.{location}" in _FIELD_LABELS:
+        return _FIELD_LABELS[f"{prefix}.{location}"]
+    return location or "value"
 
 
 def _describe_one(entry: Mapping[str, object]) -> str:

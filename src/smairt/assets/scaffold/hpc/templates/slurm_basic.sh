@@ -39,7 +39,7 @@ echo "=========================================="
 
 # Run the script from the project root, so its own paths resolve and TeeLogger
 # writes to results/logs/ as it does for a local run.
-python "$SCRIPT"
+python3 "$SCRIPT"
 
 # Print completion info
 echo "=========================================="

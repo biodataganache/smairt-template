@@ -83,7 +83,7 @@ def main() -> None:
     print("them before creating the first iteration. Committing the criteria first is what")
     print("keeps the test a test, so this helper deliberately stops here:")
     print(
-        f"  python scripts/new_iteration.py baseline {arguments.phase} --hypothesis {hypothesis_id}"
+        f"  python3 scripts/new_iteration.py baseline {arguments.phase} --hypothesis {hypothesis_id}"
     )
 
 

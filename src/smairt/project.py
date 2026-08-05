@@ -784,6 +784,7 @@ def project_check(root: Path) -> list[CheckIssue]:
             )
         )
     issues.extend(_outcome_drift_issues(root))
+    issues.extend(_dangling_hypothesis_issues(root))
     issues.extend(_manifest_reconciliation_issues(root, contract))
     if contract.scaffold_version == __version__:
         issues.extend(_managed_file_issues(root, contract))
@@ -855,6 +856,60 @@ def _manifest_reconciliation_issues(root: Path, contract: ProjectContract) -> li
             )
         )
     return issues
+
+
+def _dangling_hypothesis_issues(root: Path) -> list[CheckIssue]:
+    """Report iteration rows naming a hypothesis file the project does not contain.
+
+    The whole value of the record is that one number joins hypothesis, script, log, and
+    analysis. A typo in `--hypothesis` used to write a row pointing at nothing, and the
+    project still reported clean — so the broken link surfaced months later, if ever.
+
+    `new_iteration.py` now refuses an unknown hypothesis, but a project may already carry
+    such a row, and a hypothesis file can be renamed or deleted afterwards. This is a
+    filename comparison and nothing more: whether a hypothesis is well posed is the
+    researcher's judgment. There is no repair, because only the researcher knows whether the
+    reference or the filename is the mistake.
+    """
+    log_path = root / "analysis" / "ITERATION_LOG.md"
+    if not log_path.is_file():
+        return []
+    relative = log_path.relative_to(root).as_posix()
+    existing = {path.stem for path in (root / "hypotheses").glob("HYPOTHESIS_[0-9]*.md")}
+    issues: list[CheckIssue] = []
+    for number, referenced in sorted(_iteration_hypotheses(log_path.read_text()).items()):
+        missing = sorted(name for name in referenced if name not in existing)
+        if missing:
+            issues.append(
+                CheckIssue(
+                    "dangling-hypothesis-reference",
+                    relative,
+                    f"Iteration {number} names a hypothesis with no file: {', '.join(missing)}.",
+                )
+            )
+    return issues
+
+
+def _iteration_hypotheses(content: str) -> dict[str, set[str]]:
+    """Return the hypothesis identifiers each iteration's state row references.
+
+    Read from the state table only. The outcome history has a different shape and records
+    prose rather than references.
+    """
+    references: dict[str, set[str]] = {}
+    in_history = False
+    for line in content.splitlines():
+        if line.startswith("## "):
+            in_history = line.strip() == "## Outcome history"
+            continue
+        if in_history or not line.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) >= 4 and re.fullmatch(r"\d+", cells[0]):
+            named = set(re.findall(r"HYPOTHESIS_\d+", cells[3]))
+            if named:
+                references[cells[0]] = named
+    return references
 
 
 def _iteration_log_records(content: str) -> tuple[dict[str, str], dict[str, str]]:
@@ -1183,12 +1238,12 @@ def next_workflow_action(root: Path) -> tuple[str, str]:
     if not sorted((root / "hypotheses").glob("HYPOTHESIS_[0-9]*.md")):
         return (
             "No hypothesis yet",
-            "python scripts/new_track.py '<the question>' <phase>",
+            "python3 scripts/new_track.py '<the question>' <phase>",
         )
     if not sorted((root / "experiments").glob("*/script_*.py")):
         return (
             "Hypothesis recorded, no iteration yet",
-            "commit the criteria, then python scripts/new_iteration.py",
+            "commit the criteria, then python3 scripts/new_iteration.py",
         )
     uninterpreted = _iterations_missing(root, "analysis/ANALYSIS_{:02d}.md")
     if uninterpreted:
@@ -1202,11 +1257,11 @@ def next_workflow_action(root: Path) -> tuple[str, str]:
         listed = ", ".join(f"{number:02d}" for number in unrecorded)
         return (
             f"Interpreted but the outcome is not recorded: {listed}",
-            "python scripts/record_outcome.py NN --outcome '...'",
+            "python3 scripts/record_outcome.py NN --outcome '...'",
         )
     return (
         "Every iteration is interpreted and recorded",
-        "python scripts/new_iteration.py for the next attempt, or select_result.py to report one",
+        "python3 scripts/new_iteration.py for the next attempt, or select_result.py to report one",
     )
 
 

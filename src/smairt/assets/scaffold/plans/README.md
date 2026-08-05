@@ -25,7 +25,7 @@ when it starts a track, so a plan you write by hand and a plan the helper create
 same shape. Edit the template to suit your field and both follow.
 
 ```bash
-python scripts/new_track.py "The wider layer exceeds the baseline" synthetic
+python3 scripts/new_track.py "The wider layer exceeds the baseline" synthetic
 ```
 
 ## Naming Convention

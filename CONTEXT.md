@@ -47,6 +47,10 @@ SMAIRT creates and manages readable, file-based scientific research workspaces.
 - Researcher work is never overwritten, regenerated, or semantically assessed.
 - A scaffold-version mismatch blocks package-owned mutations, and every refusal names the upgrade that resolves it.
 - A scaffold upgrade never reads, rewrites, or judges researcher work, and preserves a modified editable starter.
+- Every command a researcher is told to run must exist on a supported platform without extra setup.
+- A project created successfully passes its own Project Check.
+- An iteration may only reference a hypothesis file that exists, so the number joining hypothesis, script, log, and analysis always resolves.
+- No failure reaches a researcher as a traceback or as library-formatted output.
 - Interactive presentation never enters the alternate screen and never exceeds the terminal's height.
 - Color is never the only signal; markers and words carry every meaning color carries.
 - A diff preview reflects the operation that would run, never a fixed description of it.

@@ -44,7 +44,7 @@ and say what result would be uninformative either way. I will choose the criteri
 Then create the records:
 
 ```bash
-python scripts/new_track.py "[the question]" [synthetic|downloaded|real]
+python3 scripts/new_track.py "[the question]" [synthetic|downloaded|real]
 ```
 
 ## Before writing an experiment
@@ -67,13 +67,13 @@ Create the iteration first, so it is numbered and recorded:
 
 ```bash
 # one change
-python scripts/new_iteration.py "[description]" [phase] --hypothesis HYPOTHESIS_[XX]
+python3 scripts/new_iteration.py "[description]" [phase] --hypothesis HYPOTHESIS_[XX]
 
 # several candidate directions at once
-python scripts/new_iteration.py "[description]" [phase] --hypothesis HYPOTHESIS_[XX] --probes [N]
+python3 scripts/new_iteration.py "[description]" [phase] --hypothesis HYPOTHESIS_[XX] --probes [N]
 
 # continuing from an earlier attempt
-python scripts/new_iteration.py "[description]" [phase] --hypothesis HYPOTHESIS_[XX] --from-iteration [NN]
+python3 scripts/new_iteration.py "[description]" [phase] --hypothesis HYPOTHESIS_[XX] --from-iteration [NN]
 ```
 
 ## Interpreting results

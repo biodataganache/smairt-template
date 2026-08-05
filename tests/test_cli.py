@@ -302,6 +302,18 @@ def test_hpc_guidance_is_a_phase_independent_editable_template(tmp_path: Path) -
 def test_generated_script_captures_stdout_stderr_warnings_and_tracebacks(tmp_path: Path) -> None:
     destination = tmp_path / "logging"
     assert create_project(destination).returncode == 0
+    # The hypothesis has to exist before an iteration may reference it, so that the number
+    # joining hypothesis, script, log, and analysis cannot point at nothing.
+    assert (
+        subprocess.run(
+            [sys.executable, "scripts/new_track.py", "Output is captured", "synthetic"],
+            cwd=destination,
+            check=False,
+            capture_output=True,
+            text=True,
+        ).returncode
+        == 0
+    )
     created = subprocess.run(
         [
             sys.executable,
@@ -385,6 +397,16 @@ def test_generated_script_records_provenance_and_never_reuses_a_log_path(tmp_pat
     ).stdout.strip()
     input_path = destination / "data" / "synthetic" / "sample.txt"
     input_path.write_text("identity matters\n")
+    assert (
+        subprocess.run(
+            [sys.executable, "scripts/new_track.py", "Runs are repeatable", "synthetic"],
+            cwd=destination,
+            check=False,
+            capture_output=True,
+            text=True,
+        ).returncode
+        == 0
+    )
 
     created = subprocess.run(
         [

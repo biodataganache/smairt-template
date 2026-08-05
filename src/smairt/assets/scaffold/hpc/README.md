@@ -41,7 +41,7 @@ paths:
 `slurm_job.sh` runs any command you pass it, so one wrapper covers every phase:
 
 ```bash
-sbatch hpc/slurm_job.sh python experiments/01_synthetic/script_01_baseline.py
+sbatch hpc/slurm_job.sh python3 experiments/01_synthetic/script_01_baseline.py
 ```
 
 Use `templates/slurm_basic.sh` as a starting point when a job needs more than the

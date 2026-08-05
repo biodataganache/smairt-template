@@ -205,7 +205,7 @@ dropping back to a case with a known answer is usually the fastest way to find o
 One script, one hypothesis, runnable on its own. Create it from the project root:
 
 ```bash
-python scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
+python3 scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
 ```
 
 The hypothesis argument is required. Naming what a script is meant to settle before
@@ -320,7 +320,7 @@ for the field cannot.
 Once the analysis exists, record in one line what the iteration showed:
 
 ```bash
-python scripts/record_outcome.py 7 --outcome "Criterion met, 0.71 against a 0.65 target"
+python3 scripts/record_outcome.py 7 --outcome "Criterion met, 0.71 against a 0.65 target"
 ```
 
 This refuses until `analysis/ANALYSIS_07.md` exists, because an outcome recorded before the
@@ -358,14 +358,14 @@ When you advance or stop, say which iteration you would stand behind and what it
 evidence for:
 
 ```bash
-python scripts/select_result.py 7 --claim "The wider layer exceeds the 0.65 target"
+python3 scripts/select_result.py 7 --claim "The wider layer exceeds the 0.65 target"
 ```
 
 For a panel, name the probes that support the claim; the helper reads the recorded kind and
 refuses to collapse a panel into a single success:
 
 ```bash
-python scripts/select_result.py 7 --claim "Three probes exceed the target" \
+python3 scripts/select_result.py 7 --claim "Three probes exceed the target" \
   --probes "probe_01,probe_03,probe_07"
 ```
 

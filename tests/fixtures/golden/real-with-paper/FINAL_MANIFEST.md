@@ -34,7 +34,7 @@ Status: `Pending`, `Draft`, `Final`.
 Use the selection helper when you decide an iteration is reportable:
 
 ```bash
-python scripts/select_result.py 7 --claim "The wider layer exceeds the target" --paper
+python3 scripts/select_result.py 7 --claim "The wider layer exceeds the target" --paper
 ```
 
 For a panel, include `--probes` naming the arms that support the claim. The helper appends
@@ -42,7 +42,7 @@ one detailed entry with the exact log path and never edits an existing claim. It
 the entry because invoking it is your explicit selection decision; it never chooses what to
 report.
 
-Use `python scripts/generate_manifest.py` when you need an inventory of evidence that
+Use `python3 scripts/generate_manifest.py` when you need an inventory of evidence that
 exists but has not been selected. That helper only prints or creates an inventory; it never
 rewrites this file.
 

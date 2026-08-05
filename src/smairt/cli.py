@@ -1172,6 +1172,9 @@ def regenerate(
     select: list[str] = typer.Option(
         [], "--select", help="Missing or unchanged managed asset path."
     ),
+    show_all: bool = typer.Option(
+        False, "--all", help="List every eligible asset, including those already current."
+    ),
     confirm: bool = typer.Option(False, help="Write the previewed managed assets."),
 ) -> None:
     """Preview and restore only missing or unmodified managed guidance and templates."""
@@ -1182,26 +1185,32 @@ def regenerate(
             # every managed asset as "eligible" and then refused on --confirm.
             require_upgradable(root, "regenerate managed assets")
             statuses = {item["path"]: item["status"] for item in managed_file_statuses(root)}
-            actionable = [
-                relative
-                for relative in managed_asset_paths(root)
-                if statuses.get(relative) in {"missing", "unchanged"}
-            ]
-            if not actionable:
-                typer.echo("No managed assets are eligible for regeneration.")
-                return
-            typer.echo("Managed assets eligible for regeneration:")
-            for relative in actionable:
-                typer.echo(f"- {relative}: {statuses[relative]}")
-            preserved = sorted(
-                relative
-                for relative in managed_asset_paths(root)
-                if statuses.get(relative) == "modified"
-            )
+            paths = managed_asset_paths(root)
+            missing = [relative for relative in paths if statuses.get(relative) == "missing"]
+            current = [relative for relative in paths if statuses.get(relative) == "unchanged"]
+            # Missing files are the reason to run this command. Listing forty already-current
+            # files alongside them means a researcher has to diff the output against
+            # `smairt check` by eye to find the one row that matters.
+            if missing:
+                typer.echo("Missing, so regenerating would restore them:")
+                for relative in missing:
+                    typer.echo(f"- {relative}")
+            if show_all and current:
+                typer.echo("Already current, and may be regenerated anyway:")
+                for relative in current:
+                    typer.echo(f"- {relative}")
+            elif current:
+                typer.echo(
+                    f"{len(current)} managed file(s) are already current. Use --all to list them."
+                )
+            preserved = [relative for relative in paths if statuses.get(relative) == "modified"]
             if preserved:
-                typer.echo("Modified and preserved, so not eligible:")
+                typer.echo("Differ from the installed version, so not eligible:")
                 for relative in preserved:
                     typer.echo(f"- {relative}")
+            if not missing and not current:
+                typer.echo("No managed assets are eligible for regeneration.")
+                return
             typer.echo(
                 "Select paths with --select PATH. Add --confirm only after reviewing the preview."
             )

@@ -47,7 +47,7 @@ def main() -> None:
 
     print(f"Created {target.relative_to(root)}")
     print("This is a utility, not an iteration: no number was taken and no row was added.")
-    print("If it tests something, create an iteration instead: python scripts/new_iteration.py")
+    print("If it tests something, create an iteration instead: python3 scripts/new_iteration.py")
 
 
 def _template(name: str, purpose: str) -> str:
