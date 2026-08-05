@@ -333,6 +333,17 @@ evidence for:
 python scripts/select_result.py 7 --claim "The wider layer exceeds the 0.65 target"
 ```
 
+For a panel, name the probes that support the claim; the helper reads the recorded kind and
+refuses to collapse a panel into a single success:
+
+```bash
+python scripts/select_result.py 7 --claim "Three probes exceed the target" \
+  --probes "probe_01,probe_03,probe_07"
+```
+
+With the Paper capability, add `--paper` to append the same decision, including its exact
+log path, to `FINAL_MANIFEST.md`.
+
 Several attempts at the same question produce competing evidence, and without this the
 question of which one you would report is settled by whoever reads the folder last.
 Selection reads `analysis/ITERATION_LOG.md` rather than the filesystem, so an iteration

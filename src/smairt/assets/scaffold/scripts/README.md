@@ -153,21 +153,28 @@ the latest history line, which is your cue to update it.
 ```bash
 python scripts/select_result.py 4 --claim "Activation choice drives the gain"
 python scripts/select_result.py 4 --claim "Three activations help" --probes "probe_01,probe_03,probe_07"
+
+# With the Paper capability, append the same selection to FINAL_MANIFEST.md
+python scripts/select_result.py 4 --claim "Three activations help" --probes "probe_01,probe_03,probe_07" --paper
 ```
 
 Creates `analysis/SELECTED_NN.md` with the claim, the iteration, and every file needed to
-check it. For a panel iteration, `--probes` names which arms support the claim, so a panel
-is never reported as though all of it succeeded.
+check it. It reads `Kind` from `analysis/ITERATION_LOG.md`; for a panel, `--probes` is
+required and names which arms support the claim, so a panel is never reported as though all
+of it succeeded. Supplying `--probes` for a recorded single-point iteration is also refused.
 
 Nothing is copied and nothing is deleted. The evidence stays in `results/logs/` where it
 was produced, and this record points at it; a duplicate can drift from the original, and a
 pointer cannot.
 
-It refuses when the iteration has no script, when it has not been run, and when a record
-already exists.
+It refuses when the number is not recorded as an iteration, when its script is missing,
+when it has not been run, and when a selection record already exists.
 
-With the Paper capability, add the matching entry to `FINAL_MANIFEST.md` by hand. Deciding
-what counts as reportable evidence stays with the researcher.
+With the Paper capability, `--paper` appends a detailed entry to `FINAL_MANIFEST.md` using
+the same claim, script, supporting probes, and exact log path. The helper can write this
+because running `select_result.py` is the researcher's explicit decision that the evidence
+is reportable; it never chooses a result on its own and never edits an existing manifest
+entry.
 
 ## new_utility.py
 

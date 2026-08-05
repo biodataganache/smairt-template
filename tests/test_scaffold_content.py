@@ -256,7 +256,7 @@ def test_selecting_a_result_is_decided_by_the_record_rather_than_the_filesystem(
     the iteration log instead.
     """
     select = rendered_assets()["scripts/select_result.py"]
-    assert "recorded_iterations" in select
+    assert "iteration_records" in select
     assert "existing_iterations" not in select
 
 

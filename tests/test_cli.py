@@ -916,6 +916,107 @@ def test_recording_an_outcome_appends_history_and_fills_only_its_own_placeholder
     assert checked.returncode == 1
 
 
+def test_panel_selection_requires_probes_and_appends_exact_paper_evidence(tmp_path: Path) -> None:
+    """A panel cannot be reported as though every probe supported one claim.
+
+    The iteration log already records whether an attempt was a panel. Selection must read
+    that record, require the supporting probes, and put the same exact log path into both
+    the selection record and the Paper manifest. Asking for the Paper append without the
+    Paper capability must stop before creating a partial selection record.
+    """
+    destination = tmp_path / "panel-selection"
+    assert create_project(destination, paper=True).returncode == 0
+
+    def helper(*arguments: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, *arguments],
+            cwd=destination,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+    assert helper("scripts/new_track.py", "Which probes help?", "synthetic").returncode == 0
+    created = helper(
+        "scripts/new_iteration.py",
+        "probe panel",
+        "synthetic",
+        "--hypothesis",
+        "HYPOTHESIS_01",
+        "--probes",
+        "3",
+    )
+    assert created.returncode == 0, created.stderr
+    assert helper("experiments/01_synthetic/script_01_probe_panel.py").returncode == 0
+
+    refused = helper("scripts/select_result.py", "1", "--claim", "Probe 02 helps")
+    assert refused.returncode != 0
+    assert "panel (3)" in refused.stderr
+    assert "--probes" in refused.stderr
+    assert not (destination / "analysis" / "SELECTED_01.md").exists()
+
+    selected = helper(
+        "scripts/select_result.py",
+        "1",
+        "--claim",
+        "Probe 02 helps",
+        "--probes",
+        "probe_02",
+        "--paper",
+    )
+    assert selected.returncode == 0, selected.stderr
+
+    log = next((destination / "results" / "logs").glob("script_01_probe_panel_*.log"))
+    relative_log = log.relative_to(destination).as_posix()
+    selection = (destination / "analysis" / "SELECTED_01.md").read_text()
+    manifest = (destination / "FINAL_MANIFEST.md").read_text()
+    assert relative_log in selection
+    assert relative_log in manifest
+    assert "Probe 02 helps" in manifest
+    assert "probe_02" in manifest
+    assert "Appended the Paper manifest entry" in selected.stdout
+
+
+def test_selection_refuses_non_iterations_and_paper_without_the_capability(tmp_path: Path) -> None:
+    """Neither an unrecorded script nor an absent capability may create a partial record."""
+    destination = tmp_path / "selection-refusals"
+    assert create_project(destination).returncode == 0
+
+    def helper(*arguments: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, *arguments],
+            cwd=destination,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+    stray = destination / "experiments" / "01_synthetic" / "script_09_stray.py"
+    stray.write_text("print('not an iteration')\n")
+    unrecorded = helper("scripts/select_result.py", "9", "--claim", "A stray claim")
+    assert unrecorded.returncode != 0
+    assert "not recorded" in unrecorded.stderr
+    assert not (destination / "analysis" / "SELECTED_09.md").exists()
+    stray.unlink()
+
+    assert helper("scripts/new_track.py", "A question", "synthetic").returncode == 0
+    assert (
+        helper(
+            "scripts/new_iteration.py",
+            "baseline",
+            "synthetic",
+            "--hypothesis",
+            "HYPOTHESIS_01",
+        ).returncode
+        == 0
+    )
+    assert helper("experiments/01_synthetic/script_01_baseline.py").returncode == 0
+    no_paper = helper("scripts/select_result.py", "1", "--claim", "A claim", "--paper")
+    assert no_paper.returncode != 0
+    assert "Paper capability" in no_paper.stderr
+    assert not (destination / "analysis" / "SELECTED_01.md").exists()
+
+
 def test_an_editor_hosted_assistant_is_launched_by_opening_the_workspace(tmp_path: Path) -> None:
     """Zoo Code runs inside VS Code, so opening the workspace is the launch.
 

@@ -109,14 +109,34 @@ def recorded_iterations(root: Path) -> list[int]:
     record rather than the filesystem is what lets a caller refuse to treat an
     unrecorded script as reportable evidence.
     """
+    return sorted(iteration_records(root))
+
+
+def iteration_records(root: Path) -> dict[int, dict[str, str]]:
+    """Return the current-state rows keyed by iteration number.
+
+    The log already records structural facts callers need, especially whether an
+    iteration was a single point or a panel. Reading those facts here keeps helpers from
+    asking a researcher to repeat them on the command line and from silently treating a
+    panel as a single successful result.
+    """
     log_path = root / "analysis" / "ITERATION_LOG.md"
     if not log_path.exists():
-        return []
-    return [
-        int(match.group(1))
-        for line in log_path.read_text().splitlines()
-        if (match := re.match(r"\|\s*(\d+)\s*\|", line))
-    ]
+        return {}
+    records: dict[int, dict[str, str]] = {}
+    for line in log_path.read_text().splitlines():
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) != 7 or not cells[0].isdigit():
+            continue
+        records[int(cells[0])] = {
+            "date": cells[1],
+            "script": cells[2].strip("`"),
+            "hypotheses": cells[3],
+            "kind": cells[4],
+            "changed_from": cells[5],
+            "outcome": cells[6],
+        }
+    return records
 
 
 def find_iteration_script(root: Path, number: int) -> Path | None:
