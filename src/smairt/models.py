@@ -6,6 +6,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from smairt import __version__
+
 
 class StartingPhase(StrEnum):
     SYNTHETIC = "synthetic"
@@ -23,11 +25,17 @@ class Assistant(StrEnum):
 
 
 class License(StrEnum):
+    """The licenses SMAIRT will write for a project.
+
+    Only licenses whose complete official text SMAIRT ships are offered. A truncated
+    license is not the license it names, so an abbreviated Apache-2.0, GPL-3.0, or
+    bespoke proprietary notice was removed rather than shortened. A researcher who
+    needs one of those writes `LICENSE` themselves; `smairt check` reports a
+    researcher-authored `LICENSE` as modified and never replaces it.
+    """
+
     MIT = "MIT"
     BSD_3_CLAUSE = "BSD-3-Clause"
-    APACHE_2_0 = "Apache-2.0"
-    GPL_3_0 = "GPL-3.0"
-    PROPRIETARY = "proprietary"
 
 
 class CapabilityState(StrEnum):
@@ -130,7 +138,14 @@ class ProjectContract(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     schema_version: int = 1
-    scaffold_version: str = "0.4.0"
+    scaffold_version: str = __version__
+    """The installed version that generated this project.
+
+    Derived from `__version__` rather than restated, because `project_check()` decides
+    whether a project is current by comparing this string to the installed version. When
+    the two were maintained separately, bumping one and forgetting the other made every
+    freshly generated project fail its own check.
+    """
     project: ProjectIdentity
     people: dict[str, Researcher]
     assistant: Assistant

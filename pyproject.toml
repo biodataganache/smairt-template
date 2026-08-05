@@ -45,6 +45,12 @@ dev = [
 [project.scripts]
 smairt = "smairt.cli:main"
 
+[tool.hatch.build]
+# macOS writes .DS_Store into any browsed directory, including `src/smairt/assets/scaffold`.
+# Those files are gitignored, so they never appear in a review, but the build copies whatever
+# is on disk — so a wheel built on a Mac would ship them into every generated project.
+exclude = ["**/.DS_Store"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/smairt"]
 

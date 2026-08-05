@@ -100,3 +100,9 @@ submit, monitor, or cancel jobs.
 ## License
 
 {{ project.name }} is licensed under the terms recorded in `LICENSE`.
+
+SMAIRT writes `LICENSE` only for the licenses whose complete official text it ships, so
+the file is never an abbreviation of the license it names. To use a different license,
+replace `LICENSE` with its full official text yourself and record the choice with your
+institution. `smairt check` then reports `LICENSE` as researcher-modified and will not
+replace it.

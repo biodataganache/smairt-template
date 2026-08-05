@@ -573,33 +573,12 @@ class Wizard:
         self._choose(
             "Choose a license",
             key="license",
-            default="MIT",
-            choices=(
-                ("1", "MIT", "MIT", "Permissive reuse with attribution and no warranty."),
-                (
-                    "2",
-                    "BSD-3-Clause",
-                    "BSD-3-Clause",
-                    "Permissive reuse with attribution and no endorsement.",
-                ),
-                (
-                    "3",
-                    "Apache-2.0",
-                    "Apache-2.0",
-                    "Permissive reuse with patent terms and notices.",
-                ),
-                (
-                    "4",
-                    "GPL-3.0",
-                    "GPL-3.0",
-                    "Reuse and distribution requires sharing covered source changes.",
-                ),
-                (
-                    "5",
-                    "Proprietary",
-                    "proprietary",
-                    "Reserve reuse rights unless you grant permission.",
-                ),
+            default=License.MIT.value,
+            # Derived from the License enum rather than restated, so a license can never be
+            # offered here without shipped legal text behind it.
+            choices=tuple(
+                (str(number), item.value, item.value, LICENSE_EXPLANATIONS[item])
+                for number, item in enumerate(License, start=1)
             ),
         )
         if str(self.answers["license"]) != previous_license:

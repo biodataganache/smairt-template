@@ -29,5 +29,5 @@ jobs:
       - run: uv run python scripts/ci_scaffold_diff.py
       - run: uv run pytest
       - run: uv build
-      - run: uv run python scripts/smoke_install.py --artifact dist/smairt-0.4.0-py3-none-any.whl --workspace .smoke/wheel
-      - run: uv run python scripts/smoke_install.py --artifact dist/smairt-0.4.0.tar.gz --workspace .smoke/sdist
+      - run: uv run python scripts/smoke_install.py --artifact dist --kind wheel --workspace .smoke/wheel
+      - run: uv run python scripts/smoke_install.py --artifact dist --kind sdist --workspace .smoke/sdist

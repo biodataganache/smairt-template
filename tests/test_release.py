@@ -48,6 +48,10 @@ def test_built_wheel_and_sdist_install_into_clean_environments_and_create_projec
     assert "smairt/assets/scaffold/scripts/shared/logging.py" in wheel_files
     assert f"smairt-{__version__}.dist-info/METADATA" in wheel_files
     assert any(path.endswith(".dist-info/licenses/LICENSE") for path in wheel_files)
+    # A gitignored file is invisible in review but still on disk for the build to copy, so
+    # operating-system metadata must be excluded by the build rather than by tidiness.
+    assert not [path for path in wheel_files if ".DS_Store" in path]
+    assert not [path for path in source_files if ".DS_Store" in path]
     assert {
         "LICENSE",
         "README.md",
@@ -74,16 +78,19 @@ def test_built_wheel_and_sdist_install_into_clean_environments_and_create_projec
     assert unsafe_workspace.returncode == 1
     assert "must be absent or empty" in unsafe_workspace.stderr
     assert sentinel.read_text() == "do not delete\n"
-    for artifact in artifacts:
-        workspace = tmp_path / artifact.stem
-        if artifact == wheel:
+    # Exercised the way CI addresses artifacts: by kind, so no caller carries the version.
+    for kind, artifact in (("wheel", wheel), ("sdist", source_distribution)):
+        workspace = tmp_path / f"smoke-{kind}"
+        if kind == "wheel":
             workspace.mkdir()
         smoke = subprocess.run(
             [
                 sys.executable,
                 "scripts/smoke_install.py",
                 "--artifact",
-                str(artifact),
+                str(distribution_directory),
+                "--kind",
+                kind,
                 "--workspace",
                 str(workspace),
             ],
