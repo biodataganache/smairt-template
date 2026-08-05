@@ -10,9 +10,9 @@ Store target, collected, or operational data used to address the research questi
 
 ## Inventory and Provenance
 
-| Filename or Pattern | Source/Collection | Date/Version | Processing | Access Restrictions | Used By |
-|---|---|---|---|---|---|
-| | | | | | |
+| Filename or Pattern | Source/Collection | Date/Version | Checksum | Processing | Access Restrictions | Used By |
+|---|---|---|---|---|---|---|
+| | | | | | | |
 
 Document consent, governance, access, preprocessing, exclusions, and quality limitations as
 appropriate. Data files are ignored by default. Do not commit sensitive data merely because

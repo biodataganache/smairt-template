@@ -10,7 +10,7 @@ Typical modules:
 - models.py    — Model architectures shared across scripts
 
 Usage from experiment scripts, which run from the project root:
-    from scripts.shared import TeeLogger, setup_logging
+    from scripts.shared import TeeLogger, record_run_status, setup_logging, write_provenance
     from scripts.shared.data_loading import load_data
     from scripts.shared.metrics import compute_score
 
@@ -22,9 +22,12 @@ hand and an import fails, add the same three lines it uses:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 """
 
-from .logging import TeeLogger, setup_logging
+from .iterations import record_run_status
+from .logging import TeeLogger, setup_logging, write_provenance
 
 __all__ = [
     "TeeLogger",
+    "record_run_status",
     "setup_logging",
+    "write_provenance",
 ]

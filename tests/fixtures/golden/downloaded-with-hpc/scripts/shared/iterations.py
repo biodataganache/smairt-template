@@ -244,6 +244,29 @@ def fill_outcome_placeholder(root: Path, *, number: int, outcome: str) -> bool:
     return False
 
 
+def record_run_status(root: Path, number: int, status: str, log_path: Path) -> None:
+    """Append a run status and exact log path without editing the iteration's state row.
+
+    Runs are events, so a rerun must not erase the status of the run before it. A separate
+    append-only history also means a crash is recorded even when no interpretation will
+    ever be written for it. The current-state row remains researcher-facing scientific
+    prose rather than a mixture of execution and interpretation state.
+    """
+    history = root / "analysis" / "RUN_HISTORY.md"
+    if not history.exists():
+        history.parent.mkdir(parents=True, exist_ok=True)
+        history.write_text(
+            "# Run History\n\n"
+            "Appended by generated iteration scripts. Each line identifies one execution, "
+            "its exact log, and whether it completed. Earlier lines are never edited.\n\n"
+            "| Date | Iteration | Status | Log |\n"
+            "|---|---|---|---|\n"
+        )
+    relative = log_path.relative_to(root).as_posix()
+    with history.open("a") as handle:
+        handle.write(f"| {date.today().isoformat()} | {number:02d} | {status} | `{relative}` |\n")
+
+
 def state_row_outcome(root: Path, number: int) -> str | None:
     """Return an iteration's recorded outcome from the state table, if it has a row."""
     log_path = root / "analysis" / "ITERATION_LOG.md"

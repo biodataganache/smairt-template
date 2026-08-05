@@ -229,6 +229,14 @@ results/logs/script_01_baseline_20240115_143022.log
 results/logs/script_07_validation_20240220_091544.log
 ```
 
+Before the script's own output, the log records the Python executable and dependencies,
+Git commit when available, arguments and configuration, host and device, and the SHA-256
+identity of input files. It ends with `Run status: SUCCEEDED` or `Run status: FAILED
+(<exception>)`. The same status and exact log path are appended to
+`analysis/RUN_HISTORY.md`, so a crash does not disappear when the iteration is rerun.
+Immediate reruns receive distinct microsecond-resolution names rather than competing for
+one file.
+
 Four files form the audit trail, and the assistant reads them directly:
 
 | Artifact | File | Question it answers |

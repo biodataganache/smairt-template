@@ -172,17 +172,17 @@ def _without_leading_docstring(text: str) -> str:
 
 def _template(script_name: str, hypothesis: str, number: int, probes: int | None) -> str:
     if probes is None:
-        experiment = """        print("TODO: implement the experiment")"""
+        experiment = """            print("TODO: implement the experiment")"""
     else:
-        experiment = f"""        probes = {{
-            f"probe_{{index:02d}}": "TODO: describe this variation"
-            for index in range(1, {probes} + 1)
-        }}
-        # Report every probe, including the ones that change nothing or make things
-        # worse. A panel reported as its best arm is a panel reported dishonestly.
-        for label, variation in probes.items():
-            print(f"{{label}}: {{variation}}")
-            print(f"{{label}} result: TODO")"""
+        experiment = f"""            probes = {{
+                f"probe_{{index:02d}}": "TODO: describe this variation"
+                for index in range(1, {probes} + 1)
+            }}
+            # Report every probe, including the ones that change nothing or make things
+            # worse. A panel reported as its best arm is a panel reported dishonestly.
+            for label, variation in probes.items():
+                print(f"{{label}}: {{variation}}")
+                print(f"{{label}} result: TODO")"""
 
     return f'''#!/usr/bin/env python3
 """Iteration {number:02d}: {script_name}
@@ -197,17 +197,28 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.shared import TeeLogger, setup_logging
+from scripts.shared import TeeLogger, record_run_status, setup_logging, write_provenance
 
 SCRIPT_NAME = "{script_name}"
+ITERATION_NUMBER = {number}
 
 
 def main() -> None:
     log_path = setup_logging(SCRIPT_NAME, PROJECT_ROOT / "results" / "logs")
-    with TeeLogger(log_path):
-        print("Hypothesis: {hypothesis}")
+    logger = TeeLogger(log_path)
+    try:
+        with logger:
+            write_provenance(project_root=PROJECT_ROOT, config={{}})
+            print("Hypothesis: {hypothesis}")
 {experiment}
-        print(f"Log: {{log_path.relative_to(PROJECT_ROOT)}}")
+            print(f"Log: {{log_path.relative_to(PROJECT_ROOT)}}")
+    finally:
+        # This runs after TeeLogger has classified the run, even when the experiment
+        # raised. A record failure is reported but never masks the experiment's exception.
+        try:
+            record_run_status(PROJECT_ROOT, ITERATION_NUMBER, logger.status, log_path)
+        except OSError as error:
+            print(f"Warning: could not append run history: {{error}}", file=sys.stderr)
 
 
 if __name__ == "__main__":

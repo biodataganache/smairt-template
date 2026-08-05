@@ -191,17 +191,30 @@ is numbered and recorded.
 ## shared/logging.py
 
 `TeeLogger` writes to the console and a file at once, capturing stdout, stderr, warnings,
-and uncaught tracebacks. Generated scripts already use it:
+uncaught tracebacks, and an explicit `SUCCEEDED` or `FAILED` status. Generated scripts also
+call `write_provenance()` before the experiment:
 
 ```python
 log_path = setup_logging(SCRIPT_NAME, PROJECT_ROOT / "results" / "logs")
 with TeeLogger(log_path):
+    write_provenance(project_root=PROJECT_ROOT, config={})
     ...
 ```
 
-Everything the run produced ends up in one file named `<script_name>_<timestamp>.log`. A
-traceback that appeared only in a terminal is not part of the evidence; this is what stops
-that happening.
+That header records the Python executable and version, installed dependency versions, Git
+commit when available, command-line arguments, configuration, host and visible device,
+and the size and SHA-256 identity of input files. Home-directory paths are replaced with
+`<HOME>` and the host name is hashed, so a shared log does not publish a username or
+workstation name. Pass `input_paths=[...]` when the script uses inputs outside `data/`;
+otherwise regular files under `data/` are inventoried. Checksums are cached by path, size,
+and modification time so large real datasets are not re-read unchanged on every run.
+
+Everything the run produced ends up in one unique file named
+`<script_name>_<timestamp>_<microseconds>.log`. Immediate reruns cannot replace one another.
+Iteration scripts also append the status and exact log path to
+`analysis/RUN_HISTORY.md`, so a crash remains visible even if the iteration is rerun
+successfully later. A traceback that appeared only in a terminal is not part of the
+evidence; this is what stops that happening.
 
 ## shared/iterations.py
 

@@ -66,7 +66,7 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.shared import TeeLogger, setup_logging
+from scripts.shared import TeeLogger, setup_logging, write_provenance
 
 SCRIPT_NAME = "{name}"
 
@@ -74,6 +74,7 @@ SCRIPT_NAME = "{name}"
 def main() -> None:
     log_path = setup_logging(SCRIPT_NAME, PROJECT_ROOT / "results" / "logs")
     with TeeLogger(log_path):
+        write_provenance(project_root=PROJECT_ROOT, config={{}})
         print("Purpose: {purpose}")
         print("TODO: implement the utility")
         print(f"Log: {{log_path.relative_to(PROJECT_ROOT)}}")

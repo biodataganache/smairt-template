@@ -313,9 +313,9 @@ def test_generated_script_captures_stdout_stderr_warnings_and_tracebacks(tmp_pat
     script = destination / "experiments" / "01_synthetic" / "script_01_capture_failure.py"
     contents = script.read_text().replace(
         'print("TODO: implement the experiment")',
-        'print("standard output")\n        print("standard error", file=sys.stderr)\n'
-        '        import warnings\n        warnings.warn("warning output")\n'
-        '        raise RuntimeError("failure output")',
+        'print("standard output")\n            print("standard error", file=sys.stderr)\n'
+        '            import warnings\n            warnings.warn("warning output")\n'
+        '            raise RuntimeError("failure output")',
     )
     script.write_text(contents)
 
@@ -332,6 +332,7 @@ def test_generated_script_captures_stdout_stderr_warnings_and_tracebacks(tmp_pat
     assert ran.returncode != 0
     assert len(logs) == 1
     log = logs[0].read_text()
+    run_history = (destination / "analysis" / "RUN_HISTORY.md").read_text()
     assert "standard output" in log
     assert "standard error" in log
     assert "standard output" in ran.stdout
@@ -340,6 +341,96 @@ def test_generated_script_captures_stdout_stderr_warnings_and_tracebacks(tmp_pat
     assert "warning output" in log
     assert "Traceback (most recent call last)" in log
     assert "RuntimeError: failure output" in log
+    assert "Run status: FAILED (RuntimeError)" in log
+    assert "FAILED (RuntimeError)" in run_history
+
+
+def test_generated_script_records_provenance_and_never_reuses_a_log_path(tmp_path: Path) -> None:
+    """A log must answer what produced it without relying on the current checkout.
+
+    Two runs may begin in the same second, so second-resolution names are not identities.
+    Each run gets its own log, and both the log and iteration row state whether it
+    completed cleanly.
+    """
+    destination = tmp_path / "provenance"
+    assert create_project(destination, initialize_git=True).returncode == 0
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=SMAIRT Test",
+            "-c",
+            "user.email=test@example.com",
+            "commit",
+            "-m",
+            "pre-run record",
+        ],
+        cwd=destination,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=destination,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    input_path = destination / "data" / "synthetic" / "sample.txt"
+    input_path.write_text("identity matters\n")
+
+    created = subprocess.run(
+        [
+            sys.executable,
+            "scripts/new_iteration.py",
+            "repeatable",
+            "synthetic",
+            "--hypothesis",
+            "HYPOTHESIS_01",
+        ],
+        cwd=destination,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    script = destination / "experiments" / "01_synthetic" / "script_01_repeatable.py"
+    first = subprocess.run(
+        [sys.executable, str(script), "--example", "value"],
+        cwd=destination,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    second = subprocess.run(
+        [sys.executable, str(script), "--example", "value"],
+        cwd=destination,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    logs = sorted((destination / "results" / "logs").glob("script_01_repeatable_*.log"))
+
+    assert created.returncode == 0, created.stderr
+    assert first.returncode == 0, first.stderr
+    assert second.returncode == 0, second.stderr
+    assert len(logs) == 2
+    assert logs[0].name != logs[1].name
+    for path in logs:
+        log = path.read_text()
+        assert f"Git commit: {commit}" in log
+        assert "Python executable:" in log
+        assert "Python version:" in log
+        assert "Dependencies:" in log
+        assert "Arguments:" in log and "--example" in log
+        assert "Config: {}" in log
+        assert "Host:" in log
+        assert "Device:" in log
+        assert "Inputs:" in log
+        assert "data/synthetic/sample.txt" in log
+        assert "sha256=" in log
+        assert "Run status: SUCCEEDED" in log
+    assert "SUCCEEDED" in (destination / "analysis" / "RUN_HISTORY.md").read_text()
 
 
 def test_managed_assets_are_derived_from_the_package_after_clone(tmp_path: Path) -> None:
