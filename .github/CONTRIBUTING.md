@@ -1,6 +1,6 @@
 # Contributing To SMAIRT
 
-SMAIRT V0.1 is an installable research-workspace generator. The supported
+SMAIRT is an installable research-workspace generator. The supported
 development platforms are macOS, Linux, and WSL with Python 3.11 through 3.13.
 Native Windows support is deferred.
 

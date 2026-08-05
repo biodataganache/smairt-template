@@ -1,6 +1,6 @@
 # SMAIRT: Scientific Method with AI Research Toolkit
 
-SMAIRT V0.1 creates readable, hypothesis-driven scientific research workspaces
+SMAIRT creates readable, hypothesis-driven scientific research workspaces
 for coding assistants. The installed `smairt` command is the supported project
 creation path. It supports macOS, Linux, and Windows through WSL; native
 Windows support is deferred.
@@ -26,7 +26,7 @@ smairt --version
 ```
 
 Use `uv tool install --force .` or `pipx reinstall smairt` after updating your
-checkout. Native Windows is not supported in V0.1; use WSL instead.
+checkout. Native Windows is not supported; use WSL instead.
 
 ## Create A Project
 
@@ -211,7 +211,7 @@ Cookiecutter implementations are retained under `legacy/cookiecutter/` only as
 unsupported historical references. They are not packaged, tested, or supported
 generation paths. Use `smairt new` for every new project and automation flow.
 
-## V0.1 Limits
+## Current Limits
 
 - Existing folders without `smairt.yaml` are not adopted or migrated.
 - Project Check diagnoses structure and configuration; it does not inspect
@@ -220,6 +220,13 @@ generation paths. Use `smairt new` for every new project and automation flow.
   assets. An upgrade never rewrites researcher work or a modified starter.
 - HPC support supplies guidance and a template, not scheduler integration.
 - Native Windows support is deferred.
+- Demos under `demos/` show a superseded workflow. Their scientific reasoning
+  still holds; their commands and directory layouts do not.
+
+## Changes
+
+[CHANGELOG.md](CHANGELOG.md) records what changed in each version and what an
+existing project needs to do about it.
 
 ## Development
 

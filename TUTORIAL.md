@@ -1,6 +1,6 @@
 # SMAIRT Research Workflow Tutorial
 
-This V0.1 tutorial uses the installed `smairt` command. It applies on macOS,
+This tutorial uses the installed `smairt` command. It applies on macOS,
 Linux, and WSL with Python 3.11 or newer; native Windows is deferred. The
 repository preview is installed from a checkout, not from PyPI.
 
@@ -65,7 +65,7 @@ Enable HPC guidance when you need a starting SLURM script:
 smairt hpc enable ./classification_noise_study
 ```
 
-Edit `hpc/slurm_job.sh` for the cluster. SMAIRT V0.1 does not connect to,
+Edit `hpc/slurm_job.sh` for the cluster. SMAIRT does not connect to,
 submit to, monitor, or manage a scheduler.
 
 ## Check And Repair Structure

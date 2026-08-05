@@ -1,5 +1,17 @@
 # SMAIRT Demo Collection
 
+> **These demos show a superseded workflow.** They were built against an earlier scaffold and
+> still ship helpers that no longer exist — `new_script.py`, `new_experiment.py`, and
+> `finalize_iteration.py` — along with the retired `iter_NN → final/` directory tree and
+> letter-prefixed script names. The current workflow is a track, then numbered iterations
+> recorded in `analysis/ITERATION_LOG.md`, with outcomes recorded by `record_outcome.py` and
+> reportable results named by `select_result.py`.
+>
+> Read them for the *scientific reasoning* they demonstrate, which is still sound and still
+> the point. Do not copy their commands or directory layouts. For the current workflow, create
+> a project with `smairt new` and read its `README.md` and `docs/12_STEPS.md`. Re-enriching
+> these demos is tracked separately.
+
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../smairt-template/README.md)
 [![Framework: SMAIRT](https://img.shields.io/badge/framework-SMAIRT-6f42c1.svg)](../smairt-template/README.md)
 [![Mode: Scientist in Control](https://img.shields.io/badge/AI%20workflow-human%20review%20required-darkgreen.svg)](USING_ZOO_CODE.md)

@@ -1,6 +1,6 @@
 # SMAIRT Paper Workspace Tutorial
 
-Paper support is an additive V0.1 capability, not a separate project mode. It
+Paper support is an additive capability, not a separate project mode. It
 keeps publication-focused analysis in `paper/analysis/` while exploratory work
 remains in `analysis/`.
 

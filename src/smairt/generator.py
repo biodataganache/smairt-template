@@ -8,13 +8,8 @@ from pathlib import Path
 
 import yaml
 
-from smairt.models import ProjectContract, ProjectOptions, StartingPhase
-from smairt.project import (
-    create_management_assets,
-    hpc_asset_contents,
-    phase_asset_contents,
-    phase_directories,
-)
+from smairt.models import ProjectContract, ProjectOptions
+from smairt.project import create_management_assets
 from smairt.scaffold import materialize_template_assets
 
 
@@ -98,29 +93,6 @@ def validate_destination(destination: Path) -> None:
 def _generate_into(root: Path, options: ProjectOptions) -> None:
     contract = ProjectContract.from_options(options, git_initialized=False)
     materialize_template_assets(root, contract, missing_only=False)
-
-
-def _create_phase_directories(root: Path, phase: StartingPhase) -> None:
-    for directory in phase_directories(phase):
-        (root / directory).mkdir(parents=True)
-    for relative, content in phase_asset_contents(phase).items():
-        (root / relative).write_text(content)
-
-
-def _create_paper_assets(root: Path) -> None:
-    from smairt.project import paper_asset_contents
-
-    for relative, content in paper_asset_contents().items():
-        path = root / relative
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content)
-
-
-def _create_hpc_assets(root: Path, project_slug: str) -> None:
-    for relative, content in hpc_asset_contents(project_slug).items():
-        path = root / relative
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content)
 
 
 def _initialize_git(root: Path, messages: list[str]) -> bool:

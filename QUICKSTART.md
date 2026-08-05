@@ -1,6 +1,6 @@
 # SMAIRT Quick Start
 
-SMAIRT V0.1 creates a local research workspace for a coding assistant. It is
+SMAIRT creates a local research workspace for a coding assistant. It is
 supported on macOS, Linux, and WSL with Python 3.11 or newer. Native Windows is
 deferred; use WSL.
 

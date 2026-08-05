@@ -53,23 +53,23 @@ REQUIRED_DIRECTORIES = (
     "results/figures",
     "prompts",
 )
-PHASE_DIRECTORIES = {
-    StartingPhase.SYNTHETIC: (
-        "data/synthetic",
-        "data/downloaded",
-        "data/real",
-        "experiments/01_synthetic",
-        "experiments/02_downloaded",
-        "experiments/03_real_data",
-    ),
-    StartingPhase.DOWNLOADED: (
-        "data/downloaded",
-        "data/real",
-        "experiments/02_downloaded",
-        "experiments/03_real_data",
-    ),
-    StartingPhase.REAL: ("data/real", "experiments/03_real_data"),
-}
+PHASE_DIRECTORIES = (
+    "data/synthetic",
+    "data/downloaded",
+    "data/real",
+    "experiments/01_synthetic",
+    "experiments/02_downloaded",
+    "experiments/03_real_data",
+)
+"""Every phase directory, present in every project regardless of its starting phase.
+
+Not keyed by phase. `starting_phase` records where work began and `current_phase` records
+where attention is now; neither decides which directories exist, because a project that
+begins with synthetic data still needs somewhere to put real data when it gets there.
+
+This replaced a phase-keyed map whose `downloaded` and `real` entries were unreachable, read
+through a function that took a phase argument and deleted it. The behavior was right and the
+route to it invited the belief that phase controlled layout."""
 _MIT_TEXT = """\
 MIT License
 
@@ -414,72 +414,10 @@ def _materialize(root: Path, contract: ProjectContract, *, missing_only: bool = 
         raise ProjectError(str(error)) from error
 
 
-def _create_paper_assets_safely(root: Path) -> None:
-    _materialize(root, load_contract(root))
-
-
-def _create_hpc_assets_safely(root: Path, slug: str) -> None:
-    del slug
-    _materialize(root, load_contract(root))
-
-
-def hpc_asset_contents(slug: str) -> dict[str, str]:
-    return {
-        "hpc/README.md": "# HPC Guidance\n\n"
-        "Run `sbatch hpc/slurm_job.sh <experiment-command> [arguments...]` from the project root "
-        "after adapting the scheduler directives to your cluster. Choose a command that uses "
-        "paths created for the project's current phase. SMAIRT does not submit or manage jobs.\n",
-        "hpc/slurm_job.sh": "#!/usr/bin/env bash\n"
-        f"#SBATCH --job-name={slug}\n"
-        "#SBATCH --output=results/logs/%x-%j.out\n\n"
-        "set -eu\n\n"
-        'if [ "$#" -eq 0 ]; then\n'
-        '  echo "Usage: sbatch hpc/slurm_job.sh <experiment-command> [arguments...]" >&2\n'
-        '  echo "Choose a command and paths appropriate for the current project phase." >&2\n'
-        "  exit 2\n"
-        "fi\n\n"
-        '"$@"\n',
-    }
-
-
-def paper_asset_contents() -> dict[str, str]:
-    return {
-        "paper/README.md": "# Paper Workspace\n\n"
-        "Paper support is an optional publication overlay on the standard SMAIRT audit trail. "
-        "Use `paper/analysis/` for publication-focused interpretation and `paper/outline.md` "
-        "for the evolving manuscript structure. Check `capabilities.paper.state` in "
-        "`smairt.yaml`: retained files are researcher-owned history while Paper is inactive.\n",
-        "paper/outline.md": "# Paper Outline\n",
-        "paper/analysis/README.md": "# Paper Analysis\n\n"
-        "Connect results from the standard research workflow to claims in the paper outline.\n",
-    }
-
-
-def phase_asset_contents(phase: StartingPhase) -> dict[str, str]:
-    guidance = {
-        "data/synthetic": "Generated data used to test assumptions before external data is introduced.",
-        "data/downloaded": "Public or benchmark data, with provenance recorded alongside retrieval steps.",
-        "data/real": "Collected or operational data; document access, provenance, and transformations.",
-        "experiments/01_synthetic": "Scripts and notes for experiments against synthetic data.",
-        "experiments/02_downloaded": "Scripts and notes for experiments against downloaded data.",
-        "experiments/03_real_data": "Scripts and notes for experiments against real data.",
-    }
-    return {
-        f"{directory}/README.md": f"# {directory}\n\n{guidance[directory]}\n"
-        for directory in phase_directories(phase)
-    }
-
-
 def _create_directory(path: Path) -> None:
     if path.exists() and not path.is_dir():
         raise ProjectError(f"Cannot create directory because a file exists: {path}")
     path.mkdir(parents=True, exist_ok=True)
-
-
-def _write_if_missing_and_track(root: Path, path: Path, content: str) -> None:
-    if not path.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content)
 
 
 def update_settings(
@@ -521,7 +459,7 @@ def update_settings(
         updates["assistant"] = assistant
     if phase is not None:
         _require_current_scaffold(contract, "change the current phase")
-        _create_phase_directories_non_destructively(root, phase)
+        _create_phase_directories_non_destructively(root)
         updates["current_phase"] = phase
     if researcher is not None or email is not None:
         current = contract.people["researcher"]
@@ -573,11 +511,16 @@ def update_settings(
         prepare_assistant(root)
 
 
-def _create_phase_directories_non_destructively(root: Path, phase: StartingPhase) -> None:
-    for directory in phase_directories(phase):
+def _create_phase_directories_non_destructively(root: Path) -> None:
+    """Ensure every phase directory and its shipped guidance exists, creating nothing else.
+
+    The guidance comes from the scaffold templates rather than from text repeated here. A
+    second copy wrote different words than the files a project is generated with, so a phase
+    README restored by a phase change did not match the one every other project has.
+    """
+    for directory in PHASE_DIRECTORIES:
         _create_directory(root / directory)
-    for relative, content in phase_asset_contents(phase).items():
-        _write_if_missing_and_track(root, root / relative, content)
+    _materialize(root, load_contract(root))
 
 
 def update_collaborator(root: Path, role: str, name: str, email: str | None) -> None:
@@ -739,7 +682,7 @@ def project_check(root: Path) -> list[CheckIssue]:
                     f"create-directory:{directory}",
                 )
             )
-    for directory in _phase_directories(contract.current_phase):
+    for directory in PHASE_DIRECTORIES:
         if not (root / directory).is_dir():
             issues.append(
                 CheckIssue(
@@ -934,15 +877,6 @@ def _iteration_log_records(content: str) -> tuple[dict[str, str], dict[str, str]
     return rows, history
 
 
-def _phase_directories(phase: StartingPhase) -> tuple[str, ...]:
-    return phase_directories(phase)
-
-
-def phase_directories(phase: StartingPhase) -> tuple[str, ...]:
-    del phase
-    return PHASE_DIRECTORIES[StartingPhase.SYNTHETIC]
-
-
 def _managed_file_issues(root: Path, contract: ProjectContract) -> list[CheckIssue]:
     assets = managed_asset_contents(root)
     issues: list[CheckIssue] = []
@@ -1025,12 +959,10 @@ def apply_repairs(root: Path, identifiers: list[str]) -> list[CheckIssue]:
         elif issue.repair == "create-assistant-pointer":
             prepare_assistant(root)
         elif issue.repair.startswith("restore-capability:"):
-            name = issue.repair.removeprefix("restore-capability:")
-            contract = load_contract(root)
-            if name == "paper":
-                _create_paper_assets_safely(root)
-            else:
-                _create_hpc_assets_safely(root, contract.project.slug)
+            # Both capabilities restore the same way: write whatever the contract's enabled
+            # capabilities declare and is missing. The two wrappers this replaced differed
+            # only in an argument one of them deleted.
+            _materialize(root, load_contract(root))
     return selected
 
 

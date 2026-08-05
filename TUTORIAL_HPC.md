@@ -1,6 +1,6 @@
 # SMAIRT HPC Guidance Tutorial
 
-HPC support is an optional V0.1 project capability. It provides a small,
+HPC support is an optional project capability. It provides a small,
 editable SLURM starting point; it does not submit, monitor, or manage jobs.
 
 ## Enable The Capability
