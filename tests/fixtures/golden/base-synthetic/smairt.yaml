@@ -1,5 +1,5 @@
 schema_version: 1
-scaffold_version: 0.3.0
+scaffold_version: 0.4.0
 project:
   name: Golden Synthetic Study
   slug: golden_synthetic_study

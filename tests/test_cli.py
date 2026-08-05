@@ -42,7 +42,7 @@ def test_installed_command_reports_its_version() -> None:
     )
 
     assert result.returncode == 0
-    assert result.stdout.strip() == "smairt 0.3.0"
+    assert result.stdout.strip() == "smairt 0.4.0"
 
 
 def test_invalid_slug_exits_cleanly_without_creating_a_project(tmp_path: Path) -> None:
@@ -145,7 +145,7 @@ def test_installed_command_creates_a_project_with_a_versioned_contract(
     metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
     assert metadata == {
         "schema_version": 1,
-        "scaffold_version": "0.3.0",
+        "scaffold_version": "0.4.0",
         "project": {
             "name": "Protein Study",
             "slug": "protein_study",

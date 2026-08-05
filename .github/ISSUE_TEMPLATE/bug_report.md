@@ -23,7 +23,7 @@ What actually happened.
 ## Environment
 - OS: [e.g., macOS 14.0, Ubuntu 22.04, WSL]
 - Python version: [e.g., 3.11.5]
-- SMAIRT version: [e.g., 0.3.0]
+- SMAIRT version: [e.g., 0.4.0]
 - Installation route: [`uv tool install .` or `pipx install .`]
 
 ## Error Output

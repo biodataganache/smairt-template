@@ -229,23 +229,104 @@ def test_exactly_one_shipped_helper_assigns_an_iteration_number() -> None:
     assert offenders == []
 
 
-def test_no_shipped_helper_writes_a_file_without_first_refusing_an_existing_one() -> None:
-    """Overwriting destroys work that other records still reference.
+def test_every_shipped_write_is_an_explicit_reviewed_operation() -> None:
+    """Every overwrite-capable call has a reviewed creation or narrow-update guard.
 
-    The destructive-call guard above does not cover this: an unguarded `write_text` names
-    no deletion function while still discarding researcher work. A helper must either go
-    through the shared script writer, which refuses an existing path, or refuse one
-    itself.
+    The destructive-call scan above misses `write_text`. Matching whole source fragments
+    makes both halves of each safety argument falsifiable: removing a refusal, broadening a
+    narrow update, or adding a write fails even when another `exists()` appears elsewhere.
+    Deliberate cache replacement is listed separately because the cache is disposable tool
+    state rather than researcher work.
     """
-    offenders = sorted(
-        relative
-        for relative, content in rendered_assets().items()
-        if relative.endswith(".py")
-        and "write_text" in content
-        and "write_new_script" not in content
-        and "exists()" not in content
+    sources = rendered_assets()
+    protected_writes = {
+        "scripts/generate_manifest.py": """if output.exists():
+        parser.error(f"refusing to overwrite existing file: {output}")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(manifest)""",
+        "scripts/new_track.py": """for path in (hypothesis_path, plan_path):
+        if path.exists():
+            parser.error(f"refusing to overwrite existing file: {path}")
+
+    rigor = _rigor_settings(root)
+    hypothesis = _hypothesis(
+        _template(parser, root / "hypotheses" / "HYPOTHESIS_TEMPLATE.md"),
+        hypothesis_id=hypothesis_id,
+        number=hypothesis_number,
+        question=arguments.question,
+        phase=arguments.phase,
+    ) + _rigor_block(rigor)
+    plan = _plan(
+        _template(parser, root / "plans" / "PLAN_TEMPLATE.md"),
+        hypothesis_id=hypothesis_id,
+        question=arguments.question,
     )
-    assert offenders == []
+    if any(rigor.values()):
+        plan += "\\n## Project rigor declarations\\n\\nSee `analysis/RIGOR.md` for the standing commitments that apply to this track.\\n"
+
+    hypothesis_path.parent.mkdir(parents=True, exist_ok=True)
+    hypothesis_path.write_text(hypothesis)
+    plan_path.parent.mkdir(parents=True, exist_ok=True)
+    plan_path.write_text(plan)""",
+        "scripts/select_result.py": """if target.exists():
+        parser.error(f"refusing to overwrite existing record: {target}")
+
+    logs = sorted((root / "results" / "logs").glob(f"{script.stem}_*.log"))
+    if not logs:
+        parser.error(
+            f"no log found for {script.stem}; run the iteration before selecting its result"
+        )
+
+    manifest = root / "FINAL_MANIFEST.md"
+    if arguments.paper and not manifest.exists():
+        parser.error(
+            "--paper requires the Paper capability and FINAL_MANIFEST.md; enable it with "
+            "`smairt paper enable` before selecting this result"
+        )
+
+    relative_script = script.relative_to(root)
+    relative_logs = [log.relative_to(root) for log in logs]
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(""",
+        "scripts/shared/iterations.py": """if path.exists():
+        raise FileExistsError(f"refusing to overwrite existing script: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body)""",
+    }
+    for relative, fragment in protected_writes.items():
+        assert fragment in sources[relative]
+
+    iterations = sources["scripts/shared/iterations.py"]
+    assert "if not log_path.exists():" in iterations
+    assert "if line.startswith(prefix) and OUTCOME_PLACEHOLDER in line:" in iterations
+    assert "if not history.exists():" in iterations
+
+    overwrite_calls = re.compile(
+        r"\.(?:write_text|write_bytes|open)\(|\bopen\(|\b(?:shutil\.copy|shutil\.copy2|shutil\.copyfile)\("
+    )
+    writes = sorted(
+        f"{relative}: {line.strip()}"
+        for relative, content in sources.items()
+        if relative.endswith(".py")
+        for line in content.splitlines()
+        if overwrite_calls.search(line)
+        and 'open("a")' not in line
+        and '.open("a")' not in line
+        and '.open("rb")' not in line
+    )
+    assert writes == [
+        "scripts/generate_manifest.py: output.write_text(manifest)",
+        "scripts/new_track.py: hypothesis_path.write_text(hypothesis)",
+        "scripts/new_track.py: plan_path.write_text(plan)",
+        "scripts/select_result.py: target.write_text(",
+        "scripts/shared/iterations.py: history.write_text(",
+        'scripts/shared/iterations.py: log_path.write_text("".join(_with_state_row(lines, row)))',
+        'scripts/shared/iterations.py: log_path.write_text("".join(lines))',
+        "scripts/shared/iterations.py: log_path.write_text(ITERATION_LOG_HEADER)",
+        "scripts/shared/iterations.py: path.write_text(body)",
+        'scripts/shared/logging.py: cache_path.write_text(json.dumps(cache, indent=2, sort_keys=True) + "\\n")',
+        'scripts/shared/logging.py: self._log = self.log_path.open("x", buffering=1)',
+    ]
 
 
 def test_selecting_a_result_is_decided_by_the_record_rather_than_the_filesystem() -> None:

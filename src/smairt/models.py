@@ -130,7 +130,7 @@ class ProjectContract(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     schema_version: int = 1
-    scaffold_version: str = "0.3.0"
+    scaffold_version: str = "0.4.0"
     project: ProjectIdentity
     people: dict[str, Researcher]
     assistant: Assistant

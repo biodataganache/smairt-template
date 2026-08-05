@@ -28,6 +28,34 @@ so six filename references move with every bump or the build fails on a missing 
 
 This record accounts for the meaningful files recovered from the original Cookiecutter scaffold. `results/.DS_Store` is intentionally excluded as operating-system metadata.
 
+## Scaffold version 0.4.0 and final remediation gate
+
+Stages A through H changed the generated project's workflow contracts after the `0.3.0`
+transition: one numbering authority, append-only outcome history, structural result selection,
+self-contained provenance, project-level rigor declarations, and a dashboard handoff into the
+recorded workflow. The package and scaffold therefore move together to `0.4.0`. This is the
+single version bump for that remediation sequence; no migration is implied or attempted.
+
+Stage I makes the corrected properties falsifiable. The guard suite now includes the write
+path that a destructive-call scan alone misses: a shipped helper containing `write_text` must
+either use the shared refusing writer or visibly check that its destination does not exist.
+The three normalized golden projects were regenerated after the version bump.
+
+The release gate passed on 2026-08-05:
+
+- `ruff format --check`: 61 files already formatted;
+- `ruff check`: no findings;
+- strict `mypy`: no findings in 27 source files;
+- complete `pytest`: 123 tests passed;
+- blueprint diff from the pre-remediation scaffold: five intended additions, removal of
+  `scripts/new_script.py`, and the intended `scripts/shared` ownership change; no renames or
+  condition changes;
+- package build: `smairt-0.4.0-py3-none-any.whl` and `smairt-0.4.0.tar.gz` built;
+- isolated wheel and source-distribution smoke installs: both passed;
+- installed-wheel end to end: created a Paper project, started a track, created and ran an
+  iteration, wrote its interpretation, recorded its outcome, selected it into
+  `FINAL_MANIFEST.md`, and finished with an empty `smairt check --json` issue list.
+
 ## Content fidelity
 
 "Restored at same path" describes the path only. For a period it stood in for
