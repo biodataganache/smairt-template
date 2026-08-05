@@ -11,7 +11,7 @@ AssetKind = Literal["directory", "file"]
 AssetOwnership = Literal[
     "tool-guidance", "editable-starter", "researcher-work", "historical-reference"
 ]
-AssetCondition = Literal["always", "paper", "hpc"]
+AssetCondition = Literal["always", "paper", "hpc", "rigor"]
 
 
 class ScaffoldAsset(BaseModel):
@@ -80,6 +80,8 @@ def active_assets(contract: object, *, include_inactive: bool = False) -> list[S
     def enabled(condition: AssetCondition) -> bool:
         if condition == "always":
             return True
+        if condition == "rigor":
+            return any(getattr(contract, "rigor").model_dump().values())
         state = capabilities[condition].state.value
         return state == "enabled" or (include_inactive and state == "inactive")
 
@@ -107,7 +109,11 @@ def render_template_assets(contract: object, *, include_inactive: bool = False) 
         keep_trailing_newline=True,
     )
     people = getattr(contract, "people")
-    context = {"project": getattr(contract, "project"), "researcher": people["researcher"]}
+    context = {
+        "project": getattr(contract, "project"),
+        "researcher": people["researcher"],
+        "rigor": getattr(contract, "rigor"),
+    }
     rendered: dict[str, str] = {}
     for asset in active_assets(contract, include_inactive=include_inactive):
         if asset.kind != "file" or asset.source in {"contract", "license", "assistant-pointer"}:

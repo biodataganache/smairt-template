@@ -27,6 +27,7 @@ from smairt.models import (
     ProjectContract,
     PromptConvention,
     Researcher,
+    RigorSettings,
     StartingPhase,
 )
 from smairt.scaffold import (
@@ -149,6 +150,8 @@ def save_contract(root: Path, contract: ProjectContract) -> None:
     data = contract.model_dump(mode="json", exclude_none=True)
     if not contract.conventions.model_dump(exclude_none=True):
         data.pop("conventions", None)
+    if not any(contract.rigor.model_dump().values()):
+        data.pop("rigor", None)
     (root / CONTRACT_PATH).write_text(yaml.safe_dump(data, sort_keys=False))
 
 
@@ -412,6 +415,10 @@ def update_settings(
     email: str | None = None,
     prompt_convention: PromptConvention | None = None,
     code_convention: CodeConvention | None = None,
+    declare_multiplicity_policy: bool | None = None,
+    separate_discovery_validation: bool | None = None,
+    declare_unit_of_inference: bool | None = None,
+    track_per_probe_status: bool | None = None,
 ) -> None:
     contract = load_contract(root)
     project = contract.project.model_validate(
@@ -455,10 +462,31 @@ def update_settings(
         conventions["code"] = code_convention.value
     if conventions:
         updates["conventions"] = ConventionSettings.model_validate(conventions)
+    rigor_updates = {
+        key: value
+        for key, value in {
+            "declare_multiplicity_policy": declare_multiplicity_policy,
+            "separate_discovery_validation": separate_discovery_validation,
+            "declare_unit_of_inference": declare_unit_of_inference,
+            "track_per_probe_status": track_per_probe_status,
+        }.items()
+        if value is not None
+    }
+    if rigor_updates:
+        _require_current_scaffold(contract, "change research rigor declarations")
+        updates["rigor"] = RigorSettings.model_validate(
+            {**contract.rigor.model_dump(), **rigor_updates}
+        )
     updated_contract = contract.model_copy(update=updates)
     if researcher is not None:
         _refresh_managed_license_holder(root, updated_contract)
     save_contract(root, updated_contract)
+    if rigor_updates and any(updated_contract.rigor.model_dump().values()):
+        # Render through the blueprint, but create only this newly activated researcher
+        # artifact. A settings change must not incidentally restore unrelated missing files.
+        rigor_path = root / "analysis/RIGOR.md"
+        if not rigor_path.exists():
+            rigor_path.write_text(render_template_assets(updated_contract)["analysis/RIGOR.md"])
     if prompt_convention is not None or code_convention is not None:
         _apply_convention_guidance(root, updated_contract)
     if assistant is not None:
@@ -675,6 +703,7 @@ def project_check(root: Path) -> list[CheckIssue]:
             )
         )
     issues.extend(_outcome_drift_issues(root))
+    issues.extend(_manifest_reconciliation_issues(root, contract))
     if contract.scaffold_version == __version__:
         issues.extend(_managed_file_issues(root, contract))
         issues.extend(_unresolved_token_issues(root))
@@ -708,6 +737,43 @@ def _outcome_drift_issues(root: Path) -> list[CheckIssue]:
         for number, latest in history.items()
         if number in rows and rows[number] != latest
     ]
+
+
+def _manifest_reconciliation_issues(root: Path, contract: ProjectContract) -> list[CheckIssue]:
+    """Report selected-result records absent from an active Paper manifest.
+
+    This is a filename/heading reconciliation only. It does not decide whether a claim
+    belongs in a paper, whether a hypothesis is supported, or how manifest prose should
+    read. Consequently it has no automatic repair.
+    """
+    paper = contract.capabilities.get("paper")
+    if paper is None or paper.state is not CapabilityState.ENABLED:
+        return []
+    manifest = root / "FINAL_MANIFEST.md"
+    if not manifest.is_file():
+        return []  # The managed-file check reports the missing capability artifact.
+    recorded = {
+        int(number)
+        for number in re.findall(
+            r"^### Selected Result: Iteration (\d+)\s*$", manifest.read_text(), re.MULTILINE
+        )
+    }
+    issues: list[CheckIssue] = []
+    for selected in sorted((root / "analysis").glob("SELECTED_[0-9]*.md")):
+        match = re.fullmatch(r"SELECTED_(\d+)\.md", selected.name)
+        if match is None or int(match.group(1)) in recorded:
+            continue
+        number = int(match.group(1))
+        relative = selected.relative_to(root).as_posix()
+        issues.append(
+            CheckIssue(
+                "manifest-selection-drift",
+                relative,
+                f"Iteration {number:02d} has a selected-result record but no matching "
+                "selected-result heading in FINAL_MANIFEST.md.",
+            )
+        )
+    return issues
 
 
 def _iteration_log_records(content: str) -> tuple[dict[str, str], dict[str, str]]:

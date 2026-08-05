@@ -18,6 +18,8 @@ import re
 import sys
 from pathlib import Path
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.shared.iterations import (  # noqa: E402
@@ -69,6 +71,8 @@ def main() -> None:
     target = iteration_script_path(root, arguments.phase, script_name)
 
     seed = _seed_script(root, arguments.from_iteration, parser)
+    rigor = _rigor_settings(root)
+    declaration = _rigor_block(rigor, panel=arguments.probes is not None)
     body = (
         _seeded_body(
             seed,
@@ -77,9 +81,16 @@ def main() -> None:
             number=number,
             from_iteration=arguments.from_iteration,
             probes=arguments.probes,
+            rigor_block=declaration,
         )
         if seed is not None
-        else _template(script_name, arguments.hypothesis, number, arguments.probes)
+        else _template(
+            script_name,
+            arguments.hypothesis,
+            number,
+            arguments.probes,
+            rigor_block=declaration,
+        )
     )
     try:
         write_new_script(target, body)
@@ -126,6 +137,7 @@ def _seeded_body(
     number: int,
     from_iteration: int | None,
     probes: int | None,
+    rigor_block: str,
 ) -> str:
     """Return the earlier script re-headed for this iteration.
 
@@ -154,7 +166,7 @@ Kind: {"single point" if probes is None else f"panel of {probes} probes"}
 Seeded from iteration {from_iteration:02d}.
 
 Changed from iteration {from_iteration:02d}: [state exactly what varies, and why]
-"""
+{rigor_block}"""
 '''
     if not replaced:
         header += (
@@ -170,7 +182,48 @@ def _without_leading_docstring(text: str) -> str:
     return re.sub(r'\A\s*""".*?"""\n', "", remainder, count=1, flags=re.DOTALL)
 
 
-def _template(script_name: str, hypothesis: str, number: int, probes: int | None) -> str:
+def _rigor_settings(root: Path) -> dict[str, bool]:
+    """Return optional declaration switches from the generated project's contract."""
+    try:
+        contract = yaml.safe_load((root / "smairt.yaml").read_text())
+    except (OSError, yaml.YAMLError):
+        return {}
+    rigor = contract.get("rigor", {}) if isinstance(contract, dict) else {}
+    if not isinstance(rigor, dict):
+        return {}
+    return {key: value for key, value in rigor.items() if isinstance(value, bool)}
+
+
+def _rigor_block(rigor: dict[str, bool], *, panel: bool) -> str:
+    """Create docstring fields only for declarations enabled at creation time."""
+    fields: list[tuple[str, str]] = []
+    if rigor.get("declare_multiplicity_policy"):
+        fields.append(("Multiplicity declaration", "[Apply the policy in analysis/RIGOR.md]"))
+    if rigor.get("separate_discovery_validation"):
+        fields.append(
+            ("Discovery or validation role", "[Discovery | Validation; identify held-out data]")
+        )
+    if rigor.get("declare_unit_of_inference"):
+        fields.append(("Unit of inference", "[Name the independent unit supporting this claim]"))
+    if panel and rigor.get("track_per_probe_status"):
+        fields.append(
+            ("Per-probe hypothesis status", "[Pre-specify each probe; record each status later]")
+        )
+    if not fields:
+        return ""
+    lines = ["", "Project rigor declarations (standing policy: analysis/RIGOR.md):"]
+    lines.extend(f"- {name}: {prompt}" for name, prompt in fields)
+    return "\n".join(lines) + "\n"
+
+
+def _template(
+    script_name: str,
+    hypothesis: str,
+    number: int,
+    probes: int | None,
+    *,
+    rigor_block: str,
+) -> str:
     if probes is None:
         experiment = """            print("TODO: implement the experiment")"""
     else:
@@ -189,7 +242,7 @@ def _template(script_name: str, hypothesis: str, number: int, probes: int | None
 
 Hypothesis: {hypothesis}
 Kind: {"single point" if probes is None else f"panel of {probes} probes"}
-"""
+{rigor_block}"""
 
 from pathlib import Path
 import sys

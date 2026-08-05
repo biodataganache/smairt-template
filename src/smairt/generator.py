@@ -117,4 +117,9 @@ def _write_contract(root: Path, options: ProjectOptions, git_initialized: bool) 
     contract = ProjectContract.from_options(options, git_initialized)
     data = contract.model_dump(mode="json", exclude_none=True)
     data.pop("conventions", None)
+    # False rigor declarations are the default behavior, not four decisions the
+    # researcher made. Omit the block until at least one declaration is enabled so a
+    # default project's contract remains byte-for-byte stable.
+    if not any(contract.rigor.model_dump().values()):
+        data.pop("rigor", None)
     (root / "smairt.yaml").write_text(yaml.safe_dump(data, sort_keys=False))

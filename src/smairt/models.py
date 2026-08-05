@@ -53,6 +53,22 @@ class ConventionSettings(BaseModel):
     code: CodeConvention | None = None
 
 
+class RigorSettings(BaseModel):
+    """Optional declarations that add structure without choosing scientific policy.
+
+    Every value answers only whether newly created research files should ask the
+    researcher to state a decision. The contract deliberately stores no method name or
+    policy text; those words belong to the researcher in ``analysis/RIGOR.md``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    declare_multiplicity_policy: bool = False
+    separate_discovery_validation: bool = False
+    declare_unit_of_inference: bool = False
+    track_per_probe_status: bool = False
+
+
 class ProjectIdentity(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -126,6 +142,7 @@ class ProjectContract(BaseModel):
     git_initialized: bool
     capabilities: dict[str, Capability]
     conventions: ConventionSettings = Field(default_factory=ConventionSettings)
+    rigor: RigorSettings = Field(default_factory=RigorSettings)
 
     @model_validator(mode="before")
     @classmethod

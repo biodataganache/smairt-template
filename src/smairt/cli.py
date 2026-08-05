@@ -973,6 +973,18 @@ def settings(
     code_convention: CodeConvention | None = typer.Option(
         None, help="Code convention: typed-python or standard-python."
     ),
+    declare_multiplicity_policy: bool | None = typer.Option(
+        None, help="Add multiplicity-policy prompts to newly created research files."
+    ),
+    separate_discovery_validation: bool | None = typer.Option(
+        None, help="Add discovery/validation-role prompts to newly created research files."
+    ),
+    declare_unit_of_inference: bool | None = typer.Option(
+        None, help="Add unit-of-inference prompts to newly created research files."
+    ),
+    track_per_probe_status: bool | None = typer.Option(
+        None, help="Add per-probe hypothesis-status prompts to newly created research files."
+    ),
     license: License | None = typer.Option(None, help="License to preview or change."),
     confirm_license: bool = typer.Option(False, help="Confirm the previewed license replacement."),
 ) -> None:
@@ -1013,6 +1025,10 @@ def settings(
             email=email,
             prompt_convention=prompt_convention,
             code_convention=code_convention,
+            declare_multiplicity_policy=declare_multiplicity_policy,
+            separate_discovery_validation=separate_discovery_validation,
+            declare_unit_of_inference=declare_unit_of_inference,
+            track_per_probe_status=track_per_probe_status,
         )
         preferences = local_preferences(root)
         if experience is not None:
@@ -1039,6 +1055,10 @@ def settings(
                 motion,
                 prompt_convention,
                 code_convention,
+                declare_multiplicity_policy,
+                separate_discovery_validation,
+                declare_unit_of_inference,
+                track_per_probe_status,
                 license,
             )
         ):
@@ -1214,6 +1234,7 @@ class Dashboard:
                     Action("verbose", "Verbose Project Check"),
                     Action("regenerate", "Regenerate managed assets"),
                     Action("conventions", "Customize prompt and code conventions"),
+                    Action("rigor", "Configure research rigor declarations"),
                     Action("tools", "Detected local tools"),
                     Action("back", "← Back"),
                 ),
@@ -1226,6 +1247,8 @@ class Dashboard:
                 self._regenerate()
             elif action == "conventions":
                 self._conventions()
+            elif action == "rigor":
+                self._rigor()
             elif action == "tools":
                 self._tools()
             else:
@@ -1536,6 +1559,90 @@ class Dashboard:
             self.console.print("Use only the listed prompt and code conventions.", style="caution")
         else:
             self.console.print("Conventions updated.")
+
+    def _rigor(self) -> None:
+        """Choose declaration prompts, never the scientific policies themselves."""
+        contract = load_contract(self.root)
+        choices = [
+            ("multiplicity", "Declare a multiplicity policy"),
+            ("discovery-validation", "Separate discovery and validation roles"),
+            ("unit-of-inference", "Declare the unit of inference"),
+            ("per-probe-status", "Track hypothesis status for each panel probe"),
+        ]
+        current = [
+            token
+            for token, enabled in (
+                ("multiplicity", contract.rigor.declare_multiplicity_policy),
+                ("discovery-validation", contract.rigor.separate_discovery_validation),
+                ("unit-of-inference", contract.rigor.declare_unit_of_inference),
+                ("per-probe-status", contract.rigor.track_per_probe_status),
+            )
+            if enabled
+        ]
+        if self.visual:
+            try:
+                selected = [
+                    str(value)
+                    for value in select_many(
+                        "Research rigor declarations",
+                        choices,
+                        checked=current,
+                        details=(
+                            "These settings add blank fields to new files; they never choose a method.",
+                            "Enabling creates analysis/RIGOR.md once. Disabling removes nothing.",
+                        ),
+                    )
+                ]
+            except (BackRequested, SelectionCancelled):
+                return
+        else:
+            allowed = {token for token, _ in choices}
+            self.console.print(f"Currently enabled: {', '.join(current) or 'none'}")
+            answer = self.session.prompt(
+                "Enabled declarations separated by commas, none, or back: "
+            ).strip()
+            if answer.lower() in {"", "back"}:
+                return
+            selected = (
+                []
+                if answer.lower() == "none"
+                else [item.strip() for item in answer.split(",") if item.strip()]
+            )
+            unknown = set(selected) - allowed
+            if unknown:
+                self.console.print(
+                    f"Unknown declarations: {', '.join(sorted(unknown))}.", style="caution"
+                )
+                return
+        enabled = [label for token, label in choices if token in selected]
+        disabled = [label for token, label in choices if token not in selected]
+        self.console.print("Pending research rigor declaration changes:")
+        self.console.print(f"- Enabled: {', '.join(enabled) or 'none'}")
+        self.console.print(f"- Disabled: {', '.join(disabled) or 'none'}")
+        will_create = bool(selected) and not (self.root / "analysis/RIGOR.md").exists()
+        if will_create:
+            self.console.print("- Create: analysis/RIGOR.md")
+        self.console.print("- Existing research files: unchanged")
+        if set(selected) == set(current):
+            self.console.print("No rigor declaration changes requested.")
+            return
+        if not self._confirmed(
+            "Apply these research rigor declaration changes",
+            details=(
+                "The settings affect only helper output created afterward.",
+                "Disabling never removes analysis/RIGOR.md or prior declarations.",
+            ),
+        ):
+            self.console.print("No changes made.")
+            return
+        update_settings(
+            self.root,
+            declare_multiplicity_policy="multiplicity" in selected,
+            separate_discovery_validation="discovery-validation" in selected,
+            declare_unit_of_inference="unit-of-inference" in selected,
+            track_per_probe_status="per-probe-status" in selected,
+        )
+        self.console.print("Research rigor declarations updated; existing files were unchanged.")
 
     def _choose_value(self, title: str, choices: list[tuple[str, str]], current: str) -> str:
         """Return one value from a finite set, or empty when nothing is to change.

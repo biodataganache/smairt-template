@@ -151,6 +151,26 @@ worth the cost.
 
 ---
 
+### Questions worth answering before the run
+
+The right structure depends on the field, but four risks are present whether or not this
+project enables extra rigor fields in Advanced settings:
+
+- **Multiplicity**: testing many probes or outcomes creates more chances for an accidental
+  pass. State how the project will interpret the family of tests rather than presenting
+  only the best result.
+- **Discovery versus validation**: repeated adaptation against the same data can make a
+  discovery look independently confirmed. State which role an iteration and its data play.
+- **Unit of inference**: repeated seeds or measurements are not automatically independent
+  evidence. Name the independent unit that supports the claim.
+- **Per-probe status**: one verdict can hide a mixed panel. Preserve what each probe showed,
+  including null and adverse results.
+
+Advanced settings can make helpers add blank declarations for these questions to files
+created afterward. The settings never name a method or choose an answer. If enabled, the
+researcher records standing policy in `analysis/RIGOR.md`; an assistant may suggest wording,
+but the researcher approves, edits, or rejects it.
+
 ## Step 6 - Select the data phase
 
 Every project carries all three phases:

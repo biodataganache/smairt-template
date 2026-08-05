@@ -1108,6 +1108,223 @@ def test_selection_refuses_non_iterations_and_paper_without_the_capability(tmp_p
     assert not (destination / "analysis" / "SELECTED_01.md").exists()
 
 
+def test_rigor_settings_are_additive_structural_prompts_not_scientific_policy(
+    tmp_path: Path,
+) -> None:
+    """Advanced rigor controls add blank declarations and never prescribe an answer."""
+    destination = tmp_path / "rigor-settings"
+    assert create_project(destination).returncode == 0
+    hypothesis_template = (destination / "hypotheses/HYPOTHESIS_TEMPLATE.md").read_bytes()
+    plan_template = (destination / "plans/PLAN_TEMPLATE.md").read_bytes()
+    assert not (destination / "analysis/RIGOR.md").exists()
+
+    enabled = subprocess.run(
+        [
+            str(installed_smairt()),
+            "settings",
+            str(destination),
+            "--declare-multiplicity-policy",
+            "--separate-discovery-validation",
+            "--declare-unit-of-inference",
+            "--track-per-probe-status",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert enabled.returncode == 0, enabled.stderr
+
+    metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
+    assert metadata["rigor"] == {
+        "declare_multiplicity_policy": True,
+        "separate_discovery_validation": True,
+        "declare_unit_of_inference": True,
+        "track_per_probe_status": True,
+    }
+    addendum = destination / "analysis/RIGOR.md"
+    assert addendum.is_file()
+    addendum_text = addendum.read_text()
+    assert "researcher approves, edits, or rejects" in addendum_text
+    assert addendum_text.count("[State this project's policy in the researcher's words.]") == 4
+    assert "Bonferroni" not in addendum_text
+    assert "false discovery rate" not in addendum_text.lower()
+    assert (destination / "hypotheses/HYPOTHESIS_TEMPLATE.md").read_bytes() == hypothesis_template
+    assert (destination / "plans/PLAN_TEMPLATE.md").read_bytes() == plan_template
+
+    first_track = subprocess.run(
+        [
+            sys.executable,
+            "scripts/new_track.py",
+            "Do the candidate changes generalize?",
+            "synthetic",
+        ],
+        cwd=destination,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert first_track.returncode == 0, first_track.stderr
+    hypothesis = (destination / "hypotheses/HYPOTHESIS_01.md").read_text()
+    created_plans = [
+        path
+        for path in (destination / "plans").glob("PLAN_*.md")
+        if path.name != "PLAN_TEMPLATE.md"
+    ]
+    assert len(created_plans) == 1
+    plan = created_plans[0].read_text()
+    assert "Multiplicity declaration" in hypothesis
+    assert "Discovery or validation role" in hypothesis
+    assert "Unit of inference" in hypothesis
+    assert "Per-probe hypothesis status" not in hypothesis
+    assert "analysis/RIGOR.md" in plan
+
+    first_iteration = subprocess.run(
+        [
+            sys.executable,
+            "scripts/new_iteration.py",
+            "candidate panel",
+            "synthetic",
+            "--hypothesis",
+            "HYPOTHESIS_01",
+            "--probes",
+            "3",
+        ],
+        cwd=destination,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert first_iteration.returncode == 0, first_iteration.stderr
+    first_script = destination / "experiments/01_synthetic/script_01_candidate_panel.py"
+    script_text = first_script.read_text()
+    assert "Multiplicity declaration" in script_text
+    assert "Discovery or validation role" in script_text
+    assert "Unit of inference" in script_text
+    assert "Per-probe hypothesis status" in script_text
+
+    addendum.write_text(addendum_text + "\nResearcher-approved custom policy.\n")
+    disabled = subprocess.run(
+        [
+            str(installed_smairt()),
+            "settings",
+            str(destination),
+            "--no-declare-multiplicity-policy",
+            "--no-separate-discovery-validation",
+            "--no-declare-unit-of-inference",
+            "--no-track-per-probe-status",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert disabled.returncode == 0, disabled.stderr
+    assert addendum.read_text().endswith("Researcher-approved custom policy.\n")
+    assert first_script.read_text() == script_text
+
+    second_track = subprocess.run(
+        [sys.executable, "scripts/new_track.py", "Does the baseline replicate?", "synthetic"],
+        cwd=destination,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert second_track.returncode == 0, second_track.stderr
+    assert (
+        "Project rigor declarations"
+        not in (destination / "hypotheses/HYPOTHESIS_02.md").read_text()
+    )
+
+
+def test_project_check_reconciles_selected_results_with_the_paper_manifest(tmp_path: Path) -> None:
+    """Check compares record identity only; it neither judges nor repairs a claim."""
+    destination = tmp_path / "manifest-reconciliation"
+    assert create_project(destination, paper=True).returncode == 0
+    selection = destination / "analysis/SELECTED_07.md"
+    selection.write_text("# Selected Result: Iteration 07\n")
+
+    missing = subprocess.run(
+        [str(installed_smairt()), "check", str(destination), "--json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert missing.returncode == 1
+    issue = next(
+        item
+        for item in json.loads(missing.stdout)["issues"]
+        if item["code"] == "manifest-selection-drift"
+    )
+    assert issue["path"] == "analysis/SELECTED_07.md"
+    assert "Iteration 07" in issue["message"]
+    assert "repair" not in issue
+
+    with (destination / "FINAL_MANIFEST.md").open("a") as handle:
+        handle.write("\n### Selected Result: Iteration 07\n")
+    reconciled = subprocess.run(
+        [str(installed_smairt()), "check", str(destination), "--json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert reconciled.returncode == 0, reconciled.stdout
+
+
+def test_a_stale_scaffold_refuses_rigor_mutation_without_creating_an_addendum(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "stale-rigor"
+    assert create_project(destination).returncode == 0
+    contract_path = destination / "smairt.yaml"
+    metadata = yaml.safe_load(contract_path.read_text())
+    metadata["scaffold_version"] = "0.2.0"
+    contract_path.write_text(yaml.safe_dump(metadata, sort_keys=False))
+    before = contract_path.read_bytes()
+
+    result = subprocess.run(
+        [
+            str(installed_smairt()),
+            "settings",
+            str(destination),
+            "--declare-multiplicity-policy",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 1
+    assert "Cannot change research rigor declarations" in result.stderr
+    assert contract_path.read_bytes() == before
+    assert not (destination / "analysis/RIGOR.md").exists()
+
+
+def test_advanced_rigor_screen_previews_and_confirms_before_writing(tmp_path: Path) -> None:
+    destination = tmp_path / "rigor-dashboard"
+    assert create_project(destination).returncode == 0
+    configured = subprocess.run(
+        [str(installed_smairt()), "settings", str(destination), "--experience", "advanced"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert configured.returncode == 0, configured.stderr
+
+    refused = run_dashboard(destination, "advanced\nrigor\nmultiplicity\nno\nback\nexit\n")
+    assert refused.returncode == 0, refused.stderr
+    assert "Pending research rigor declaration changes:" in refused.stdout
+    assert "Create: analysis/RIGOR.md" in refused.stdout
+    assert "No changes made." in refused.stdout
+    assert not (destination / "analysis/RIGOR.md").exists()
+    assert "rigor" not in yaml.safe_load((destination / "smairt.yaml").read_text())
+
+    applied = run_dashboard(destination, "advanced\nrigor\nmultiplicity\nyes\nback\nexit\n")
+    assert applied.returncode == 0, applied.stderr
+    assert "Research rigor declarations updated" in applied.stdout
+    metadata = yaml.safe_load((destination / "smairt.yaml").read_text())
+    assert metadata["rigor"]["declare_multiplicity_policy"] is True
+    assert (destination / "analysis/RIGOR.md").is_file()
+
+
 def test_an_editor_hosted_assistant_is_launched_by_opening_the_workspace(tmp_path: Path) -> None:
     """Zoo Code runs inside VS Code, so opening the workspace is the launch.
 
@@ -1521,6 +1738,7 @@ def test_advanced_controls_are_local_safe_and_visible_from_installed_command(
     assert "Advanced ▸ [advanced]" in dashboard.stdout
     assert "Inspect project contract [inspect]" in dashboard.stdout
     assert "Regenerate managed assets [regenerate]" in dashboard.stdout
+    assert "Configure research rigor declarations [rigor]" in dashboard.stdout
     assert "Detected local tools [tools]" in dashboard.stdout
 
 

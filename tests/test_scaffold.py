@@ -12,7 +12,7 @@ def test_scaffold_blueprint_is_a_complete_readable_asset_declaration() -> None:
     paths = [asset.path for asset in blueprint.assets]
     assert len(ids) == len(set(ids))
     assert len(paths) == len(set(paths))
-    assert {asset.condition for asset in blueprint.assets} == {"always", "paper", "hpc"}
+    assert {asset.condition for asset in blueprint.assets} == {"always", "paper", "hpc", "rigor"}
     assert {asset.ownership for asset in blueprint.assets} == {
         "tool-guidance",
         "editable-starter",
@@ -27,6 +27,7 @@ def test_scaffold_blueprint_is_a_complete_readable_asset_declaration() -> None:
         "experiments/01_synthetic",
         "experiments/02_downloaded",
         "experiments/03_real_data",
+        "analysis/RIGOR.md",
         "FINAL_MANIFEST.md",
         "hpc/templates/slurm_basic.sh",
     }

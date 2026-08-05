@@ -18,6 +18,7 @@ assets:
   - {id: analysis-directory, path: analysis, kind: directory, purpose: Interpretation decisions and study synthesis., ownership: researcher-work, condition: always}
   - {id: analysis-readme, path: analysis/README.md, kind: file, purpose: Analysis workflow guidance., ownership: tool-guidance, condition: always, source: analysis/README.md}
   - {id: analysis-plan, path: analysis/ANALYSIS_PLAN.md, kind: file, purpose: Living analysis plan starter., ownership: editable-starter, condition: always, source: analysis/ANALYSIS_PLAN.md}
+  - {id: rigor-addendum, path: analysis/RIGOR.md, kind: file, purpose: Researcher-owned standing rigor commitments enabled by Advanced settings., ownership: researcher-work, condition: rigor, source: analysis/RIGOR.md}
   - {id: iteration-log, path: analysis/ITERATION_LOG.md, kind: file, purpose: Living append-only index of every iteration and its outcome., ownership: researcher-work, condition: always, source: analysis/ITERATION_LOG.md}
   - {id: analysis-template, path: analysis/ANALYSIS_TEMPLATE.md, kind: file, purpose: Reusable result interpretation starter., ownership: editable-starter, condition: always, source: analysis/ANALYSIS_TEMPLATE.md}
   - {id: breadcrumb-trail, path: analysis/BREADCRUMB_TRAIL.md, kind: file, purpose: Living index from decisions to evidence., ownership: researcher-work, condition: always, source: analysis/BREADCRUMB_TRAIL.md}

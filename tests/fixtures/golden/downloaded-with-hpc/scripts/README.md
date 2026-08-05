@@ -70,6 +70,20 @@ dates can be set by hand, so it is a record you keep for yourself and offer to s
 trusts it, not a proof against someone who does not. `docs/12_STEPS.md` step 4 says what to
 do when you need the stronger claim.
 
+### Optional rigor declarations
+
+Advanced project settings can ask `new_track.py` and `new_iteration.py` to add blank
+fields for multiplicity policy, discovery/validation role, unit of inference, and
+per-probe hypothesis status. These switches change only files created afterward. They do
+not rewrite templates or existing research files, block work, or name a statistical
+method. Standing commitments live in researcher-owned `analysis/RIGOR.md`; an assistant
+may suggest wording, but the researcher approves, edits, or rejects it.
+
+These questions matter even when the extra fields are disabled: multiple probes create
+more opportunities for accidental passes, adapting and validating on the same data can
+hide overfitting, repeated measurements need not be independent units, and one panel
+verdict can conceal mixed probe outcomes.
+
 ## new_iteration.py
 
 An iteration is one attempt: one script, its log, its interpretation.

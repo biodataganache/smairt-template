@@ -26,6 +26,8 @@ import re
 import sys
 from pathlib import Path
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.shared.iterations import PHASES, project_root, slugify  # noqa: E402
@@ -52,18 +54,21 @@ def main() -> None:
         if path.exists():
             parser.error(f"refusing to overwrite existing file: {path}")
 
+    rigor = _rigor_settings(root)
     hypothesis = _hypothesis(
         _template(parser, root / "hypotheses" / "HYPOTHESIS_TEMPLATE.md"),
         hypothesis_id=hypothesis_id,
         number=hypothesis_number,
         question=arguments.question,
         phase=arguments.phase,
-    )
+    ) + _rigor_block(rigor)
     plan = _plan(
         _template(parser, root / "plans" / "PLAN_TEMPLATE.md"),
         hypothesis_id=hypothesis_id,
         question=arguments.question,
     )
+    if any(rigor.values()):
+        plan += "\n## Project rigor declarations\n\nSee `analysis/RIGOR.md` for the standing commitments that apply to this track.\n"
 
     hypothesis_path.parent.mkdir(parents=True, exist_ok=True)
     hypothesis_path.write_text(hypothesis)
@@ -126,6 +131,45 @@ def _hypothesis(
     )
     filled = filled.replace("- **Phase**: synthetic | downloaded | real", f"- **Phase**: {phase}")
     return filled.replace("HYPOTHESIS_XX", f"HYPOTHESIS_{number:02d}")
+
+
+def _rigor_settings(root: Path) -> dict[str, bool]:
+    """Read optional booleans directly so generated projects need only PyYAML."""
+    try:
+        contract = yaml.safe_load((root / "smairt.yaml").read_text())
+    except (OSError, yaml.YAMLError):
+        return {}
+    rigor = contract.get("rigor", {}) if isinstance(contract, dict) else {}
+    if not isinstance(rigor, dict):
+        return {}
+    return {key: value for key, value in rigor.items() if isinstance(value, bool)}
+
+
+def _rigor_block(rigor: dict[str, bool]) -> str:
+    """Return track-level declarations requested for newly created files.
+
+    Per-probe status is iteration structure, so it appears only when `new_iteration.py`
+    knows that the artifact is a panel rather than as an inapplicable hypothesis field.
+    """
+    fields: list[tuple[str, str]] = []
+    if rigor.get("declare_multiplicity_policy"):
+        fields.append(
+            ("Multiplicity declaration", "[How repeated tests or probes will be interpreted]")
+        )
+    if rigor.get("separate_discovery_validation"):
+        fields.append(
+            (
+                "Discovery or validation role",
+                "[Discovery | Validation, and which data are held out]",
+            )
+        )
+    if rigor.get("declare_unit_of_inference"):
+        fields.append(("Unit of inference", "[What independent unit supports the claim]"))
+    if not fields:
+        return ""
+    lines = ["", "## Project rigor declarations", "", "Standing policy: `analysis/RIGOR.md`.", ""]
+    lines.extend(f"- **{name}**: {prompt}" for name, prompt in fields)
+    return "\n".join(lines) + "\n"
 
 
 def _plan(template: str, *, hypothesis_id: str, question: str) -> str:
