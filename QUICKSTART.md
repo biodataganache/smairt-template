@@ -88,6 +88,11 @@ Project Check is read-only. If it reports a deterministic structural repair,
 review it first with `smairt repair .`, then apply only the chosen repair with
 `smairt repair . --select REPAIR --confirm`.
 
+If Project Check reports that the project's scaffold version differs from the
+installed SMAIRT, review the difference with `smairt upgrade .` and apply it with
+`smairt upgrade . --confirm`. The preview writes nothing, and an upgrade never
+rewrites your own work or a starter file you have edited.
+
 ## Legacy Automation
 
 Cookiecutter implementations under `legacy/cookiecutter/` are unsupported,

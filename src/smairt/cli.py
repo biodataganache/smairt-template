@@ -46,6 +46,7 @@ from smairt.project import (
     CapabilityPlan,
     ProjectError,
     apply_repairs,
+    apply_upgrade,
     assistant_launch_status,
     capability_plan,
     change_license,
@@ -67,11 +68,13 @@ from smairt.project import (
     record_recent,
     regenerate_managed_assets,
     repair_previews,
+    require_upgradable,
     resolve_project,
     save_local_preferences,
     set_capabilities,
     update_collaborator,
     update_settings,
+    upgrade_plan,
 )
 from smairt.terminal import (
     BackRequested,
@@ -901,6 +904,9 @@ def repair(
     root = _project_or_exit(path)
     try:
         if not select:
+            # Checked before listing, because an out-of-date project would otherwise be told
+            # "No safe repairs are available" and exit 0 while every repair is in fact blocked.
+            require_upgradable(root, "repair package-owned structure")
             available = [issue for issue in project_check(root) if issue.repair is not None]
             if not available:
                 typer.echo("No safe repairs are available.")
@@ -1082,6 +1088,53 @@ def inspect(
         _command_error(error)
 
 
+@app.command("upgrade")
+def upgrade(
+    path: Path | None = typer.Argument(None, help="Project directory or current project."),
+    confirm: bool = typer.Option(False, help="Apply the previewed upgrade."),
+) -> None:
+    """Preview and apply moving a project onto the installed scaffold version."""
+    root = _project_or_exit(path)
+    try:
+        plan = upgrade_plan(root)
+    except ProjectError as error:
+        _command_error(error)
+        return
+    if plan.is_current:
+        typer.echo(f"Project is already on the installed SMAIRT {plan.to_version}.")
+        return
+    typer.echo(f"Upgrade preview: scaffold {plan.from_version} to {plan.to_version}")
+    for label, changes in (
+        ("Would be updated to the installed guidance", plan.updates),
+        ("Would be created", plan.creates),
+    ):
+        if changes:
+            typer.echo(f"{label}:")
+            for change in changes:
+                typer.echo(f"- {change.path}")
+    if plan.preserved:
+        # Deliberately not called "modified": for an editable starter, a difference from the
+        # installed text may be the researcher's edit or may be a change the newer scaffold
+        # made to the starter itself. SMAIRT cannot tell those apart, so it keeps the file
+        # either way and says so without asserting who changed it.
+        typer.echo("Differs from the installed version, so kept exactly as it is:")
+        for change in plan.preserved:
+            typer.echo(f"- {change.path}")
+    typer.echo(
+        f"Already current: {len(plan.unchanged)} file(s). "
+        "Researcher work is never read, rewritten, or judged by an upgrade."
+    )
+    if not confirm:
+        typer.echo("No changes made. Re-run with --confirm to apply this upgrade.")
+        return
+    try:
+        apply_upgrade(root)
+    except (ProjectError, OSError) as error:
+        typer.echo(f"Error: upgrade failed and the project stays on {plan.from_version}: {error}")
+        raise typer.Exit(code=1) from error
+    typer.echo(f"Project upgraded to scaffold {plan.to_version}.")
+
+
 @app.command("regenerate")
 def regenerate(
     path: Path | None = typer.Argument(None, help="Project directory or current project."),
@@ -1094,9 +1147,30 @@ def regenerate(
     root = _project_or_exit(path)
     try:
         if not select:
+            # Checked before listing, because an out-of-date project would otherwise be shown
+            # every managed asset as "eligible" and then refused on --confirm.
+            require_upgradable(root, "regenerate managed assets")
+            statuses = {item["path"]: item["status"] for item in managed_file_statuses(root)}
+            actionable = [
+                relative
+                for relative in managed_asset_paths(root)
+                if statuses.get(relative) in {"missing", "unchanged"}
+            ]
+            if not actionable:
+                typer.echo("No managed assets are eligible for regeneration.")
+                return
             typer.echo("Managed assets eligible for regeneration:")
-            for relative in managed_asset_paths(root):
-                typer.echo(f"- {relative}")
+            for relative in actionable:
+                typer.echo(f"- {relative}: {statuses[relative]}")
+            preserved = sorted(
+                relative
+                for relative in managed_asset_paths(root)
+                if statuses.get(relative) == "modified"
+            )
+            if preserved:
+                typer.echo("Modified and preserved, so not eligible:")
+                for relative in preserved:
+                    typer.echo(f"- {relative}")
             typer.echo(
                 "Select paths with --select PATH. Add --confirm only after reviewing the preview."
             )

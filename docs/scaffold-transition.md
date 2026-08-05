@@ -15,16 +15,20 @@ look for `analysis/ITERATION_LOG.md` and three helpers their project does not co
 is a change in what a project is, not a fix.
 
 Consequence, verified rather than assumed: a `0.2.0` project is now told
-`scaffold-version-mismatch`, and capability changes, repair, and regeneration refuse with
-`An explicit upgrade flow is not available yet`. That is the behavior
-[ADR 0001](adr/0001-protect-generated-project-surface.md:21) specifies, and the bump is what
-makes it reachable. A researcher holding a `0.2.0` project who wants the current workflow
-should generate a new project; there is no migration.
+`scaffold-version-mismatch`, and capability changes, repair, and regeneration refuse. That is
+the behavior [ADR 0001](adr/0001-protect-generated-project-surface.md:21) specifies, and the
+bump is what makes it reachable.
 
-The version string appears in ten files. Three are load-bearing: `pyproject.toml`,
-`src/smairt/__init__.py`, and the `scaffold_version` default in `src/smairt/models.py`. The
-CI workflow, the README, and CONTRIBUTING each hardcode the two build artifact filenames,
-so six filename references move with every bump or the build fails on a missing file.
+> **Superseded.** This section originally continued: "A researcher holding a `0.2.0` project
+> who wants the current workflow should generate a new project; there is no migration." That
+> answer does not survive contact with a study already under way. See
+> [Scaffold upgrades](#scaffold-upgrades) below; `smairt upgrade` is now the route, and the
+> refusals name it.
+
+The version string used to appear in ten files, three of them load-bearing. That is no longer
+true: `pyproject.toml` is the only place a version is written, `__version__` reads the
+installed distribution metadata, and `scaffold_version` derives from `__version__`. CI, the
+README, and CONTRIBUTING select build artifacts by kind rather than by filename.
 
 This record accounts for the meaningful files recovered from the original Cookiecutter scaffold. `results/.DS_Store` is intentionally excluded as operating-system metadata.
 
@@ -34,7 +38,8 @@ Stages A through H changed the generated project's workflow contracts after the 
 transition: one numbering authority, append-only outcome history, structural result selection,
 self-contained provenance, project-level rigor declarations, and a dashboard handoff into the
 recorded workflow. The package and scaffold therefore move together to `0.4.0`. This is the
-single version bump for that remediation sequence; no migration is implied or attempted.
+single version bump for that remediation sequence. Migration is now available separately; see
+[Scaffold upgrades](#scaffold-upgrades).
 
 Stage I makes the corrected properties falsifiable. The guard suite now includes the write
 path that a destructive-call scan alone misses: a shipped helper containing `write_text` must
@@ -55,6 +60,57 @@ The release gate passed on 2026-08-05:
 - installed-wheel end to end: created a Paper project, started a track, created and ran an
   iteration, wrote its interpretation, recorded its outcome, selected it into
   `FINAL_MANIFEST.md`, and finished with an empty `smairt check --json` issue list.
+
+## Scaffold upgrades
+
+`smairt upgrade` is the explicit upgrade flow [ADR 0001](adr/0001-protect-generated-project-surface.md:21)
+deferred. It closes a defect that shipped: tying a project to its recorded scaffold version is
+correct, but with no route forward the tool went read-only the moment it was updated. A project
+created by `0.3.0` and opened with `0.4.0` could not change its phase, enable a capability,
+repair a missing directory, or regenerate an asset. The only documented answer was to start a
+new project, which is not an answer for a study already months in.
+
+The flow previews, then writes only on `--confirm`:
+
+```bash
+smairt upgrade /path/to/project            # preview; writes nothing
+smairt upgrade /path/to/project --confirm  # apply
+```
+
+What it does, and deliberately does not do:
+
+| Asset ownership | On upgrade |
+|---|---|
+| `tool-guidance`, unmodified | Rewritten to the installed version |
+| `tool-guidance`, modified | Rewritten; the package owns this text |
+| `editable-starter`, differing | **Kept as it is** |
+| `researcher-work` | Never read, rewritten, or judged |
+| Missing declared asset | Created |
+
+An editable starter that differs from the installed text is kept rather than rewritten, and
+the preview says only that it differs. It deliberately does not claim the researcher modified
+it: across a real release the newer scaffold may have changed the starter itself, and SMAIRT
+cannot distinguish that from an edit. Keeping the file is correct under either reading, so the
+wording states the observation and not a conclusion about who made the change.
+
+Verified against a real release rather than a simulated one: a `0.3.0` project was created with
+a genuine `0.3.0` install, carried through a track, two iterations, a run, and an
+interpretation, then upgraded with the current build. Fifteen tool-guidance files were rewritten
+and three created, including the `record_outcome.py` helper `0.3.0` never shipped. Every
+researcher artifact — hypothesis, both scripts, the run log, the analysis, the plan, and the
+iteration log — was byte-identical afterward, and the project then passed `smairt check` and
+accepted the settings and capability changes the mismatch had blocked.
+
+The preview is rendered from the same projected contract the write uses, so it cannot describe
+a different operation. The contract is saved last, so an interrupted upgrade leaves the project
+on its old version and the same command can simply be run again.
+
+Every refusal now names the route. `smairt check` reports the mismatch and says what to run,
+and the two commands that previously misreported their state were corrected: `smairt repair`
+printed `No safe repairs are available` and exited `0` while every repair was blocked, and
+`smairt regenerate` listed all forty-three managed assets as eligible before refusing on
+`--confirm`. `tests/test_upgrade.py` holds each of these properties, including that researcher
+work and an edited starter survive an upgrade byte for byte.
 
 ## Content fidelity
 

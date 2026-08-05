@@ -25,6 +25,7 @@ SMAIRT creates and manages readable, file-based scientific research workspaces.
 | Action token | The stable name identifying a menu action. Tokens are the addressing contract; displayed numbers are a renumberable convenience. |
 | Capability selection | A multi-selection of optional capabilities in which a deliberate none is mutually exclusive with any capability. |
 | Diff preview | The statement of exactly which changes an operation would make, derived from the operation itself and shown before anything is written. |
+| Scaffold upgrade | Moving a project onto the installed scaffold version. Rewrites tool-owned guidance, creates missing declared assets, and preserves researcher work and modified editable starters. |
 
 ## Core Relationships
 
@@ -44,7 +45,8 @@ SMAIRT creates and manages readable, file-based scientific research workspaces.
 - Capability activation creates missing starters only.
 - Capability deactivation changes contract state only.
 - Researcher work is never overwritten, regenerated, or semantically assessed.
-- A scaffold-version mismatch blocks package-owned mutations until an explicit upgrade flow exists.
+- A scaffold-version mismatch blocks package-owned mutations, and every refusal names the upgrade that resolves it.
+- A scaffold upgrade never reads, rewrites, or judges researcher work, and preserves a modified editable starter.
 - Interactive presentation never enters the alternate screen and never exceeds the terminal's height.
 - Color is never the only signal; markers and words carry every meaning color carries.
 - A diff preview reflects the operation that would run, never a fixed description of it.

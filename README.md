@@ -126,6 +126,7 @@ Stable scriptable commands include:
 smairt open /path/to/project
 smairt check /path/to/project --json
 smairt repair /path/to/project
+smairt upgrade /path/to/project
 smairt paper enable /path/to/project
 smairt hpc disable /path/to/project
 smairt settings /path/to/project --experience advanced --no-motion
@@ -140,6 +141,25 @@ rendering the write itself uses, and writes nothing until that preview is
 accepted. Paper and HPC deactivation never deletes project files. Motion is
 enabled only for interactive terminals and can be disabled locally with
 `--no-motion`; it is suppressed for tests, redirected output, JSON, and CI.
+
+## Upgrading An Existing Project
+
+A project records the scaffold version that made it. When you update SMAIRT, an
+existing project reports `scaffold-version-mismatch` and package-owned changes
+wait for an explicit upgrade:
+
+```bash
+smairt upgrade /path/to/project            # preview; writes nothing
+smairt upgrade /path/to/project --confirm  # apply
+```
+
+The preview lists exactly which tool-owned guidance would be rewritten, which
+files would be created, and which files are kept untouched. It is rendered from
+the same contract the write uses, so it cannot describe a different operation.
+Researcher work is never read, rewritten, or judged, and a starter file that
+differs from the installed text is kept as it is. The project version moves
+last, so an interrupted upgrade leaves the project on its old version and the
+same command can be run again.
 
 Advanced Mode adds one `Advanced ▸` row that opens contract inspection, verbose
 Project Check, managed-asset regeneration, convention controls, and detected
@@ -187,7 +207,8 @@ generation paths. Use `smairt new` for every new project and automation flow.
 - Existing folders without `smairt.yaml` are not adopted or migrated.
 - Project Check diagnoses structure and configuration; it does not inspect
   scientific correctness or modify researcher-authored content.
-- Repairs and regeneration are limited to deterministic, tool-owned assets.
+- Repairs, regeneration, and upgrades are limited to deterministic, tool-owned
+  assets. An upgrade never rewrites researcher work or a modified starter.
 - HPC support supplies guidance and a template, not scheduler integration.
 - Native Windows support is deferred.
 

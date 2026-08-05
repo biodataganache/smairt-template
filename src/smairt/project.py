@@ -700,7 +700,8 @@ def project_check(root: Path) -> list[CheckIssue]:
             CheckIssue(
                 "scaffold-version-mismatch",
                 "smairt.yaml",
-                f"Project scaffold {contract.scaffold_version} differs from installed SMAIRT {__version__}.",
+                f"Project scaffold {contract.scaffold_version} differs from installed SMAIRT "
+                f"{__version__}. Run `smairt upgrade` to review and apply the difference.",
             )
         )
     for directory in REQUIRED_DIRECTORIES:
@@ -1006,6 +1007,137 @@ def managed_asset_paths(root: Path) -> list[str]:
     return sorted(managed_asset_contents(root))
 
 
+@dataclass(frozen=True)
+class UpgradeChange:
+    """One tool-owned asset an upgrade would write, create, or leave alone."""
+
+    path: str
+    action: str
+    """One of `update`, `create`, `unchanged`, or `preserve`."""
+
+    @property
+    def writes(self) -> bool:
+        return self.action in {"update", "create"}
+
+
+@dataclass(frozen=True)
+class UpgradePlan:
+    """What moving a project onto the installed scaffold version would do.
+
+    Every entry is derived from the same rendering the write itself uses, so the preview
+    cannot describe an operation other than the one that would run.
+    """
+
+    from_version: str
+    to_version: str
+    changes: tuple[UpgradeChange, ...]
+
+    @property
+    def is_current(self) -> bool:
+        return self.from_version == self.to_version
+
+    @property
+    def updates(self) -> tuple[UpgradeChange, ...]:
+        return tuple(change for change in self.changes if change.action == "update")
+
+    @property
+    def creates(self) -> tuple[UpgradeChange, ...]:
+        return tuple(change for change in self.changes if change.action == "create")
+
+    @property
+    def preserved(self) -> tuple[UpgradeChange, ...]:
+        """Researcher-modified assets the upgrade refuses to touch."""
+        return tuple(change for change in self.changes if change.action == "preserve")
+
+    @property
+    def unchanged(self) -> tuple[UpgradeChange, ...]:
+        return tuple(change for change in self.changes if change.action == "unchanged")
+
+    @property
+    def writes_nothing(self) -> bool:
+        return not any(change.writes for change in self.changes)
+
+
+def upgrade_plan(root: Path) -> UpgradePlan:
+    """Describe what upgrading this project to the installed version would change.
+
+    Only tool-owned assets are considered, and a modified one is reported as preserved
+    rather than rewritten. Researcher work is never in this plan at all: the blueprint
+    classifies it as `researcher-work`, and `managed_asset_contents()` excludes it.
+
+    This exists because tying a project to its recorded scaffold version, as ADR 0001
+    requires, left every project created by an earlier release unable to change its own
+    settings, capabilities, or structure. Refusing a mutation is correct; refusing it with
+    no route forward makes the tool read-only the moment it is updated.
+    """
+    contract = load_contract(root)
+    # Rendered from the contract as it will be after the version moves, so an asset that
+    # only exists in the newer scaffold appears as a creation rather than being missed.
+    projected = contract.model_copy(update={"scaffold_version": __version__})
+    assets = _managed_assets_for(projected)
+    ownership = asset_ownership(projected)
+    changes: list[UpgradeChange] = []
+    for relative, expected in sorted(assets.items()):
+        path = root / relative
+        if not path.exists():
+            changes.append(UpgradeChange(relative, "create"))
+            continue
+        current = path.read_text()
+        if current == expected:
+            changes.append(UpgradeChange(relative, "unchanged"))
+        elif ownership.get(relative) == "tool-guidance":
+            changes.append(UpgradeChange(relative, "update"))
+        else:
+            # An editable starter is meant to be edited, so a difference is the researcher's
+            # work rather than drift to correct.
+            changes.append(UpgradeChange(relative, "preserve"))
+    return UpgradePlan(contract.scaffold_version, __version__, tuple(changes))
+
+
+def apply_upgrade(root: Path) -> UpgradePlan:
+    """Move the project onto the installed scaffold version.
+
+    Writes only what the plan reports as a write, then records the new version. The contract
+    is saved last so an interrupted upgrade leaves the project on its old version and the
+    same upgrade can simply be run again.
+    """
+    contract = load_contract(root)
+    plan = upgrade_plan(root)
+    if plan.is_current:
+        raise ProjectError(
+            f"Project is already on the installed SMAIRT {__version__}; nothing to upgrade."
+        )
+    projected = contract.model_copy(update={"scaffold_version": __version__})
+    assets = _managed_assets_for(projected)
+    for change in plan.changes:
+        if not change.writes:
+            continue
+        path = root / change.path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(assets[change.path])
+    materialize_template_assets(root, projected, missing_only=True)
+    save_contract(root, projected)
+    return plan
+
+
+def _managed_assets_for(contract: ProjectContract) -> dict[str, str]:
+    """Return tool-owned asset content for a contract that is not yet saved.
+
+    `managed_asset_contents()` reloads the contract from disk, which cannot describe a
+    version the project has not moved to yet. This renders the same assets from a projected
+    contract so the preview and the write agree on what the upgraded project contains.
+    """
+    assets = render_template_assets(contract)
+    ownership = asset_ownership(contract)
+    assets = {
+        relative: content
+        for relative, content in assets.items()
+        if ownership[relative] != "researcher-work"
+    }
+    _add_contract_derived_assets(assets, contract)
+    return assets
+
+
 def next_workflow_action(root: Path) -> tuple[str, str]:
     """Return what the project is missing next, and the command that addresses it.
 
@@ -1111,6 +1243,12 @@ def managed_asset_contents(root: Path, *, include_inactive: bool = False) -> dic
         for relative, content in assets.items()
         if ownership[relative] != "researcher-work"
     }
+    _add_contract_derived_assets(assets, contract)
+    return assets
+
+
+def _add_contract_derived_assets(assets: dict[str, str], contract: ProjectContract) -> None:
+    """Add the assets rendered from the contract rather than from a template file."""
     assets["LICENSE"] = _render_license(
         contract.license, contract.people["researcher"].name, contract.license_year
     )
@@ -1118,14 +1256,33 @@ def managed_asset_contents(root: Path, *, include_inactive: bool = False) -> dic
         "# SMAIRT AI Context\n\nRead `prompts/AI_CONTEXT.md` before working in this project.\n"
     )
     _apply_contract_conventions(assets, contract)
-    return assets
+
+
+def require_upgradable(root: Path, action: str) -> None:
+    """Refuse an action that a scaffold-version difference blocks, before listing anything.
+
+    Commands that preview before writing have to check this at the point they start
+    describing the operation, not only at the point they would write. `smairt repair` on an
+    out-of-date project used to report "No safe repairs are available" and exit 0 while every
+    repair was blocked, and `smairt regenerate` listed all forty-three assets as eligible
+    before refusing on confirm. Both statements were false in a way that reads as success.
+    """
+    _require_current_scaffold(load_contract(root), action)
 
 
 def _require_current_scaffold(contract: ProjectContract, action: str) -> None:
+    """Refuse a package-owned mutation on an out-of-date project, and say what to run.
+
+    ADR 0001 ties a project to its recorded scaffold version, so refusing here is correct.
+    Refusing without naming a route forward is not: it left every project created by an
+    earlier release unable to change its settings, capabilities, or structure, with the only
+    documented answer being to start a new project.
+    """
     if contract.scaffold_version != __version__:
         raise ProjectError(
             f"Cannot {action}: project scaffold {contract.scaffold_version} differs from installed "
-            f"SMAIRT {__version__}. An explicit upgrade flow is not available yet."
+            f"SMAIRT {__version__}. Run `smairt upgrade` to review the changes and move this "
+            "project onto the installed version; researcher work is never rewritten."
         )
 
 
