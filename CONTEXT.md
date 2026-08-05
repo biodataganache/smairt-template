@@ -36,6 +36,7 @@ SMAIRT creates and manages readable, file-based scientific research workspaces.
 - Golden projects independently record complete representative generated output.
 - Framed screens and printed output both derive their styling from the semantic palette.
 - A capability selection produces a diff preview, and only an explicit confirmation applies it.
+- Creating a project and managing one are separate modules that meet only at the command surface: `wizard.py` creates, `dashboard.py` manages, `presentation.py` holds what both need to speak the same way, and `cli.py` is the adapter over them.
 
 ## Invariants
 

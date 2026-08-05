@@ -95,6 +95,11 @@ changed.
 - `PHASE_DIRECTORIES` is one tuple naming what every project contains, rather than a
   phase-keyed map with two unreachable entries read through a function that discarded its
   argument.
+- Split `cli.py` (2,267 lines) into four modules along the seams that were already there:
+  `presentation.py` for what every surface needs to speak the same way, `wizard.py` for guided
+  creation, `dashboard.py` for managing an existing project, and `cli.py` for the command
+  surface alone. The dependency graph is strictly layered with no cycles, and no behavior
+  changed — the same 178 tests pass before and after.
 
 ## 0.4.0
 
