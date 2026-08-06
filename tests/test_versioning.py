@@ -121,3 +121,19 @@ def test_a_freshly_generated_project_passes_its_own_check(tmp_path: Path) -> Non
     payload = json.loads(checked.stdout)
     assert payload["ok"] is True, payload["issues"]
     assert payload["issues"] == []
+
+
+def test_the_citation_records_the_installed_version() -> None:
+    """A citation naming the wrong version misattributes the software being cited.
+
+    `CITATION.cff` cannot derive its version the way the package does, so this is the one place
+    a literal is unavoidable. That makes it exactly the place that drifts silently, since nothing
+    else reads the file.
+    """
+    citation = yaml.safe_load((REPOSITORY_ROOT / "CITATION.cff").read_text())
+
+    assert citation["version"] == __version__, (
+        f"CITATION.cff records {citation['version']} but the package is {__version__}"
+    )
+    assert citation["license"] == "MIT"
+    assert citation["repository-code"].startswith("https://")

@@ -86,7 +86,7 @@ Full context, hypothesis, and metrics are in
 
 2. **Seed your project with the background:**
    ```bash
-   cp background/01_initial_question.md protein_language_model/background/
+   cp protein_language_model/background/01_initial_question.md <your-new-project>/background/
    ```
 
 3. **Configure Zoo Code, then open the project in VS Code and prime it.** New to

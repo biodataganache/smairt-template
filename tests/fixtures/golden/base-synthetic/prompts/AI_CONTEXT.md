@@ -1,6 +1,6 @@
 # AI Context for SMAIRT Project
 
-You are collaborating on a project that uses the SMAIRT (Scientific Method with AI Research Template) framework.
+You are collaborating on a project that uses the SMAIRT (Scientific Method with AI Research Toolkit) framework.
 
 ---
 

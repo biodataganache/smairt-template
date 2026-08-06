@@ -8,6 +8,7 @@ that the declared environment is complete, which is knowable without running any
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 
 import pytest
@@ -164,3 +165,24 @@ def test_an_optional_demo_dependency_explains_itself_when_absent(demo: Path) -> 
             assert distribution in text, (
                 f"{demo.name}/{source} handles a missing import without naming {distribution}"
             )
+
+
+@pytest.mark.parametrize("demo", demo_directories(), ids=lambda path: path.name)
+def test_a_demo_never_tells_a_reader_to_copy_a_file_that_is_not_there(demo: Path) -> None:
+    """Seven of eight demos pointed at a path that does not exist.
+
+    `cp background/01_initial_question.md <project>/background/` reads plausibly, but the
+    reference question lives inside the completed project rather than beside `DEMO.md`. A reader
+    following the tutorial hit `No such file or directory` on the first command.
+    """
+    guide = demo / "DEMO.md"
+    if not guide.is_file():
+        pytest.skip(f"{demo.name} has no DEMO.md")
+    missing: list[str] = []
+    for number, line in enumerate(guide.read_text().splitlines(), start=1):
+        for source in re.findall(r"\bcp\s+([\w/.-]+)\s", line):
+            if not (demo / source).exists():
+                missing.append(f"{guide.name}:{number} -> {source}")
+    assert not missing, f"{demo.name} documents copying files that do not exist:\n" + "\n".join(
+        missing
+    )

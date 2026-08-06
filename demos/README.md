@@ -9,16 +9,16 @@
 >
 > Read them for the *scientific reasoning* they demonstrate, which is still sound and still
 > the point. Do not copy their commands or directory layouts. For the current workflow, create
-> a project with `smairt new` and read its `README.md` and `docs/12_STEPS.md`. Re-enriching
-> these demos is tracked separately.
+> a project with `smairt new` and read [docs/workflow.md](../docs/workflow.md). Rewriting these
+> demos against the current toolkit is tracked separately.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../smairt-template/README.md)
-[![Framework: SMAIRT](https://img.shields.io/badge/framework-SMAIRT-6f42c1.svg)](../smairt-template/README.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE)
+[![Framework: SMAIRT](https://img.shields.io/badge/framework-SMAIRT-6f42c1.svg)](../README.md)
 [![Mode: Scientist in Control](https://img.shields.io/badge/AI%20workflow-human%20review%20required-darkgreen.svg)](USING_ZOO_CODE.md)
 
 **A professional, scientist-friendly set of SMAIRT demos for learning how to do reproducible, AI-assisted research without giving up scientific judgment.**
 
-SMAIRT stands for **Scientific Method with AI Research Template**. These demos are designed to help a scientist, student, reviewer, or curious newcomer understand the framework quickly, pick a domain-specific example, and run an honest first research iteration.
+SMAIRT stands for **Scientific Method with AI Research Toolkit**. These demos are designed to help a scientist, student, reviewer, or curious newcomer understand the framework quickly, pick a domain-specific example, and run an honest first research iteration.
 
 ![SMAIRT demo tracks](demo_tracks.svg)
 
@@ -244,8 +244,8 @@ The completed lunar example shows what a multi-iteration trail can look like, bu
 | [`epidemic_sird/`](epidemic_sird/DEMO.md)             | Math / epidemiology demo (SIRD infection-recovery-death model)    |
 | [`bring_your_own/`](bring_your_own/DEMO.md)           | Flexible worksheet-driven custom-project entry point              |
 | [`FIRST_SCRIPT_GUIDE.md`](FIRST_SCRIPT_GUIDE.md)      | Shared beginner guide for choosing a strong first SMAIRT script   |
-| [`../smairt-template/`](../smairt-template/README.md) | The canonical SMAIRT toolkit                       |
-| [`../smairt-agentic/`](../smairt-agentic/README.md)   | SMAIRT agentic tooling and CLI                                    |
+| [`../README.md`](../README.md)                         | The SMAIRT toolkit itself                                        |
+| [`../docs/workflow.md`](../docs/workflow.md)           | The current research loop                                        |
 
 ---
 

@@ -1,7 +1,7 @@
 # Complete the public repository identity
 
 Type: task
-Status: unclaimed
+Status: blocked
 Blocked by: 04, 06, 07, 14
 
 ## Question
@@ -20,3 +20,42 @@ Does the repository present itself consistently as the SMAIRT framework rather t
 ## Resolution
 
 Resolve when a first-time reader sees one name and purpose across GitHub metadata, README, package metadata, citation, license, and contribution paths, with no unsupported publication claim.
+
+## Progress
+
+Everything inside the repository is done. Two items need an account with admin on
+`PNNL-CompBio/smairt-template`; mine has `push` but not `admin`, confirmed via the API.
+
+### Done
+
+- **`CITATION.cff` added.** A publication-facing repo a reviewer cannot cite is missing the
+  point. Only approved facts are recorded — organization authorship, MIT, the repository URL, the
+  real version — with no invented DOI, journal, or author list. A test asserts its version matches
+  the package, because that literal is unavoidable there and so is exactly what drifts silently.
+- **"Research Template" corrected to "Research Toolkit" in the shipped scaffold.**
+  `prompts/AI_CONTEXT.md` was priming every assistant with the retired identity, in a file
+  regenerated into every project. Goldens updated through the generator.
+- **Broken demo links repaired.** `demos/README.md` pointed two badges and two table rows at
+  `../smairt-template/` and `../smairt-agentic/`, sibling directories that do not exist in any
+  checkout.
+- **Seven of eight `DEMO.md` files told readers to copy a file that is not there.**
+  `cp background/01_initial_question.md ...` reads plausibly, but the reference question lives
+  inside the completed project, not beside `DEMO.md`. A reader hit
+  `No such file or directory` on the first command. A test now asserts every documented `cp`
+  source exists.
+
+### Blocked on admin access
+
+1. **Repository description** still reads "The Scientific Method using AI Research Template for
+   cookiecutter." Suggested: *"SMAIRT: Scientific Method with AI Research Toolkit — create
+   research workspaces that keep a traceable record from hypothesis to result."*
+2. **Topics** are empty. Suggested: `reproducible-research`, `scientific-workflow`,
+   `research-provenance`, `ai-assisted-research`, `python-cli`.
+
+GitHub license detection resolves itself on merge: `LICENSE` exists on this branch and not on
+`main`, which is why the repository currently reports no license.
+
+### Deliberately not done
+
+No code of conduct was added. Adding an unapproved one to a PNNL repository would be presumptuous
+about an organizational policy I cannot verify.

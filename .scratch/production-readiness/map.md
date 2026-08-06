@@ -35,6 +35,8 @@ This branch is ready to replace `main` as SMAIRT's publication-facing framework 
 
 - [Repair demo dependency contracts](issues/08-repair-demo-dependency-contracts.md) — `scikit-learn` and `seaborn` declared where they were imported and missing; `fair-esm` stays optional but now names itself when absent. `protein_properties` calculators deferred to the rewrite, since that is a migration problem rather than a declaration one.
 
+- [Complete the public repository identity](issues/15-complete-public-repository-identity.md) — **partially blocked.** `CITATION.cff` added, retired "Research Template" identity corrected in the shipped scaffold, broken demo links and seven false `cp` commands fixed. The GitHub description and topics need an account with admin on the PNNL repository.
+
 ## Not yet specified
 
 - Whether demo verification belongs in every CI matrix cell, one representative cell, or a separate scheduled job. This becomes decidable after the demo smoke interface and runtime are known.
