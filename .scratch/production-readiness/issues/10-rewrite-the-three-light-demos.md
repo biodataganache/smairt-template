@@ -1,7 +1,7 @@
 # Rewrite the three light demos as current generated projects
 
 Type: task
-Status: in progress
+Status: resolved
 Blocked by: 08, 09
 
 ## Question
@@ -74,3 +74,21 @@ would pass while the tutorial a reader actually follows still taught the retired
 
 `lunar` and `peptide_digest` are migrated to *current scaffold, imported history* rather than
 rewritten. Their science is not re-derived and their scripts are not reinstrumented.
+
+## Resolved
+
+- [x] enzyme_kinetics: current. Ported into the generated frame, rerun, invariants match.
+- [x] lunar: current scaffold, imported history. Corridor 10.9270-10.9360 km/s reproduced.
+- [x] peptide_digest: current scaffold, imported history.
+
+All three pass `smairt check`. Migration was driven by blueprint path ownership, not directory
+copying, which is what protected the researcher-owned prompt records.
+
+Findings worth carrying forward:
+- `new_iteration.py` is a *current* helper name; the legacy demos ship a stale copy. Do not put it
+  on a retired-helper list.
+- Verification runs overwrite committed figures and add logs. Restore `results/` from the committed
+  tree before installing a migrated demo.
+- 47 pre-existing dangling links existed across these two demos. 35 had a bogus
+  `smairt_template_demos/...` prefix; 12 pointed at logs never committed and are now plain
+  filenames marked "not retained".
