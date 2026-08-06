@@ -2,7 +2,7 @@
 
 ## Destination
 
-This branch is ready to replace `main` as SMAIRT's publication-facing framework repository: a newcomer has one truthful front door, every active document and example matches the installed toolkit, all eight demos are reproducible current generated projects, platform and package checks are green, and an independent adversarial review finds no unresolved release blocker.
+This branch is ready to replace `main` as SMAIRT's publication-facing framework repository: a newcomer has one truthful front door, every active document and example matches the installed toolkit, every demo is either a reproducible current generated project or is honestly labelled legacy, platform and package checks are green, and an independent adversarial review finds no unresolved release blocker.
 
 ## Notes
 
@@ -10,6 +10,7 @@ This branch is ready to replace `main` as SMAIRT's publication-facing framework 
 - Treat `CONTEXT.md` as the domain language and `docs/adr/0001-0003` as accepted decisions. Do not re-litigate those ADRs without evidence of real friction.
 - Use the codebase-design vocabulary when changing architecture: **module**, **interface**, **depth**, **seam**, **adapter**, **leverage**, and **locality**. The interface is the test surface. Apply the deletion test before extracting or retaining a module. One adapter is a hypothetical seam; two adapters make it real.
 - Rewrite all eight completed demos against the current `smairt` CLI. Do not preserve the cookiecutter-era structure merely for compatibility.
+  **Superseded during implementation.** See the demo status taxonomy in ticket 10: three demos become current, five stay legacy behind an honest warning.
 - Keep small downloaded fixtures only with publication-grade provenance. Fetch the 4.1 MB JHU COVID-19 data on demand from a pinned source rather than committing the snapshot.
 - Make `README.md` the single newcomer front door. It should point to current demos for examples and to a smaller `docs/` hierarchy for depth. Compress and update the tutorials rather than keeping five competing introductions.
 - Delete `plans/` and `adversarial_review1.md` after confirming their durable outcomes are represented by current documentation and changelog entries.
@@ -41,6 +42,14 @@ This branch is ready to replace `main` as SMAIRT's publication-facing framework 
 
 ## Decisions taken during implementation
 
+- The eight completed demos are NOT all becoming current projects. Three levels instead:
+  `enzyme_kinetics` current; `lunar` and `peptide_digest` current scaffold with imported history;
+  `epidemic_sird`, `proteomics_de`, `protein_properties`, `ppi_network`, `protein_lm` legacy.
+  Recorded in ticket 10. Ticket 11 dropped.
+- No execution record is ever backfilled. No legacy script calls `record_run_status`, so a
+  hand-written `RUN_HISTORY.md` row would claim an execution that never happened. Imported demos
+  ship the empty template plus a migration note.
+
 - The protein language model demo (ticket 12) is dropped, not deferred. Too expensive to migrate,
   least likely to be run. It stays as a legacy demo behind the `demos/README.md` warning.
 - The GitHub description and topics stay as they are for now. Revisit when the front-repo state is final.
@@ -54,7 +63,7 @@ This branch is ready to replace `main` as SMAIRT's publication-facing framework 
 - Whether demo verification belongs in every CI matrix cell, one representative cell, or a separate scheduled job. This becomes decidable after the demo smoke interface and runtime are known.
 - Whether merging this effort should immediately create the `v0.4.0` tag or leave release publication as a separately approved act.
 - Whether the portable `skills/` directory remains part of this framework repository after its current instructions are corrected, or ultimately belongs with the SMAIRT Lab fork.
-- Whether `demos/bring_your_own/` remains a standalone worksheet once the newcomer path and eight current demos are complete.
+- Whether `demos/bring_your_own/` remains a standalone worksheet once the newcomer path and the three current demos are complete.
 
 ## Out of scope
 

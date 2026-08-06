@@ -1,7 +1,7 @@
 # Rewrite the four medium demos as current generated projects
 
 Type: task
-Status: unclaimed
+Status: dropped
 Blocked by: 08, 09
 
 ## Question
@@ -31,3 +31,23 @@ inside the iteration that uses them, needing no framework change.
 
 Do not add a seam speculatively. Carry the light demos and the first medium demos through the
 recipe, then look at what the calculators actually need.
+
+## Outcome: dropped in favour of honest legacy labelling
+
+These four stay legacy. Verified first that their science still runs: `protein_properties`
+script_02 reaches AUROC 1.0000 with its criteria passing, and the first iteration of
+`epidemic_sird`, `proteomics_de`, and `ppi_network` all execute under their declared
+dependencies. Nothing here is broken.
+
+What they lack is a current tutorial and the generated run-status frame. Supplying both means
+instrumenting and rerunning roughly 13 scripts, and normalising 46 `B01`/`B02` references across
+10 files in `ppi_network` plus 36 `H1_`/`H2_`/`H3_` references across 16 files in
+`proteomics_de` -- references that live in printed output and dependency assertions, not only in
+filenames. The lighter demos already show every helper in the loop.
+
+The `protein_properties` calculator question is settled and needed no framework change:
+`scripts/shared/calculators.py` lives inside that demo and its own `__init__.py` exports the
+functions. Ordinary in-demo scientific code.
+
+Ticket 13's data-provenance work is *not* absorbed here. `ppi_network` and `protein_properties`
+ship real payloads behind empty inventory templates, so that ticket stays open on its own terms.
