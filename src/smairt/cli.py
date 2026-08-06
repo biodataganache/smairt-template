@@ -62,6 +62,7 @@ from smairt.project import (
     managed_asset_paths,
     managed_asset_previews,
     managed_file_statuses,
+    next_workflow_action,
     open_folder,
     project_check,
     record_recent,
@@ -124,6 +125,12 @@ def open(
         typer.echo(open_folder(root))
     else:
         typer.echo(f"Opened SMAIRT project: {root}")
+        # The generated README promises that opening a project reports where it stands, so
+        # the state the dashboard already derives is reported here too rather than leaving
+        # the command to echo back the path it was given.
+        state, command = next_workflow_action(root)
+        typer.echo(f"Where the work stands: {state}")
+        typer.echo(f"Next: {command}")
 
 
 @app.command()
@@ -569,6 +576,20 @@ def new(
     wizard_mode = destination is None
     options: ProjectOptions | None = None
     if destination is None:
+        # Guided creation asks which capabilities to include, so it cannot also honour them
+        # as flags. Accepting one and discarding it produced a project missing exactly the
+        # capability the researcher asked for, with nothing said about it.
+        ignored = [name for name, given in (("--paper", paper), ("--hpc", hpc)) if given]
+        if ignored:
+            typer.echo(
+                f"Error: guided creation asks which capabilities to include, so {' and '.join(ignored)} "
+                "cannot be applied here.\n"
+                "Either omit the flag and choose in the wizard, or give a destination: "
+                "smairt new ./project "
+                f"{' '.join(ignored)} --name ... --slug ... --description ... --researcher ... --domain ...",
+                err=True,
+            )
+            raise typer.Exit(code=CANNOT_PROCEED)
         try:
             destination, options = Wizard().run()
         except WizardCancelled:

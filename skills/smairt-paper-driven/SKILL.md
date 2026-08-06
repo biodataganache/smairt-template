@@ -13,8 +13,10 @@ question/background -> hypothesis -> phase experiment -> results/logs
   -> analysis/decision -> study report
 ```
 
-Use `smairt new --paper` when creating a project or `smairt paper enable` for an
-existing project. Do not create a second project structure for publication work.
+Run `smairt paper enable` in an existing project, or pass `--paper` to a complete
+`smairt new ./project ...` command. Guided creation asks which capabilities to include, so
+it refuses the flag rather than discarding it. Do not create a second project structure for
+publication work.
 
 ## Overlay Workflow
 

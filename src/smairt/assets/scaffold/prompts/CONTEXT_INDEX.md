@@ -22,7 +22,7 @@ at once.
 | `analysis/ANALYSIS_PLAN.md` | The tracks already in flight, and what each one settles |
 | `plans/README.md` | What a plan contains |
 | `background/` | Whether the question has already been approached |
-| `scripts/README.md` | `new_track.py` creates the plan, hypothesis, and first iteration |
+| `scripts/README.md` | `new_track.py` starts a track with a plan and a hypothesis, before any script exists |
 
 ## Writing a new experiment
 

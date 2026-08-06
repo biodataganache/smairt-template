@@ -53,6 +53,19 @@ changed.
 
 ### Creating and running projects
 
+- **`smairt open` now reports where the project stands and what comes next.** The generated
+  project README already promised this, but the command printed only the path it had been
+  given. The state it claimed to report was already derived for the dashboard, so the
+  guidance described a capability the project had and the command did not reach for.
+- **Guided creation refuses `--paper` and `--hpc` instead of silently discarding them.**
+  With no destination, `smairt new --paper` entered the wizard, which supplies its own
+  capability answers, so the flag was accepted and dropped. A researcher following the Paper
+  skill got a project with no Paper workspace and nothing said about it. The wizard now names
+  the conflict before writing anything, and the skill documents a command that works.
+- **Generated guidance no longer says `new_track.py` creates the first iteration.** It
+  deliberately stops after the plan and hypothesis, because committing the criteria before a
+  script exists is what keeps the test a test. `prompts/CONTEXT_INDEX.md` promised a script
+  that was never written and taught researchers to skip that commit.
 - **Generated guidance says `python3` rather than `python`.** `python` does not exist on a
   stock macOS, so the first command in the project README failed at the point of first
   contact. Thirty-eight occurrences across the README, `docs/12_STEPS.md`,

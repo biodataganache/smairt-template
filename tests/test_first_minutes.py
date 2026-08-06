@@ -15,7 +15,8 @@ from pathlib import Path
 
 import pytest
 
-SCAFFOLD = Path(__file__).parents[1] / "src" / "smairt" / "assets" / "scaffold"
+REPOSITORY_ROOT = Path(__file__).parents[1]
+SCAFFOLD = REPOSITORY_ROOT / "src" / "smairt" / "assets" / "scaffold"
 GUIDANCE_SUFFIXES = {".md", ".py", ".sh", ".yaml"}
 
 # `python ` as a command, but not inside `python3` and not in prose like "the Python version".
@@ -251,3 +252,136 @@ def test_regenerate_names_files_it_would_refuse(tmp_path: Path) -> None:
     assert listed.returncode == 0, listed.stderr
     assert "Differ from the installed version, so not eligible:" in listed.stdout
     assert "- docs/12_STEPS.md" in listed.stdout
+
+
+def test_generated_guidance_does_not_claim_new_track_creates_an_iteration() -> None:
+    """`new_track.py` deliberately stops before the first script.
+
+    Committing the criteria before a script exists is what keeps the test a test, so the
+    helper stops and says so. Guidance that promises a first iteration teaches a researcher
+    to expect a script that was never written, and to skip the commit the workflow depends on.
+    """
+    offenders: list[str] = []
+    for path in sorted(SCAFFOLD.rglob("*.md")):
+        for number, line in enumerate(path.read_text().splitlines(), start=1):
+            lowered = line.lower()
+            if "new_track" not in lowered:
+                continue
+            # Only a claim about what new_track itself produces counts. A line that names
+            # both helpers is describing the pair, not promising a script.
+            if "new_iteration" in lowered:
+                continue
+            if "does not" in lowered or "not create" in lowered:
+                continue
+            if "iteration" in lowered or "first script" in lowered:
+                offenders.append(f"{path.relative_to(SCAFFOLD)}:{number}: {line.strip()}")
+    assert not offenders, (
+        "generated guidance says new_track.py creates an iteration or script:\n"
+        + "\n".join(offenders)
+    )
+
+
+def test_open_reports_where_the_project_stands(tmp_path: Path) -> None:
+    """The generated README promises this, so the command has to deliver it.
+
+    `smairt open` printed only the path it had just been given. The state it claimed to
+    report already existed behind `next_workflow_action`, so the guidance was describing a
+    capability the project had but the command did not reach for.
+    """
+    destination = tmp_path / "opened_project"
+    assert create_project(destination).returncode == 0
+
+    opened = run("open", str(destination))
+
+    assert opened.returncode == 0, opened.stderr
+    assert str(destination) in opened.stdout
+    # Freshly created, so the honest next step is recording the question.
+    assert "No research question recorded yet" in opened.stdout
+    assert "smairt settings --question" in opened.stdout
+
+
+def test_open_reports_the_next_step_as_the_project_advances(tmp_path: Path) -> None:
+    """The reported state has to follow the record, not a fixed script."""
+    destination = tmp_path / "advancing_project"
+    assert create_project(destination, **{"--question": "Does X predict Y?"}).returncode == 0
+
+    opened = run("open", str(destination))
+
+    assert opened.returncode == 0, opened.stderr
+    assert "No hypothesis yet" in opened.stdout
+    assert "new_track.py" in opened.stdout
+
+
+def test_paper_capability_is_reached_by_the_command_the_skills_document(tmp_path: Path) -> None:
+    """`smairt new --paper` has to mean Paper, or it must not be documented.
+
+    With no destination the flag was accepted and then dropped: creation entered the wizard,
+    which supplies its own options. A researcher following the skill got a project with no
+    Paper workspace and no indication that the flag had been ignored.
+    """
+    destination = tmp_path / "paper_project"
+
+    created = run(
+        "new",
+        str(destination),
+        "--name",
+        "Paper Study",
+        "--slug",
+        "paper_study",
+        "--description",
+        "A project that needs Paper.",
+        "--researcher",
+        "Ada Researcher",
+        "--domain",
+        "Computational biology",
+        "--paper",
+        "--accept-license",
+        "--no-git",
+    )
+
+    assert created.returncode == 0, created.stderr
+    assert (destination / "paper").is_dir()
+
+
+def test_no_shipped_guidance_documents_a_flag_that_creation_would_ignore() -> None:
+    """A flag that only works with a destination must not be shown without one.
+
+    The skills told a researcher to run `smairt new --paper`. Read literally that enters the
+    wizard and the flag is discarded, so the instruction produced a project missing exactly
+    the capability the skill exists to set up.
+    """
+    documents = sorted((REPOSITORY_ROOT / "skills").rglob("*.md"))
+    assert documents
+    offenders: list[str] = []
+    for path in documents:
+        for number, line in enumerate(path.read_text().splitlines(), start=1):
+            if "smairt new" not in line:
+                continue
+            if "--paper" in line or "--hpc" in line:
+                offenders.append(f"{path.relative_to(REPOSITORY_ROOT)}:{number}: {line.strip()}")
+    assert not offenders, (
+        "skills document a capability flag on `smairt new` without a destination, "
+        "which wizard mode ignores:\n" + "\n".join(offenders)
+    )
+
+
+def test_creation_refuses_a_capability_flag_it_would_silently_ignore(tmp_path: Path) -> None:
+    """Wizard mode asks about capabilities, so a flag it cannot honour must not be accepted.
+
+    Accepting and discarding it is the worst of the three options: the researcher gets no
+    Paper workspace and no reason to suspect one is missing. Refusing names the conflict
+    while nothing has been written.
+    """
+    refused = subprocess.run(
+        [str(installed_smairt()), "new", "--paper"],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+        input="",
+    )
+
+    assert refused.returncode == 2, refused.stdout
+    assert "--paper" in refused.stderr
+    assert "asks which capabilities" in refused.stderr
+    assert not list(tmp_path.iterdir())

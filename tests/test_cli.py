@@ -946,7 +946,8 @@ def test_open_tracks_recents_and_home_cleans_stale_paths(tmp_path: Path) -> None
     )
 
     assert opened.returncode == 0, opened.stderr
-    assert opened.stdout == f"Opened SMAIRT project: {destination}\n"
+    assert f"Opened SMAIRT project: {destination}" in opened.stdout
+    assert "Where the work stands:" in opened.stdout
     assert "SMAIRT Home" in home.stdout
     recents = json.loads(recents_path.read_text())
     assert recents == [{"path": str(destination), "opened_at": recents[0]["opened_at"]}]
