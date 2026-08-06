@@ -1,133 +1,49 @@
-# Session Log
+# Session Decision Index
 
-Record prompts and key decisions here. This is primarily for the **file-based workflow** (ChatGPT, Claude web) where session history isn't preserved.
+This is a concise living index, not a pasted conversation transcript. Your assistant
+reads project files directly, so copying conversations here duplicates what the files
+already say and ages badly. What no file captures on its own is *why* the work turned
+the way it did, and that is what belongs here.
 
----
+Record meaningful decisions and link the durable files that hold the scientific detail.
 
-## How to Use This File
+## Entry Template
 
+### [YYYY-MM-DD] - [Researcher or Assistant]
 
-**IDE-Native Note:** With tools like Roo/Zoo, Cursor, or Windsurf, your AI can read project files directly. This session log is less critical for context continuity, but remains valuable for:
-- Recording key decisions and their reasoning
-- Documenting intellectual contributions
-- Creating a searchable history of what was tried
+- **Task**: [What was addressed]
+- **Decision**: [What changed and why]
+- **Evidence read**: [Paths]
+- **Artifacts updated**: [Paths]
+- **Open questions**: [Unresolved items]
+- **Next action**: [Concrete follow-up]
 
-
-For each session:
-1. Record the date and session number
-2. Note the key prompts and what you asked for
-3. Summarize key results and outcomes
-4. Note which scripts were generated/modified
-5. Add your own observations and thoughts
-
-This creates a breadcrumb trail for tracking the research journey.
+Do not duplicate raw logs, analyses, or plans here.
 
 ---
 
-## Session 1 - [DATE]
+## What Is Worth Recording
 
-### Context
-- **Iteration:** 1
-- **Phase:** Synthetic data
-- **Hypothesis being tested:**
+1. **Decisions and their reasoning.** A choice you can no longer justify is a
+   choice you will make again by accident.
+2. **Where you contributed the insight.** Distinguish what you determined from
+   what an assistant proposed. That distinction is the record of your intellectual
+   contribution, and `prompts/intellectual_contribution.md` is where it accumulates.
+3. **What you tried that did not work.** Dead ends are results. Recording them
+   stops the same path being explored twice.
+4. **Where an approach stops working.** Methods that hold on synthetic data often
+   fail on real data, or under noise, or past some scale. The boundary is the
+   finding.
+5. **Patterns worth reusing.** When a technique or a recurring error proves
+   general, promote it to `prompts/KNOWN_PATTERNS.md` rather than leaving it here.
 
-### Prompt 1.1
-```
-[Your prompt here]
-```
+## Practices
 
-### Response Summary
-[Key points from AI response]
-
-### Scripts Generated
-- `experiments/01_synthetic/script_01_xxx.py`
-
-### Results
-[Brief summary — refer to `results/logs/` for full output]
-
-### My Observations
-[Your thoughts, what you noticed, connections you made, what you want to try next]
-
-### Critical Steps I Made
-[Document where YOU provided key insights vs. where AI suggested things]
-
----
-
-## Session 2 - [DATE]
-
-### Context
-- **Iteration:**
-- **Phase:**
-- **Hypothesis being tested:**
-
-### Prompt 2.1
-```
-[Your prompt here]
-```
-
-### Response Summary
-
-
-### Scripts Generated
--
-
-### Results
-
-
-### My Observations
-
-
-### Critical Steps I Made
-
-
----
-
-## Session 3 - [DATE]
-
-### Context
-- **Iteration:**
-- **Phase:**
-- **Hypothesis being tested:**
-
-### Prompt 3.1
-```
-[Your prompt here]
-```
-
-### Response Summary
-
-
-### Scripts Generated
--
-
-### Results
-
-
-### My Observations
-
-
-### Critical Steps I Made
-
-
----
-
-## Quick Reference: What to Record
-
-From each session, capture:
-
-1. **The prompts** - What you asked (exact text for file-based; summary for IDE-native)
-2. **Scripts generated** - Link to the files created or modified
-3. **Results** - What happened (reference log files in `results/logs/`)
-4. **Your observations** - What you noticed, thought about, connected
-5. **Your critical steps** - Where YOU made the key intellectual contributions
-6. **Patterns discovered** - New entries for `prompts/KNOWN_PATTERNS.md`
-
----
-
-## Tips
-
-- **Don't edit your prompts after the fact** - Keep them as you actually wrote them
-- **Note what worked within certain boundaries** - Document where approaches work and where they break down
-- **Record when things stop working** - Approaches often work within certain boundaries but fail with real data, are not robust to noise, or have other limitations
-- **Reference log files** - Full output is in `results/logs/`; just summarize here
-- **Update KNOWN_PATTERNS.md** - When you discover a reusable pattern or recurring error, add it there
+- **Link, do not copy.** Full experiment output lives in `results/logs/`;
+  interpretation lives in `analysis/`. Reference them.
+- **Do not revise history.** Correct a decision with a new entry that supersedes
+  the old one. Editing the old entry destroys the reasoning trail.
+- **Write the entry when the decision is made.** Reconstructed reasoning is a
+  guess about your own thinking.
+- **Keep entries short.** If an entry needs paragraphs of scientific detail, that
+  detail belongs in `analysis/` and this entry should point at it.

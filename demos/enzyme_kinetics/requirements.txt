@@ -1,7 +1,13 @@
-# Enzyme kinetics demo. Numpy/scipy do
-# the curve fitting (scipy.optimize.curve_fit) and matplotlib plots the
-# Michaelis-Menten curve. No data download needed: you generate synthetic
-# velocity-vs-substrate data with known Km and Vmax first.
+# Enzyme kinetics demo.
+#
+# numpy and scipy do the curve fitting (scipy.optimize.curve_fit), and matplotlib draws the
+# Michaelis-Menten curves and residual plots. No data download is needed: iterations 01 and 02
+# generate synthetic data from planted parameters, and iteration 03 reads the small committed
+# Puromycin dataset in data/downloaded/.
 numpy
 scipy
 matplotlib
+
+# Needed by the project's own helper scripts (scripts/new_iteration.py and friends), which read
+# smairt.yaml. Declared here because DEMO.md tells you to run them.
+PyYAML

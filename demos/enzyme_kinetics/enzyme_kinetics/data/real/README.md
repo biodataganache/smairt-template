@@ -1,19 +1,19 @@
 # Real Data
 
-Store your actual target data here.
+Store target, collected, or operational data used to address the research question directly.
 
 ## Purpose
 
-Real data is the final test:
-- Does your approach work on the actual problem?
-- Do results from synthetic and benchmark data transfer?
+- Test whether findings transfer to the actual problem.
+- Record real-world constraints and failure modes.
+- Compare results with synthetic and benchmark evidence where appropriate.
 
-## Contents
+## Inventory and Provenance
 
-| Filename | Description | Used By Scripts |
-|----------|-------------|-----------------|
-| | | |
+| Filename or Pattern | Source/Collection | Date/Version | Checksum | Processing | Access Restrictions | Used By |
+|---|---|---|---|---|---|---|
+| | | | | | | |
 
-## Notes
-
-Document any preprocessing, data sources, or access restrictions here.
+Document consent, governance, access, preprocessing, exclusions, and quality limitations as
+appropriate. Data files are ignored by default. Do not commit sensitive data merely because
+it is small.

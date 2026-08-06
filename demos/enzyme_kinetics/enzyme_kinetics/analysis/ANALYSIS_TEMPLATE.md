@@ -1,65 +1,77 @@
-# Analysis [XX] — [Brief Title]
+# Analysis [XX] - [Brief Title]
 
 ## Executive Summary
 
-[2-3 sentence summary of what was tested, what happened, and the key takeaway]
+[Summarize what was tested, what happened, and the main takeaway in two or three sentences.]
 
 ## Experiment Details
 
 - **Script**: `experiments/XX_phase/script_XX_description.py`
 - **Hypothesis**: `hypotheses/HYPOTHESIS_XX.md`
 - **Log**: `results/logs/script_XX_*.log`
-- **Track**: [A/B/C/D/... if applicable]
-- **Phase**: [synthetic / downloaded / real]
+- **Phase**: synthetic | downloaded | real
+- **Data record**: `data/[phase]/README.md`
 
 ## Key Results
 
-[Present the most important findings — tables, metrics, observations]
+[Present the important findings, including uncertainty and negative results.]
 
-| Metric | Expected | Observed | Status |
-|--------|----------|----------|--------|
-| [Metric 1] | [Predicted value] | [Actual value] | ✓/✗ |
-| [Metric 2] | [Predicted value] | [Actual value] | ✓/✗ |
+| Metric | Expected | Observed | Assessment |
+|---|---:|---:|---|
+| [Metric 1] | [Prediction] | [Result] | Supported / Not supported |
+| [Metric 2] | [Prediction] | [Result] | Supported / Not supported |
 
 ## Hypothesis Assessment
 
-### [SUPPORTED / REFUTED / PARTIALLY SUPPORTED / INCONCLUSIVE]
+### SUPPORTED | REFUTED | PARTIALLY SUPPORTED | INCONCLUSIVE
 
-[Detailed explanation of how results relate to the hypothesis]
+[Explain how the evidence changes confidence in the stated hypothesis.]
 
-### Where It Works (Boundaries)
-- [Condition under which the approach succeeds]
-- [Parameter range where results are good]
+### Where It Works
+
+- [Condition or parameter range where the approach succeeds]
+- [Evidence supporting that boundary]
 
 ### Where It Breaks Down
-- [Condition under which it fails]
-- [Edge cases or limitations discovered]
+
+- [Failure condition or edge case]
+- [Evidence and possible explanation]
 
 ## Comparison to Prior Work
 
-[How does this compare to previous iterations? Improvement? Regression?]
+| Comparison | Previous result | Current result | Interpretation |
+|---|---:|---:|---|
+| [Metric or behavior] | [Value] | [Value] | [Change and meaning] |
 
-| Comparison | Previous Best | This Result | Delta |
-|-----------|--------------|-------------|-------|
-| [Metric] | [Value] | [Value] | [+/-] |
+## Limitations
+
+- [Data limitation]
+- [Method or model limitation]
+- [Uncertainty, confounding, or generalization limit]
 
 ## Implications
 
-[What does this mean for the broader research question?]
+[Explain what this result means for the broader research question.]
+
+## Decision
+
+CONTINUE | REVISE | PIVOT | STOP
+
+[State why this decision follows from the evidence.]
 
 ## Next Steps
 
-1. [Most promising direction to pursue]
-2. [Alternative approach worth trying]
-3. [Thing to investigate further]
+1. [Most informative follow-up]
+2. [Alternative explanation to test]
+3. [Validation or robustness check]
 
 ## Files Generated
 
-- `results/logs/script_XX_*.log` — Raw output
-- `results/figures/[any figures]` — Visualizations
-- [Any other artifacts]
+- `results/logs/script_XX_*.log` - complete execution record
+- `results/figures/[figure]` - visualization and provenance
+- [Other result tables or summaries]
 
 ## Intellectual Contribution Notes
 
-[Record if the user made key decisions, insights, or directions during this experiment.
-Reference prompts/intellectual_contribution.md for the full log.]
+[Record important researcher choices or interpretations in
+`prompts/intellectual_contribution.md` and link the relevant entry.]

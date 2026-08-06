@@ -1,6 +1,6 @@
 # AI Context for SMAIRT Project
 
-You are collaborating on a project that uses the SMAIRT (Scientific Method with AI Research Template) framework.
+You are collaborating on a project that uses the SMAIRT (Scientific Method with AI Research Toolkit) framework.
 
 ---
 
@@ -12,7 +12,7 @@ You are operating within an AI-integrated IDE (VSCode with Roo/Zoo, Cursor, Wind
 - **You can execute commands** — Run scripts, check output, verify results
 - **You can write files directly** — Create scripts, update documentation, generate analysis
 - **You have persistent context** — Within a session, you remember previous interactions
-- **Project files are the durable record** - update hypotheses, logs, analyses, and decisions
+- **The conversation IS the session log** — No need for manual session logging
 
 ### What This Changes
 
@@ -57,22 +57,65 @@ We follow the scientific method in an iterative loop:
 Background → Hypothesis → Methods/Code → Results → Analysis → Future Directions → (repeat)
 ```
 
-Each iteration produces:
-1. A **hypothesis file** (`hypotheses/HYPOTHESIS_XX.md`)
-2. An **experiment script** (`experiments/XX_phase/script_XX_description.py`)
-3. A **log file** (`results/logs/script_XX_*.log`)
-4. An **analysis file** (`analysis/ANALYSIS_XX.md`)
+An **iteration** is one attempt at moving the work forward: one script, the log it
+produced, and the interpretation of that log. So each iteration produces:
+
+1. An **experiment script** (`experiments/XX_phase/script_NN_description.py`)
+2. A **log file** (`results/logs/script_NN_*.log`)
+3. An **analysis file** (`analysis/ANALYSIS_NN.md`)
+4. A **row and an outcome** in `analysis/ITERATION_LOG.md`
+
+An iteration *references* a hypothesis rather than producing one. A hypothesis usually
+takes several attempts to settle, so `hypotheses/HYPOTHESIS_NN.md` is written once when a
+track starts and its status is updated as attempts accumulate. Numbering the two
+separately is deliberate: iteration 07 may well be testing hypothesis 02.
+
+---
+
+## Study Report Checkpoints
+
+Beyond per-iteration analysis files, the project can accumulate a project-level
+research synthesis at `analysis/STUDY_REPORT.md`, based on
+`analysis/STUDY_REPORT_TEMPLATE.md`. This is not a one-time end-of-project
+deliverable — it is a living document you should proactively suggest creating
+or updating whenever the project reaches a natural checkpoint, such as:
+
+- one or more iterations establish a coherent, citable finding
+- the project is about to transition to a new phase or track (e.g., synthetic → downloaded)
+- the user asks for a summary, status update, or "where are we" recap
+- before a handoff to another researcher, tool, or AI session
+- before drafting a paper or external report
+
+When you notice one of these checkpoints, proactively ask the user:
+
+> "This looks like a good checkpoint to update `analysis/STUDY_REPORT.md`. Want me to create or update it?"
+
+If the report does not yet exist, copy `analysis/STUDY_REPORT_TEMPLATE.md` to
+`analysis/STUDY_REPORT.md` and fill it from the actual project files (hypotheses,
+logs, figures, analysis files) — never from memory. Set the `Report Status`
+field to reflect where the project actually stands:
+
+- `DRAFT` — first pass, sections still being filled in
+- `INTERIM` — accurate as of the current iteration, project still active
+- `UPDATED` — a prior report was revised because new iterations changed conclusions
+- `FINAL` — the project has reached its planned end state
+
+The filename never changes as the project progresses — only the `Report Status`
+field does. Do not wait for the user to remember this file exists; the whole
+point is that you help track when a synthesis checkpoint is due.
 
 ---
 
 ## The Data Progression
-
-This project uses the full three-phase data progression:
+Every project carries all three phases, so the progression is always available:
 
 1. **Synthetic data first** (`experiments/01_synthetic/`) - Fast iteration, no dependencies
 2. **Downloaded benchmark data second** (`experiments/02_downloaded/`) - Diversity, validation, robustness
 3. **Real data third** (`experiments/03_real_data/`) - Full test of approach
 
+The project records a `starting_phase`, which never changes, and a `current_phase`,
+which advances as the work does. Starting later in the progression does not remove
+the earlier directories; it only records where this project began.
 
 ---
 
@@ -126,29 +169,29 @@ analysis/          # Per-iteration analysis files (ANALYSIS_XX.md)
 data/              # Data files by phase
 scripts/           # Helper scripts and shared library
   shared/          # Reusable utilities (logging, metrics, data loading)
-paper_draft/       # Parallel narrative generation
-hpc/               # HPC job scripts and configurations
+paper/             # Publication workspace, present when Paper is enabled
+hpc/               # HPC job scripts and configurations, present when HPC is enabled
 ```
 
 ---
 
 ## Multi-Track Experimentation
 
-As projects grow, work forks into parallel investigation tracks. Tracks are
-identified by letter prefix:
+As projects grow, work forks into parallel tracks. A **track** is a direction of inquiry
+spanning as many iterations as it takes, and several can be in flight at once.
 
-```
-script_A01_...  — Track A (e.g., initial approach)
-script_B01_...  — Track B (e.g., alternative data type)
-script_C31_...  — Track C (e.g., pretraining experiments)
-script_D01_...  — Track D (e.g., fusion methods)
-script_X1_...   — Track X (e.g., interpretation/diagnostics)
-```
+A track is recorded rather than encoded in filenames. `scripts/new_track.py` creates:
 
-Each track should have:
-- A plan document: `plans/PLAN_TRACK_X_description.md`
-- Hypothesis files: `hypotheses/HYPOTHESIS_X01.md`
-- Analysis files: `analysis/ANALYSIS_X01.md`
+- A plan document: `plans/PLAN_<NAME>.md`
+- A hypothesis file: `hypotheses/HYPOTHESIS_NN.md`
+
+And the track gets a row in the `Tracks` table of `analysis/ANALYSIS_PLAN.md`, which is
+where a reader learns what directions exist and which were abandoned.
+
+Iterations stay numbered across the whole project regardless of track, so the numbers order
+the work in time. Putting a track letter in a script's name would fork the numbering, and a
+forked sequence no longer says what happened when — it also hides the script from the
+helpers, which find iterations by number.
 
 ---
 

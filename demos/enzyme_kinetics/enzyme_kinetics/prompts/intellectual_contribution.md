@@ -19,6 +19,16 @@ For each iteration, document:
 3. Where YOU made critical insights—especially at dead ends or turning points
 4. Key decisions you made that shaped the direction of the project
 
+### Who writes what
+
+The iteration entries above are yours. An assistant does not write into them.
+
+An assistant may add entries under `## AI-Detected Contributions`, because you will
+often not recognise your own contribution in the moment, and a record written only by
+whoever feels like claiming credit is worthless as evidence. Every such entry arrives
+marked `Status: unreviewed`, and stays a claim rather than a fact until you accept it.
+Accepting, rewriting, and deleting are yours alone.
+
 ---
 
 ## Iteration 1 - [DATE]
@@ -101,13 +111,17 @@ For each iteration, document:
 
 ## AI-Detected Contributions
 
-_The AI will append entries here when you confirm a novel contribution during a session._
+_An assistant appends observations here as they happen, each marked unreviewed. Nothing
+here counts until you have read it and either moved it into an iteration entry above,
+rewritten it, or deleted it. Change `Status: unreviewed` to `Status: confirmed by
+<name>` when you accept one._
 
-<!-- Example entry (AI will follow this format):
+<!-- Example entry (an assistant will follow this format):
 ### [DATE] — [Short Title]
-**Insight:** "[User's words or paraphrase]"
-**Why it matters:** [Brief explanation of impact on project direction]
-**Context:** During [what you were working on]
+**Status:** unreviewed
+**Observed:** "[Researcher's words, quoted rather than paraphrased where possible]"
+**Why it matters:** [What it changed about the project's direction]
+**Context:** During [what was being worked on]
 -->
 
 ---

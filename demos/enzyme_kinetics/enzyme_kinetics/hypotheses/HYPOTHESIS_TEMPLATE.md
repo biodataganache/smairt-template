@@ -1,49 +1,71 @@
-# Hypothesis [XX] — [Brief Title]
+# Hypothesis [XX] - [Brief Title]
 
-## Status: PENDING | SUPPORTED | REFUTED | PARTIALLY SUPPORTED | INCONCLUSIVE
+## Status
+
+PENDING | SUPPORTED | REFUTED | PARTIALLY SUPPORTED | INCONCLUSIVE
 
 ## Background
 
-[Context that motivates this hypothesis. What prior results led here?
-Reference prior analysis files or scripts.]
+[What question or prior result motivates this hypothesis? Link the relevant background,
+analysis, or experiment records.]
 
 ## Hypothesis Statement
 
-**Prediction**: [Specific, testable prediction about what will happen]
+**Prediction**: [State a specific, testable prediction.]
 
-**Rationale**: [Why you expect this outcome based on prior evidence]
+**Rationale**: [Explain why the available evidence makes this prediction plausible.]
 
-**Success criteria**: [Quantitative or qualitative criteria for support/refutation]
+**Alternative explanations**: [List other mechanisms that could produce the same observation.]
+
+**Success criteria**: [Define quantitative or qualitative criteria before running the test.]
+
+**Rejection criteria**: [Define evidence that would refute or materially weaken the hypothesis.]
+
+Both criteria belong here before any experiment script exists. A criterion written after
+the data is a rationalization.
 
 ## Experimental Design
 
-- **Script**: `experiments/XX_phase/script_XX_description.py`
-- **Phase**: [synthetic / downloaded / real]
-- **Track**: [A/B/C/D/... if applicable]
-- **Data**: [What data is used]
-- **Controls**: [What baselines or comparisons]
-- **Key metrics**: [What will be measured]
+- **Phase**: synthetic | downloaded | real
+- **Data**: [Inputs and provenance record]
+- **Controls**: [Baselines, negative controls, or comparison methods]
+- **Key metrics**: [Measurements and uncertainty estimates]
+- **Randomness**: [Seeds, repetitions, or sampling plan]
 
-## Sub-Hypotheses (if applicable)
+## Sub-Hypotheses
 
-### H_XXA: [First sub-prediction]
-- **Prediction**: [Specific]
-- **Success criteria**: [Measurable]
+Use these when a panel iteration probes several directions at once, one entry per probe.
 
-### H_XXB: [Second sub-prediction]
-- **Prediction**: [Specific]
-- **Success criteria**: [Measurable]
+### HYPOTHESIS_XXA: [First sub-prediction]
+
+- **Prediction**: [Specific outcome]
+- **Success criteria**: [Measurable threshold]
+
+### HYPOTHESIS_XXB: [Second sub-prediction]
+
+- **Prediction**: [Specific outcome]
+- **Success criteria**: [Measurable threshold]
 
 ## Dependencies
 
-- [Prior script or result this builds on]
+- [Prior iteration, analysis, or result]
 - [Data that must be available]
-- [Shared library functions needed]
+- [Shared functions or computing resources]
+
+## Iterations
+
+Several iterations usually test one hypothesis, so this is where they accumulate. The
+iteration numbers and this hypothesis number are deliberately separate: iteration 07 may
+well be testing hypothesis 02.
+
+| Iteration | What it tested | Outcome |
+|---|---|---|
 
 ## Results
 
-*(Filled in after experiment runs — see analysis/ANALYSIS_XX.md for full interpretation)*
+Complete this after interpreting. Link the raw log, figures, and corresponding
+`analysis/ANALYSIS_XX.md` interpretation rather than copying output into this file.
 
 ## Notes
 
-[Any additional context, caveats, or considerations]
+[Record caveats, decisions, or changes made before execution.]

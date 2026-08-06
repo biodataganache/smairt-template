@@ -1,16 +1,19 @@
 # Synthetic Data
 
-Store synthetic datasets used for initial testing here.
+Store synthetic datasets used to test assumptions before external data is introduced.
 
 ## Purpose
 
-Synthetic data allows:
-- Fast iteration without external dependencies
-- Quick testing of whether approaches work
-- Tight loops before moving to real data
+- Iterate without external dependencies.
+- Test whether code and metrics behave as expected.
+- Vary noise, structure, imbalance, and edge cases deliberately.
+- Establish known ground truth for validation.
 
-## Contents
+## Inventory and Provenance
 
-| Filename | Description | Used By Scripts |
-|----------|-------------|-----------------|
-| | | |
+| Filename or Pattern | Generator Script | Parameters and Seed | Description | Used By |
+|---|---|---|---|---|
+| | | | | |
+
+Data files are ignored by default, but this README remains tracked. Record enough detail to
+regenerate every synthetic dataset.

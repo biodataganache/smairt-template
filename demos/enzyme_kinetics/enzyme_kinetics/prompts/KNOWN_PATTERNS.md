@@ -161,7 +161,7 @@ Each entry documents a mistake that was made, its impact, and how to prevent it.
 
 **Prevention**: [e.g., Always filter where item_A != item_B before evaluation]
 
-**Learned from**: [iter_XX / script_XX]
+**Learned from**: [iteration NN, script_NN_description]
 
 ---
 
@@ -178,7 +178,7 @@ Each entry documents a mistake that was made, its impact, and how to prevent it.
 
 **Prevention**: [e.g., Validate exact column count on load]
 
-**Learned from**: [iter_XX / script_XX]
+**Learned from**: [iteration NN, script_NN_description]
 
 ---
 
@@ -192,7 +192,7 @@ Each entry documents a mistake that was made, its impact, and how to prevent it.
 
 **Prevention**: [e.g., Pre-flight check #3 — verify evaluation set matches data domain]
 
-**Learned from**: [iter_XX / script_XX]
+**Learned from**: [iteration NN, script_NN_description]
 
 ---
 
@@ -209,7 +209,7 @@ Each entry documents a mistake that was made, its impact, and how to prevent it.
 
 **Prevention**: [e.g., Always specify dtype for ID columns]
 
-**Learned from**: [iter_XX / script_XX]
+**Learned from**: [iteration NN, script_NN_description]
 
 ---
 
@@ -226,7 +226,7 @@ Each entry documents a mistake that was made, its impact, and how to prevent it.
 
 **Prevention**: [e.g., Always apply canonical_order() then drop_duplicates()]
 
-**Learned from**: [iter_XX / script_XX]
+**Learned from**: [iteration NN, script_NN_description]
 
 ---
 
@@ -240,7 +240,7 @@ Each entry documents a mistake that was made, its impact, and how to prevent it.
 
 **Prevention**: [e.g., Standards section 3.1 defines canonical column names]
 
-**Learned from**: [iter_XX / script_XX]
+**Learned from**: [iteration NN, script_NN_description]
 
 ---
 
@@ -254,7 +254,7 @@ Each entry documents a mistake that was made, its impact, and how to prevent it.
 
 **Prevention**: [e.g., Use standard results reporting pattern (Section 1.8)]
 
-**Learned from**: [iter_XX / script_XX]
+**Learned from**: [iteration NN, script_NN_description]
 
 ---
 
@@ -268,7 +268,7 @@ Each entry documents a mistake that was made, its impact, and how to prevent it.
 
 **Prevention**: [e.g., Use file organization pattern (Section 1.9)]
 
-**Learned from**: [iter_XX / script_XX]
+**Learned from**: [iteration NN, script_NN_description]
 
 ---
 
@@ -365,7 +365,17 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 - **OS**: [macOS / Linux / Windows]
 - **Known issues**: [e.g., path separators, line endings]
 
+### 5.5 HPC-Specific Patterns
 
+- **Cluster**: [Name]
+- **Module loads**: [Required modules]
+- **Job submission**: [Working sbatch patterns]
+- **Data paths**: [Scratch vs. project vs. home]
+
+```bash
+# Pattern: [Brief description of working HPC submission]
+# [Paste working command/script here]
+```
 
 ---
 
@@ -408,4 +418,4 @@ Track when each lesson was learned and from which iteration:
 
 | Date | Addition | Category | Learned From |
 |------|----------|----------|--------------|
-| [YYYY-MM-DD] | [What was added] | [Pattern/Error/Standard] | [iter_XX / script_XX] |
+| [YYYY-MM-DD] | [What was added] | [Pattern/Error/Standard] | [iteration NN, script_NN_description] |

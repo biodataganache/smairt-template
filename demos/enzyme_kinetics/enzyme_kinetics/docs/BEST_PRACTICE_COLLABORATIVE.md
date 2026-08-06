@@ -26,6 +26,9 @@ main
 **User-Specific Files:**
 ```
 prompts/
+├── session_log.md                    # SHARED - append with user attribution
+├── session_log_alice.md              # Alice's detailed logs
+├── session_log_bob.md                # Bob's detailed logs
 ├── intellectual_contribution.md       # SHARED - append with user attribution
 └── intellectual_contribution_alice.md # Alice's detailed contributions
 ```
@@ -54,6 +57,7 @@ hypotheses/H2_bob_alternative_algorithm.md
 
 **Use append-only pattern for shared logs:**
 ```markdown
+<!-- In session_log.md -->
 # Session Log
 
 ---

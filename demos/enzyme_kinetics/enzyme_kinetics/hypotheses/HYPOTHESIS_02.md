@@ -1,60 +1,99 @@
-# HYPOTHESIS_02.md
+# HYPOTHESIS_02 - Nonlinear least squares degrades more slowly than Lineweaver-Burk as noise rises
 
-## Title
+## Status
 
-Increasing measurement noise reveals Lineweaver-Burk bias relative to direct nonlinear Michaelis-Menten fitting.
+NOT SUPPORTED
 
 ## Background
 
-Iteration 01 established that direct nonlinear least-squares fitting can recover planted Michaelis-Menten parameters from low-noise synthetic data. The next question is whether this baseline remains more accurate than the classic Lineweaver-Burk double-reciprocal linearization as measurement noise increases.
+Iteration 01 showed direct nonlinear fitting recovers planted parameters at 3% noise. The
+Lineweaver-Burk double-reciprocal plot is the classical hand-calculation method and is still
+taught. Because it fits 1/v against 1/[S], measurement noise on small velocities is amplified,
+so the two methods should diverge as noise grows. That divergence is worth measuring rather than
+asserting.
 
-Lineweaver-Burk fitting transforms the Michaelis-Menten equation into:
+## Hypothesis Statement
 
-`1/v = (Km/Vmax)(1/[S]) + 1/Vmax`
+**Prediction**: As synthetic measurement noise increases, direct nonlinear least-squares fitting
+will recover planted Vmax and Km more accurately than Lineweaver-Burk fitting. Lineweaver-Burk
+will break the 10% relative-error threshold at a lower noise level than nonlinear fitting,
+especially for Km.
 
-This makes the problem linear, but the reciprocal transform amplifies error in low-substrate and low-velocity measurements. Therefore, noise that is modest on the original velocity scale can become disproportionately influential on the reciprocal scale.
+**Rationale**: The reciprocal transform overweights low-substrate, low-velocity points, which
+carry the largest relative error. Nonlinear fitting on the original scale weights each
+observation by its own magnitude.
 
-## Hypothesis
+**Alternative explanations**: A single unlucky replicate could produce the difference, so the
+comparison uses 50 replicates per noise level and reports medians rather than one fit.
 
-As synthetic measurement noise increases, direct nonlinear least-squares fitting of the original velocity-versus-substrate data will recover planted Vmax and Km more accurately than Lineweaver-Burk fitting. Lineweaver-Burk recovery should break the 10% relative-error credibility threshold earlier than nonlinear fitting, especially for Km.
+**Success criteria**: A method is credible at a noise level if median relative error <= 10% for
+both Vmax and Km across replicates. Lineweaver-Burk has broken down at the first noise level
+where either median error exceeds 10% while the nonlinear fit stays within it, or where it
+produces invalid parameters in a substantial fraction of replicates.
+
+**Rejection criteria**: If Lineweaver-Burk matched or beat nonlinear fitting at every tested
+noise level, the prediction would be refuted and the reciprocal transform's reputation for noise
+sensitivity would not apply at this scale.
+
+## Experimental Design
+
+- **Phase**: synthetic
+- **Data**: Generated in-script from the same planted parameters as iteration 01.
+- **Controls**: The 0% noise level is the control; both methods must agree there.
+- **Key metrics**: Median, mean, and worst-case relative error for Vmax and Km, by method and
+  noise level; count of invalid Lineweaver-Burk fits.
+- **Randomness**: Base seed 2048, 50 replicates per noise level.
 
 ## Planted true parameters
 
 | Quantity | Value |
-|----------|-------|
+|---|---|
 | True Vmax | 100.0 rate units |
 | True Km | 5.0 concentration units |
 | Substrate range | 0.5 to 50.0 concentration units |
-| Number of substrate points | 12 |
+| Substrate points | 12 |
 | Noise levels | 0%, 3%, 10%, 20%, 40% |
 | Replicates per noise level | 50 |
 | Base random seed | 2048 |
 
-## Credibility criterion
+## Dependencies
 
-A method is considered credible at a given noise level if median relative error is less than or equal to 10% for both Vmax and Km across replicates.
+- Iteration 01, interpreted in `analysis/ANALYSIS_01.md`
 
-Lineweaver-Burk is considered to have broken down at the first tested noise level where either median Vmax error or median Km error exceeds 10% while the nonlinear fit remains within that threshold, or at the first tested noise level where Lineweaver-Burk produces invalid parameters in a substantial fraction of replicates.
+## Iterations
 
-## Experiment design
+| Iteration | What it tested | Outcome |
+|---|---|---|
+| 02 | Both methods across five noise levels | Prediction refuted: nonlinear failed the Km criterion at 10% noise while Lineweaver-Burk held |
 
-1. Generate synthetic Michaelis-Menten velocity data from Vmax = 100.0 and Km = 5.0.
-2. Sweep relative Gaussian noise levels: 0%, 3%, 10%, 20%, and 40% of clean velocity.
-3. Use 50 replicate datasets per noise level with a fixed base seed for reproducibility.
-4. Fit each dataset using direct nonlinear least squares on the original velocity scale.
-5. Fit each dataset using Lineweaver-Burk linear regression on 1/v versus 1/[S].
-6. Convert Lineweaver-Burk slope and intercept into Vmax and Km.
-7. Compare both methods against planted truth using absolute and relative recovery errors for Vmax and Km.
-8. Summarize median, mean, and worst-case relative errors by method and noise level.
-9. Save figures showing error versus noise level and representative fits.
-10. Write output to both console and results/logs using TeeLogger.
+## Results
 
-## Expected result
+See `analysis/ANALYSIS_02.md`.
 
-The nonlinear fit should remain accurate at low and moderate noise levels, while Lineweaver-Burk should show larger Km and/or Vmax errors as noise increases. Because the reciprocal transform overweights low-substrate noisy points, Lineweaver-Burk is expected to cross the 10% median-error threshold earlier than nonlinear least squares.
+## Outcome
 
-## Later iterations
+The prediction was refuted, and this is the most instructive iteration in the demo.
 
-- HYPOTHESIS_03 should generate data under an inhibition model and verify the expected apparent parameter shift.
-- A competitive inhibitor should increase apparent Km while leaving Vmax approximately unchanged.
-- A noncompetitive inhibitor should reduce apparent Vmax while leaving Km approximately unchanged.
+At 10% relative noise the *nonlinear* fit failed the criterion, with median Km error 12.666%,
+while Lineweaver-Burk stayed inside it at 8.856%. The predeclared breakdown rule -- the first
+level where Lineweaver-Burk fails while nonlinear holds -- was never triggered at any tested
+level. Lineweaver-Burk's expected reciprocal bias does not dominate under a *relative* noise
+model, because relative noise keeps the low-velocity points that the reciprocal transform
+overweights from becoming disproportionately noisy.
+
+Lineweaver-Burk does become clearly unstable at 40% noise, producing invalid parameters in 10 of
+50 replicates against nonlinear's 0. So the broader concern about its stability survives; the
+specific ordering claim does not.
+
+The criteria were committed before the run, which is the only reason this reads as a finding
+rather than as a mistake to be quietly corrected. Iteration 03 uses nonlinear fitting as the
+primary method on real data, with Lineweaver-Burk kept as a diagnostic, and iteration 02 is why
+that choice is defensible rather than conventional.
+
+## Notes
+
+Reporting medians matters here: a mean over replicates that include a near-singular reciprocal
+fit is dominated by that one fit and would overstate the effect.
+
+The noise model is the load-bearing assumption. Under *absolute* rather than relative noise the
+result would plausibly reverse, and this iteration does not test that.

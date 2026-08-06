@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -16,40 +17,12 @@ import pytest
 REPOSITORY_ROOT = Path(__file__).parents[1]
 DEMOS = REPOSITORY_ROOT / "demos"
 
-# Modules the standard library supplies, plus the in-project package every generated script
-# imports its logging helpers from.
-STANDARD_LIBRARY = {
-    "abc",
-    "argparse",
-    "collections",
-    "copy",
-    "csv",
-    "dataclasses",
-    "datetime",
-    "functools",
-    "glob",
-    "hashlib",
-    "io",
-    "itertools",
-    "json",
-    "logging",
-    "math",
-    "os",
-    "pathlib",
-    "pickle",
-    "random",
-    "re",
+# The standard library, taken from the interpreter rather than hand-listed. A hand-list silently
+# reports `platform` or `socket` as a missing dependency the first time a demo imports one, which
+# sends the reader looking for a package that does not exist.
+STANDARD_LIBRARY = set(sys.stdlib_module_names) | {
+    # `scripts` is the in-project package every generated iteration imports its helpers from.
     "scripts",
-    "shutil",
-    "statistics",
-    "string",
-    "subprocess",
-    "sys",
-    "textwrap",
-    "time",
-    "typing",
-    "urllib",
-    "warnings",
 }
 
 # Import name to the distribution that provides it, where they differ.

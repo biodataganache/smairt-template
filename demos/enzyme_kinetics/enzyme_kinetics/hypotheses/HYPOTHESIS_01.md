@@ -1,53 +1,74 @@
-# HYPOTHESIS_01.md
+# HYPOTHESIS_01 - Low-noise synthetic data are sufficient to validate direct nonlinear parameter recovery
 
-## Title
+## Status
 
-Low-noise synthetic Michaelis-Menten data are sufficient to validate direct nonlinear parameter recovery.
+SUPPORTED
 
 ## Background
 
-The initial project question asks whether enzyme kinetic parameters can be recovered from measured reaction velocities at several substrate concentrations. Because synthetic data can be generated from known parameters, the first experiment should establish a simple positive control before adding higher noise, alternate fitting methods, or real assay complications.
+The project question asks whether enzyme kinetic parameters can be recovered from measured
+reaction velocities at several substrate concentrations. Synthetic data can be generated from
+known parameters, so the first iteration establishes a positive control before adding higher
+noise, alternate fitting methods, or real assay complications. If recovery fails here, nothing
+measured on real data could be trusted.
 
-## Hypothesis
+## Hypothesis Statement
 
-If velocity-versus-substrate data are generated from the Michaelis-Menten equation with known parameters and low relative measurement noise, then a direct nonlinear least-squares fit of the Michaelis-Menten equation will recover both planted parameters within 10% relative error.
+**Prediction**: If velocity-versus-substrate data are generated from the Michaelis-Menten
+equation with known parameters and low relative measurement noise, a direct nonlinear
+least-squares fit will recover both planted parameters within 10% relative error.
+
+**Rationale**: The substrate range spans below, near, and above Km, so the saturation curve is
+identifiable from the observations. At 3% noise the signal dominates.
+
+**Alternative explanations**: A fit could appear accurate because the initial guess was already
+close to truth rather than because the data constrain the parameters. The guess is deliberately
+offset from truth (90.0, 4.0 against 100.0, 5.0) so convergence is doing the work.
+
+**Success criteria**:
+
+1. Relative Vmax recovery error <= 10%.
+2. Relative Km recovery error <= 10%.
+3. The fitted curve follows the noisy observations and saturates near the planted Vmax.
+4. Fitted parameters are physically meaningful: Vmax > 0 and Km > 0.
+
+**Rejection criteria**: Either relative error above 10%, a non-converging fit, or a negative
+fitted parameter would refute the claim that this method is a usable baseline.
+
+## Experimental Design
+
+- **Phase**: synthetic
+- **Data**: Generated in-script from planted parameters. No external input.
+- **Controls**: The clean noiseless curve is plotted against the fit as the reference.
+- **Key metrics**: Fitted Vmax and Km, absolute and relative error, residual sum of squares, R^2.
+- **Randomness**: Seed 1024, fixed in the script's CONFIG and recorded by `write_provenance`.
 
 ## Planted true parameters
 
 | Quantity | Value |
-|----------|-------|
+|---|---|
 | True Vmax | 100.0 rate units |
 | True Km | 5.0 concentration units |
 | Substrate range | 0.5 to 50.0 concentration units |
-| Number of substrate points | 12 |
+| Substrate points | 12 |
 | Relative measurement noise | 3% of clean velocity |
 | Random seed | 1024 |
 
-## Credibility criterion
+## Dependencies
 
-The nonlinear least-squares method will be considered credible for this first low-noise synthetic positive control if:
+- `background/01_initial_question.md`
 
-1. Relative Vmax recovery error is less than or equal to 10%.
-2. Relative Km recovery error is less than or equal to 10%.
-3. The plotted fitted curve visually follows the noisy observations and saturates near the planted Vmax.
-4. The fitted parameters are physically meaningful: Vmax > 0 and Km > 0.
+## Iterations
 
-## Experiment design
+| Iteration | What it tested | Outcome |
+|---|---|---|
+| 01 | Nonlinear recovery at 3% noise | Both parameters recovered within 10% |
 
-1. Generate substrate concentrations spanning below and above Km, from 0.5 to 50.0.
-2. Compute clean Michaelis-Menten velocities using Vmax = 100.0 and Km = 5.0.
-3. Add Gaussian noise with standard deviation equal to 3% of each clean velocity.
-4. Fit the noisy data using scipy.optimize.curve_fit with the Michaelis-Menten equation directly, not a reciprocal transform.
-5. Report fitted Vmax, fitted Km, absolute errors, relative errors, residual sum of squares, and R^2.
-6. Save a figure overlaying the noisy data, clean truth curve, and nonlinear fitted curve.
-7. Write output to both console and results/logs using TeeLogger.
+## Results
 
-## Expected result
+See `analysis/ANALYSIS_01.md` and the log recorded in `analysis/RUN_HISTORY.md`.
 
-The nonlinear fit should recover Vmax and Km within 10% relative error. Because the data are low-noise and cover substrate concentrations below, near, and above Km, the saturation curve should be identifiable from the generated observations.
+## Notes
 
-## Later iterations
-
-- HYPOTHESIS_02 should raise noise across multiple levels, such as 0%, 3%, 10%, and 20%, to map when nonlinear parameter recovery starts to degrade.
-- HYPOTHESIS_03 should add a Lineweaver-Burk double-reciprocal fit and compare recovery errors against nonlinear least squares, with the expectation that reciprocal linearization becomes biased as noise increases.
-- Optional later hypotheses can add inhibition models or small real datasets once the synthetic workflow is validated.
+The initial guess is offset from truth on purpose, so this tests convergence rather than
+restating the answer.
