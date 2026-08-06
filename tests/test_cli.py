@@ -2126,9 +2126,21 @@ def test_interactive_wizard_cancellation_at_review_writes_no_project(tmp_path: P
 def test_interactive_wizard_reports_generation_failure_without_exposing_a_project(
     tmp_path: Path,
 ) -> None:
-    destination = tmp_path / ("a" * 248)
+    """A generation failure must be reported in words, leaving nothing behind.
 
-    result = run_interactive_new(wizard_answers(destination))
+    The failure is provoked with an unwritable parent rather than an over-long folder name.
+    Both reach the same OSError path in the generator, but a 248-character answer is a line
+    long enough to hit the pty's canonical-mode input limit on Linux, so the test used to
+    fail there for a reason that had nothing to do with the behaviour being asserted.
+    """
+    parent = tmp_path / "unwritable"
+    parent.mkdir()
+    destination = parent / "blocked_project"
+    parent.chmod(0o500)
+    try:
+        result = run_interactive_new(wizard_answers(destination))
+    finally:
+        parent.chmod(0o700)
 
     assert result.returncode == 1
     assert "Could not create the project:" in result.stdout
@@ -2181,6 +2193,15 @@ def run_interactive_new(
         env={**os.environ, "TERM": "dumb", "CI": "1"},
     )
     os.close(slave)
+    # A pty in canonical mode buffers one line at a time, and Linux caps that at MAX_CANON
+    # (typically 255 bytes). A longer answer is silently truncated, so the wizard waits forever
+    # for a newline that never arrives — which reads as a hang in the product rather than a
+    # limit of the harness.
+    longest = max((len(line) for line in input_text.splitlines()), default=0)
+    assert longest < 200, (
+        f"a {longest}-byte answer risks the pty's canonical input limit; "
+        "assert this behaviour without a pathological line"
+    )
     output = bytearray()
     sent = False
     idle = 0.0
