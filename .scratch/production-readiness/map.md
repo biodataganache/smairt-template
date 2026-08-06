@@ -37,6 +37,8 @@ This branch is ready to replace `main` as SMAIRT's publication-facing framework 
 
 - [Complete the public repository identity](issues/15-complete-public-repository-identity.md) — **partially blocked.** `CITATION.cff` added, retired "Research Template" identity corrected in the shipped scaffold, broken demo links and seven false `cp` commands fixed. The GitHub description and topics need an account with admin on the PNNL repository.
 
+- Platform matrix re-verified green twice consecutively after three layers of pty-harness fixes: a 60s ceiling, waiting for the screen to settle before answering, and bounding answer length below the Linux canonical-input limit. Each failure looked like a product hang and was the harness.
+
 ## Not yet specified
 
 - Whether demo verification belongs in every CI matrix cell, one representative cell, or a separate scheduled job. This becomes decidable after the demo smoke interface and runtime are known.
