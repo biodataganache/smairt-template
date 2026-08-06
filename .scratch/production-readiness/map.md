@@ -23,6 +23,7 @@ This branch is ready to replace `main` as SMAIRT's publication-facing framework 
 <!-- Closed ticket decisions are appended here as one-line context pointers. -->
 
 - [Correct false statements in shipped guidance](issues/02-correct-false-shipped-guidance.md) — fixed each at the level the falsehood lived: `smairt open` now reports state through the dashboard's own `next_workflow_action()`, guided creation refuses `--paper`/`--hpc` instead of discarding them, and `CONTEXT_INDEX.md` no longer promises an iteration `new_track.py` never creates.
+- [Prove the supported platform matrix before the pull request](issues/01-prove-the-supported-platform-matrix.md) — all six cells green on real runners after fixing what only a clean checkout could see: `scripts/utilities` shipped empty, so Git dropped it from every clone and from the golden fixtures meant to catch exactly that drift. Scaffold bumped to `0.5.0`; CI now reachable from `verify/**` and `workflow_dispatch`.
 
 ## Not yet specified
 
