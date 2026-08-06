@@ -31,6 +31,8 @@ This branch is ready to replace `main` as SMAIRT's publication-facing framework 
 
 - [Remove fork and superseded planning residue](issues/04-remove-fork-and-planning-residue.md) — 17 fork files returned to the fork's keeping after re-verifying they were byte-identical there, plus 6 superseded planning records deleted and the 3 experimental PDFs dropped. ADRs resume at 0004; survivors keep their numbers because they are cited.
 
+- [Compress and update the tutorials under docs](issues/07-compress-and-update-the-tutorials.md) — four root tutorials became `docs/workflow.md`, `capabilities.md`, `upgrading.md`, and `development.md`; the README dropped from 264 to 136 lines. Reader-facing docs now teach the helper-driven loop instead of telling researchers to hand-create numbered scripts.
+
 ## Not yet specified
 
 - Whether demo verification belongs in every CI matrix cell, one representative cell, or a separate scheduled job. This becomes decidable after the demo smoke interface and runtime are known.
