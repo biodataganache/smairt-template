@@ -1,0 +1,51 @@
+=== Run provenance ===
+Started: 2026-08-05T19:32:50.838462-07:00
+Python executable: /tmp/mig/.venv/bin/python
+Python version: 3.13.13
+Dependencies: PyYAML==6.0.3, contourpy==1.3.3, cycler==0.12.1, fonttools==4.63.0, kiwisolver==1.5.0, matplotlib==3.11.1, numpy==2.5.1, packaging==26.3, pandas==3.0.5, pillow==12.3.0, pyparsing==3.3.2, python-dateutil==2.9.0.post0, scipy==1.18.0, six==1.17.0
+Git commit: not available (not a Git repository or Git is unavailable)
+Arguments: ["experiments/01_synthetic/script_01_synthetic_nonlinear_fit.py"]
+Config: {"initial_guess": [90.0, 4.0], "max_relative_error_for_credibility": 0.1, "n_substrate_points": 12, "relative_noise": 0.03, "seed": 1024, "substrate_max": 50.0, "substrate_min": 0.5, "true_km": 5.0, "true_vmax": 100.0}
+Host: sha256:c9e6392e9953 (macOS-26.6-arm64-arm-64bit-Mach-O)
+Device: arm64; visible accelerators={}
+Inputs:
+- none declared or found
+=== End provenance ===
+Hypothesis: HYPOTHESIS_01
+Prediction: nonlinear least squares recovers both planted parameters within 10% at 3% noise.
+
+=== GENERATED DATA ===
+Samples: 12
+index	[S]	clean_v	noise_sd	observed_v
+01	0.500000	9.090909	0.272727	8.967179
+02	0.759956	13.193774	0.395813	13.138670
+03	1.155065	18.766087	0.562983	20.127012
+04	1.755596	25.987284	0.779619	26.052159
+05	2.668350	34.796922	1.043908	36.348471
+06	4.055654	44.785877	1.343576	45.403573
+07	6.164234	55.214123	1.656424	54.860952
+08	9.369087	65.203078	1.956092	63.920841
+09	14.240179	74.012716	2.220381	73.206094
+10	21.643806	81.233913	2.437017	82.331792
+11	32.896661	86.806226	2.604187	82.986078
+12	50.000000	90.909091	2.727273	89.894077
+
+=== NONLINEAR LEAST-SQUARES RESULTS ===
+Fitted Vmax: 97.373584  (true 100)
+Fitted Km: 4.678811  (true 5)
+Vmax relative error: 2.626%
+Km relative error: 6.424%
+Residual sum of squares: 14.675522
+R^2 on noisy observations: 0.998404
+Standard errors: [1.03225356 0.16181498]
+
+=== CRITERIA ===
+1. Vmax error <= 10%: True
+2. Km error <= 10%: True
+3. Parameters positive: True
+Criteria met: True
+
+Figure: results/figures/script_01_synthetic_nonlinear_fit_fit_curve.png
+Log: results/logs/script_01_synthetic_nonlinear_fit_20260805_193250_838004.log
+
+Run status: SUCCEEDED

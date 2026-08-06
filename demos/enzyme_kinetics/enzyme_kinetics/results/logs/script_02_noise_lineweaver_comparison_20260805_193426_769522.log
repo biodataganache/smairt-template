@@ -1,0 +1,45 @@
+=== Run provenance ===
+Started: 2026-08-05T19:34:26.770017-07:00
+Python executable: /tmp/mig/.venv/bin/python
+Python version: 3.13.13
+Dependencies: PyYAML==6.0.3, contourpy==1.3.3, cycler==0.12.1, fonttools==4.63.0, kiwisolver==1.5.0, matplotlib==3.11.1, numpy==2.5.1, packaging==26.3, pandas==3.0.5, pillow==12.3.0, pyparsing==3.3.2, python-dateutil==2.9.0.post0, scipy==1.18.0, six==1.17.0
+Git commit: not available (not a Git repository or Git is unavailable)
+Arguments: ["experiments/01_synthetic/script_02_noise_lineweaver_comparison.py"]
+Config: {"base_seed": 2048, "initial_guess": [90.0, 4.0], "invalid_fraction_for_breakdown": 0.1, "max_relative_error_for_credibility": 0.1, "n_substrate_points": 12, "noise_levels": [0.0, 0.03, 0.1, 0.2, 0.4], "replicates_per_noise": 50, "substrate_max": 50.0, "substrate_min": 0.5, "true_km": 5.0, "true_vmax": 100.0}
+Host: sha256:c9e6392e9953 (macOS-26.6-arm64-arm-64bit-Mach-O)
+Device: arm64; visible accelerators={}
+Inputs:
+- none declared or found
+=== End provenance ===
+Hypothesis: HYPOTHESIS_02
+Prediction: Lineweaver-Burk breaks the 10% median-error criterion at a lower noise level than nonlinear least squares.
+Breakdown rule, predeclared: the first level where Lineweaver-Burk fails while nonlinear remains credible.
+
+=== SUMMARY BY METHOD AND NOISE LEVEL ===
+0% noise, nonlinear: 50/50 valid, median Vmax err 0.000%, median Km err 0.000%, median R^2 1.00000, credible True
+0% noise, lineweaver_burk: 50/50 valid, median Vmax err 0.000%, median Km err 0.000%, median R^2 1.00000, credible True
+3% noise, nonlinear: 50/50 valid, median Vmax err 1.635%, median Km err 3.858%, median R^2 0.99740, credible True
+3% noise, lineweaver_burk: 50/50 valid, median Vmax err 2.357%, median Km err 3.744%, median R^2 0.99578, credible True
+10% noise, nonlinear: 50/50 valid, median Vmax err 5.057%, median Km err 10.654%, median R^2 0.97604, credible False
+10% noise, lineweaver_burk: 50/50 valid, median Vmax err 6.531%, median Km err 12.849%, median R^2 0.95921, credible False
+20% noise, nonlinear: 50/50 valid, median Vmax err 9.584%, median Km err 21.217%, median R^2 0.90583, credible False
+20% noise, lineweaver_burk: 50/50 valid, median Vmax err 22.518%, median Km err 26.245%, median R^2 0.77844, credible False
+40% noise, nonlinear: 50/50 valid, median Vmax err 23.360%, median Km err 47.135%, median R^2 0.68605, credible False
+40% noise, lineweaver_burk: 43/50 valid, median Vmax err 35.969%, median Km err 49.971%, median R^2 0.36982, credible False
+
+=== LINEWEAVER-BURK BREAKDOWN CHECK ===
+Breakdown noise level: None among tested levels
+Reason: no tested noise level met the predeclared breakdown definition
+
+=== VERDICT AGAINST THE PREDECLARED PREDICTION ===
+HYPOTHESIS_02 is NOT SUPPORTED. The predicted ordering did not appear.
+Nonlinear fitting failed first, at 10% noise, on Km.
+Lineweaver-Burk does become unstable at the highest noise level, so the concern about the reciprocal transform survives; the ordering claim does not.
+
+=== OUTPUT FILES ===
+Detailed CSV: results/script_02_noise_lineweaver_comparison_detailed_results.csv
+Summary CSV: results/script_02_noise_lineweaver_comparison_summary.csv
+Figure: results/figures/script_02_noise_lineweaver_comparison_median_errors.png
+Log: results/logs/script_02_noise_lineweaver_comparison_20260805_193426_769522.log
+
+Run status: SUCCEEDED

@@ -1,0 +1,51 @@
+=== Run provenance ===
+Started: 2026-08-05T19:35:28.690111-07:00
+Python executable: /tmp/mig/.venv/bin/python
+Python version: 3.13.13
+Dependencies: PyYAML==6.0.3, contourpy==1.3.3, cycler==0.12.1, fonttools==4.63.0, kiwisolver==1.5.0, matplotlib==3.11.1, numpy==2.5.1, packaging==26.3, pandas==3.0.5, pillow==12.3.0, pyparsing==3.3.2, python-dateutil==2.9.0.post0, scipy==1.18.0, six==1.17.0
+Git commit: not available (not a Git repository or Git is unavailable)
+Arguments: ["experiments/02_downloaded/script_03_puromycin_real_fit.py"]
+Config: {"confidence_level": 0.95, "data_path": "data/downloaded/puromycin_rates.csv", "expected_states": ["treated", "untreated"], "initial_guess": [200.0, 0.1], "minimum_observations_per_state": 5, "minimum_unique_concentrations": 4}
+Host: sha256:c9e6392e9953 (macOS-26.6-arm64-arm-64bit-Mach-O)
+Device: arm64; visible accelerators={}
+Inputs:
+- data/downloaded/puromycin_rates.csv | bytes=934 | sha256=54277a6f316cbb71d82e77679ef29af018d6a1296144d98185c7b4d33e6aeba0
+=== End provenance ===
+Hypothesis: HYPOTHESIS_03
+Prediction: nonlinear fitting yields positive, finite, plausible parameters for both conditions, with an interpretable treated/untreated difference.
+
+=== DATA VALIDATION ===
+Source: data/downloaded/puromycin_rates.csv (provenance in data/downloaded/README.md)
+States found: ['treated', 'untreated']
+treated: 12 observations, 6 unique concentrations, rate range 47.0 to 207.0
+untreated: 11 observations, 6 unique concentrations, rate range 51.0 to 160.0
+
+=== NONLINEAR FITS (PRIMARY) ===
+treated:
+  Vmax 212.683763  SE 6.947157  95% CI [199.067336, 226.300190]
+  Km   0.064121  SE 0.008281  95% CI [0.047891, 0.080352]
+  RSS 1195.448814  R^2 0.961261
+untreated:
+  Vmax 160.280092  SE 6.480249  95% CI [147.578804, 172.981380]
+  Km   0.047708  SE 0.007782  95% CI [0.032456, 0.062961]
+  RSS 859.604294  R^2 0.935572
+
+=== TREATED VERSUS UNTREATED ===
+Vmax ratio: 1.326951
+Km ratio: 1.344030
+Treated Vmax higher: True
+
+=== LINEWEAVER-BURK (DIAGNOSTIC ONLY) ===
+treated: Vmax 195.802709 (7.937% from nonlinear), Km 0.048407 (24.508% from nonlinear)
+untreated: Vmax 143.428116 (10.514% from nonlinear), Km 0.030837 (35.363% from nonlinear)
+
+=== CRITERIA ===
+Fits converged for both conditions: True
+Parameters positive: True
+Standard errors and intervals finite: True
+Criteria met: True
+
+Figures: results/figures/script_03_puromycin_real_fit_fits.png, results/figures/script_03_puromycin_real_fit_residuals.png
+Log: results/logs/script_03_puromycin_real_fit_20260805_193528_689772.log
+
+Run status: SUCCEEDED

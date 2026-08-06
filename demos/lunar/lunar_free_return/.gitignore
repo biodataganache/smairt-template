@@ -6,3 +6,10 @@ __pycache__/
 data/**
 !data/**/
 !data/**/README.md
+
+# This project is a committed reference demo, not a working researcher project. The rules above are
+# right for a researcher -- data and logs are usually large, regenerable, or private -- but here the
+# small cited fixtures and the run evidence are the point: without them a reader clones a demo that
+# cannot run and cites logs that are absent. Re-included deliberately.
+!data/**/*.csv
+!results/logs/*.log

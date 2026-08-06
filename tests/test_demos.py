@@ -466,3 +466,35 @@ def test_no_demo_guide_documents_native_windows_activation() -> None:
         "demo guidance documents native Windows activation while the CLI is WSL-only:\n"
         + "\n".join(offences)
     )
+
+
+def test_no_demo_file_is_hidden_from_a_clone_by_gitignore() -> None:
+    """A demo must arrive complete in a clone, not only in the tree that produced it.
+
+    A generated project ships a `.gitignore` that excludes `data/**` and `results/logs/`, which is
+    right for a researcher: those are usually large, regenerable, or private. Committed as reference
+    demos, the same rules deleted the evidence. `enzyme_kinetics` reached a clean clone without
+    `puromycin_rates.csv`, so its third iteration died with `FileNotFoundError`, and without the
+    three run logs its `RUN_HISTORY.md` rows pointed at nothing.
+
+    This is the same class of defect as `scripts/utilities/` shipping empty: correct on the machine
+    that wrote it, broken everywhere else, and invisible to every test that reads the working tree.
+    """
+    listed = subprocess.run(
+        ["git", "ls-files", "--others", "--ignored", "--exclude-standard", "demos/"],
+        cwd=REPOSITORY_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    # Build artefacts and virtualenvs are meant to be ignored; evidence is not.
+    evidence = [
+        path
+        for path in listed.stdout.split("\n")
+        if path
+        and not any(part in path for part in ("__pycache__", ".venv", ".DS_Store", ".smairt"))
+    ]
+    assert not evidence, (
+        "these demo files exist locally but would be absent from a clone:\n"
+        + "\n".join(f"  {path}" for path in evidence)
+    )
