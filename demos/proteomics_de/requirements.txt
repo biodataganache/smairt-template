@@ -1,9 +1,10 @@
 # Proteomics differential-abundance demo dependencies for the SMAIRT
 # project; numpy/pandas/scipy/statsmodels do the statistics and matplotlib the
 # volcano plot. No data download needed: you generate a synthetic protein matrix
-# with a known, planted answer first.
+# with a known, planted answer first. Seaborn draws the parameter-sweep panels.
 numpy
 pandas
 scipy
 statsmodels
 matplotlib
+seaborn

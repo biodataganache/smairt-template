@@ -69,7 +69,18 @@ def load_tagged_fasta(path):
 def embed_sequences(records):
     """Load frozen ESM-2 and return (N, D) mean-pooled final-layer embeddings.
     Excludes BOS/EOS and padding from the mean."""
-    import esm
+    # fair-esm is deliberately optional: it is only needed for this real-data rung, and it
+    # downloads pretrained weights on first use. Imported here rather than at module scope so
+    # the synthetic rungs never require it, and named in the failure so the fix is obvious.
+    try:
+        import esm
+    except ImportError as error:  # pragma: no cover - depends on the local environment
+        raise SystemExit(
+            "This rung needs fair-esm, which is optional because it downloads a pretrained\n"
+            "ESM-2 model (~30MB) on first use.\n\n"
+            "  pip install fair-esm\n\n"
+            "The synthetic rungs (scripts 01-08) do not need it."
+        ) from error
     print(f"[ESM]    loading {ESM_MODEL} (first run downloads weights)...")
     model, alphabet = esm.pretrained.__dict__[ESM_MODEL]()
     model.eval()

@@ -419,7 +419,12 @@ if __name__ == "__main__":
     main()
 
 
-"""
+# The pasted run output that used to live here has been removed. Results belong in
+# results/logs/, which the logging helpers write automatically, and the interpretation
+# belongs in analysis/. A transcript copied into the script it describes goes stale the
+# first time the script changes, and its Windows paths made this file emit a syntax
+# warning on every parse.
+r"""
 === RUN OUTPUT ===
 ============================================================
 Script: script_01_trajectory_sweep

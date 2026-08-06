@@ -33,6 +33,8 @@ This branch is ready to replace `main` as SMAIRT's publication-facing framework 
 
 - [Compress and update the tutorials under docs](issues/07-compress-and-update-the-tutorials.md) — four root tutorials became `docs/workflow.md`, `capabilities.md`, `upgrading.md`, and `development.md`; the README dropped from 264 to 136 lines. Reader-facing docs now teach the helper-driven loop instead of telling researchers to hand-create numbered scripts.
 
+- [Repair demo dependency contracts](issues/08-repair-demo-dependency-contracts.md) — `scikit-learn` and `seaborn` declared where they were imported and missing; `fair-esm` stays optional but now names itself when absent. `protein_properties` calculators deferred to the rewrite, since that is a migration problem rather than a declaration one.
+
 ## Not yet specified
 
 - Whether demo verification belongs in every CI matrix cell, one representative cell, or a separate scheduled job. This becomes decidable after the demo smoke interface and runtime are known.
