@@ -48,6 +48,20 @@ CASES = {
 def main() -> None:
     command = Path(sys.executable).with_name("smairt")
     GOLDEN_ROOT.mkdir(parents=True, exist_ok=True)
+    # Prove the installed command can generate a project before deleting the fixtures it is
+    # about to replace. A blueprint the package cannot parse made every generation fail, and
+    # because each case removed its golden first, the run left no fixtures behind at all.
+    verified = subprocess.run(
+        [str(command), "--version"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if verified.returncode:
+        raise SystemExit(
+            "Refusing to replace the goldens: the installed command is not usable.\n"
+            + (verified.stderr or verified.stdout)
+        )
     for case, options in CASES.items():
         destination = GOLDEN_ROOT / case
         shutil.rmtree(destination, ignore_errors=True)

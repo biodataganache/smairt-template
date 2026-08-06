@@ -25,6 +25,8 @@ This branch is ready to replace `main` as SMAIRT's publication-facing framework 
 - [Correct false statements in shipped guidance](issues/02-correct-false-shipped-guidance.md) — fixed each at the level the falsehood lived: `smairt open` now reports state through the dashboard's own `next_workflow_action()`, guided creation refuses `--paper`/`--hpc` instead of discarding them, and `CONTEXT_INDEX.md` no longer promises an iteration `new_track.py` never creates.
 - [Prove the supported platform matrix before the pull request](issues/01-prove-the-supported-platform-matrix.md) — all six cells green on real runners after fixing what only a clean checkout could see: `scripts/utilities` shipped empty, so Git dropped it from every clone and from the golden fixtures meant to catch exactly that drift. Scaffold bumped to `0.5.0`; CI now reachable from `verify/**` and `workflow_dispatch`.
 
+- [Decide whether Run History is a declared scaffold asset](issues/03-decide-run-history-ownership.md) — declared as `researcher-work` and shipped with every project, because ADR 0001 makes the blueprint authoritative and an evidence record should not be invisible to check, inspect, and upgrade. Found and fixed two defects on the way: the golden updater deleted fixtures before proving the tool worked, and nothing asserted the blueprint was loadable.
+
 ## Not yet specified
 
 - Whether demo verification belongs in every CI matrix cell, one representative cell, or a separate scheduled job. This becomes decidable after the demo smoke interface and runtime are known.

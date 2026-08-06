@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from smairt.scaffold import diff_blueprints, load_blueprint
@@ -129,3 +130,47 @@ def test_every_declared_directory_arrives_with_something_in_it() -> None:
         "declared directories that ship with no content and cannot survive Git:\n"
         + "\n".join(empty)
     )
+
+
+def test_every_file_the_helpers_create_is_declared() -> None:
+    """The blueprint is the authoritative declaration of generated paths (ADR 0001).
+
+    `analysis/RUN_HISTORY.md` was created by `scripts/shared/iterations.py` on the first run
+    and declared nowhere, so the record the scaffold calls part of the evidence was invisible
+    to check, inspect, and upgrade. A file that appears in a project without the blueprint
+    knowing about it is a second, quieter definition of what a project contains.
+    """
+    blueprint = load_blueprint()
+    declared = {asset.path for asset in blueprint.assets}
+    helpers = Path(__file__).parents[1] / "src" / "smairt" / "assets" / "scaffold" / "scripts"
+    written = re.findall(
+        r'root / "(\w+)" / "([\w.]+\.md)"',
+        "\n".join(path.read_text() for path in sorted(helpers.rglob("*.py"))),
+    )
+    assert written, "expected to find helper-created project files to check"
+    undeclared = sorted(
+        f"{directory}/{name}"
+        for directory, name in written
+        if f"{directory}/{name}" not in declared
+    )
+    assert not undeclared, (
+        "helpers create project files the scaffold blueprint does not declare:\n"
+        + "\n".join(undeclared)
+    )
+
+
+def test_the_blueprint_parses_as_the_package_reads_it() -> None:
+    """A blueprint the package cannot load is worse than a wrong one.
+
+    An unquoted comma inside a `purpose` split one flow mapping into extra keys, so
+    `load_blueprint()` raised and every generation failed. Because the golden updater removed
+    each fixture before generating its replacement, one malformed line deleted all three
+    fixtures. This asserts the declaration is loadable at all, ahead of what it says.
+    """
+    blueprint = load_blueprint()
+
+    assert blueprint.assets
+    for asset in blueprint.assets:
+        assert asset.path
+        assert asset.purpose.endswith("."), f"{asset.path}: purpose is not a sentence"
+        assert asset.kind in {"file", "directory"}

@@ -20,6 +20,7 @@ assets:
   - {id: analysis-plan, path: analysis/ANALYSIS_PLAN.md, kind: file, purpose: Living analysis plan starter., ownership: editable-starter, condition: always, source: analysis/ANALYSIS_PLAN.md}
   - {id: rigor-addendum, path: analysis/RIGOR.md, kind: file, purpose: Researcher-owned standing rigor commitments enabled by Advanced settings., ownership: researcher-work, condition: rigor, source: analysis/RIGOR.md}
   - {id: iteration-log, path: analysis/ITERATION_LOG.md, kind: file, purpose: Living append-only index of every iteration and its outcome., ownership: researcher-work, condition: always, source: analysis/ITERATION_LOG.md}
+  - {id: run-history, path: analysis/RUN_HISTORY.md, kind: file, purpose: Living append-only record of every execution and its exact log., ownership: researcher-work, condition: always, source: analysis/RUN_HISTORY.md}
   - {id: analysis-template, path: analysis/ANALYSIS_TEMPLATE.md, kind: file, purpose: Reusable result interpretation starter., ownership: editable-starter, condition: always, source: analysis/ANALYSIS_TEMPLATE.md}
   - {id: breadcrumb-trail, path: analysis/BREADCRUMB_TRAIL.md, kind: file, purpose: Living index from decisions to evidence., ownership: researcher-work, condition: always, source: analysis/BREADCRUMB_TRAIL.md}
   - {id: repository-plan, path: analysis/REPOSITORY_PLAN.md, kind: file, purpose: Reusable repository organization plan., ownership: editable-starter, condition: always, source: analysis/REPOSITORY_PLAN.md}

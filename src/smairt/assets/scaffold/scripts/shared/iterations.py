@@ -251,6 +251,9 @@ def record_run_status(root: Path, number: int, status: str, log_path: Path) -> N
     append-only history also means a crash is recorded even when no interpretation will
     ever be written for it. The current-state row remains researcher-facing scientific
     prose rather than a mixture of execution and interpretation state.
+
+    The file ships with the project, so this only ever appends. It is recreated with its
+    header only if it was deleted, because losing the header should not also lose the runs.
     """
     history = root / "analysis" / "RUN_HISTORY.md"
     if not history.exists():
