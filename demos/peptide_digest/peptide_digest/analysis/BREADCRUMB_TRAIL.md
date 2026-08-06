@@ -2,6 +2,14 @@
 
 ## Project: Peptide Digestion
 
+> **Unfilled starter.** This project's science predates the current scaffold, so this file is the
+> shipped template rather than a record of the work. Its checklists describe what the current
+> workflow asks for; they are not claims about this project. The original runs' logs were not
+> retained — see `analysis/RUN_HISTORY.md` — so nothing here should be read as asserting a complete
+> execution record. The actual interpretations are in `analysis/ANALYSIS_NN.md` and
+> `analysis/FINAL_REPORT.md`.
+
+
 > **Imported project.** The reasoning below was not recorded contemporaneously; this project's science predates the current scaffold. The narrative between iterations lives in `analysis/ANALYSIS_NN.md` and `analysis/FINAL_REPORT.md` instead.
 
 
@@ -43,16 +51,8 @@ because it "did not work" is how a project repeats itself.
 
 ## Log
 
-### [DATE] - Project setup
-
-**What was done**: Created the project, recorded the research question, and set up the
-first hypothesis.
-
-**What was learned**: Nothing yet.
-
-**What it changed**: Nothing yet.
-
-**Next**: First iteration in the synthetic phase.
+*No entries. This project's reasoning was not recorded here; it predates the current scaffold.
+The shipped example entry was removed rather than left to read as an undated project event.*
 
 ---
 

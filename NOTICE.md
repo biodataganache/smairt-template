@@ -10,8 +10,10 @@ template, under the same MIT license.
 ## Redistributed data
 
 Every payload below is small, cited, and accompanied by a `README.md` in its own directory
-recording the source, query or accessions, retrieval date, transformation, and a SHA-256. Those
-per-directory records are authoritative; this table is the index.
+recording at least the source, the transformation applied, and a SHA-256. Most also record the query
+or accessions and a retrieval date; the Puromycin dataset has no retrieval date, because it was
+copied from an R installation rather than fetched from a service. Those per-directory records are
+authoritative; this table is the index.
 
 | Payload | Source | Terms | Provenance record |
 |---|---|---|---|

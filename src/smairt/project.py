@@ -220,9 +220,10 @@ def save_contract(root: Path, contract: ProjectContract) -> None:
         data.pop("conventions", None)
     if not any(contract.rigor.model_dump().values()):
         data.pop("rigor", None)
-    # Atomically, like every scaffold asset. This is the file whose loss makes a project
-    # unreadable: `load_contract()` is what identifies a directory as a SMAIRT project, so a
-    # truncated contract is worse than a truncated guidance file, not better.
+    # Atomically, like every scaffold asset. This was the one direct write left, and
+    # `docs/upgrading.md` already promised each file was replaced atomically -- on the file whose
+    # loss is worst, since `load_contract()` is what identifies a directory as a SMAIRT project at
+    # all. An adversarial review found the gap between the promise and this line.
     _replace_atomically(root / CONTRACT_PATH, yaml.safe_dump(data, sort_keys=False))
 
 

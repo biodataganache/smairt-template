@@ -7,9 +7,9 @@ is empty. The science and its interpretations are original; the per-execution re
 original runs was never captured and has not been invented.
 
 > **About the numbers in this guide.** The figures quoted below were produced by an earlier SMAIRT
-> release with unpinned scientific dependencies, and no CI job re-runs this science. They record
-> what the original runs reported; they are not a promise about what your machine will print. A
-> small numerical difference usually means a different `numpy`/`scipy` build, not a broken demo.
+> release, and no CI job re-runs this science. They record what the original runs reported. This demo
+> is pure standard library apart from one plot, so its results are deterministic and a difference
+> would indicate a real change in the digestion rules rather than a numerical library version.
 
 
 **Level:** beginner. **Runtime:** under a second per iteration. Pure standard library except for

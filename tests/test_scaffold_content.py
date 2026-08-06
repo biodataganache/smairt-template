@@ -248,7 +248,7 @@ def test_every_shipped_write_is_an_explicit_reviewed_operation() -> None:
         if path.exists():
             parser.error(f"refusing to overwrite existing file: {path}")
 
-    rigor = _rigor_settings(root)
+    rigor = rigor_settings(root)
     hypothesis = _hypothesis(
         _template(parser, root / "hypotheses" / "HYPOTHESIS_TEMPLATE.md"),
         hypothesis_id=hypothesis_id,

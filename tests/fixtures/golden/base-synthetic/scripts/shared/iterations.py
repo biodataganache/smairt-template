@@ -13,7 +13,8 @@ not attempts at the research question belong in `scripts/utilities/` and never t
 iteration number.
 
 Shared by the `new_track.py`, `new_iteration.py`, and `select_result.py` helpers so all
-of them agree on where things live and how they are numbered.
+of them agree on where things live, how they are numbered, and what the contract asks
+newly created research files to declare.
 """
 
 from __future__ import annotations
@@ -21,6 +22,12 @@ from __future__ import annotations
 import re
 from datetime import date
 from pathlib import Path
+
+try:
+    import yaml
+except ModuleNotFoundError:  # pragma: no cover - exercised by the no-PyYAML path
+    # `rigor_settings()` falls back to reading the contract as text. See its docstring.
+    yaml = None  # type: ignore[assignment]
 
 PHASES = {
     "synthetic": "01_synthetic",
@@ -281,3 +288,59 @@ def state_row_outcome(root: Path, number: int) -> str | None:
             cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
             return cells[-1] if cells else None
     return None
+
+
+def rigor_settings(root: Path) -> dict[str, bool]:
+    """Return the rigor declarations the researcher enabled in `smairt.yaml`.
+
+    Lives here rather than in each helper because `new_track.py` and `new_iteration.py` must agree
+    about what the contract says. Two copies of a parser are two answers to the same question, which
+    is the reason iteration numbering is centralized in this module too.
+
+    Read without PyYAML when PyYAML is absent. These helpers run under whatever `python3` the
+    researcher has, not the interpreter the installed tool ships with, and an earlier release
+    imported PyYAML at module scope and crashed on the first two commands of the documented loop.
+    Making the import optional then produced something worse: the settings were skipped silently, so
+    the same project and command emitted a hypothesis with an enabled declaration under one
+    interpreter and without it under another. The dependency is optional; the researcher's recorded
+    decision is not.
+
+    The block is shallow by construction -- `rigor:` followed by indented `key: bool` -- so the text
+    path covers it exactly. Both readers were compared on the real contract shape, including a
+    nested key immediately after the block.
+    """
+    try:
+        text = (root / "smairt.yaml").read_text()
+    except OSError:
+        return {}
+
+    if yaml is not None:
+        try:
+            contract = yaml.safe_load(text)
+        except yaml.YAMLError:
+            return {}
+        rigor = contract.get("rigor", {}) if isinstance(contract, dict) else {}
+        if not isinstance(rigor, dict):
+            return {}
+        return {key: value for key, value in rigor.items() if isinstance(value, bool)}
+
+    # This checkout has PyYAML, so mypy proves the fallback dead here. It is not dead in a
+    # generated project run with an interpreter that lacks it, which is the case it exists for.
+    settings: dict[str, bool] = {}  # type: ignore[unreachable]
+    inside = False
+    for line in text.splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if not line[:1].isspace():
+            # Tracking the top-level key matters because `capabilities:` follows `rigor:` in a
+            # generated contract and carries indented `state:` lines. Without this, a capability's
+            # nested values would be read as rigor declarations.
+            inside = line.split(":", 1)[0].strip() == "rigor"
+            continue
+        if not inside or ":" not in line:
+            continue
+        key, _, raw = line.partition(":")
+        value = raw.strip()
+        if value in ("true", "false"):
+            settings[key.strip()] = value == "true"
+    return settings

@@ -9,13 +9,13 @@ from __future__ import annotations
 
 import ast
 import re
+import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
 from smairt import __version__
-from smairt.project import load_contract, project_check
 
 REPOSITORY_ROOT = Path(__file__).parents[1]
 DEMOS = REPOSITORY_ROOT / "demos"
@@ -204,35 +204,40 @@ def test_the_demo_status_taxonomy_covers_every_demo() -> None:
 
 
 @pytest.mark.parametrize("name", sorted(CONFORMING_DEMOS))
-def test_a_conforming_demo_passes_the_real_project_check(name: str) -> None:
-    """The demos claim `smairt check` passes, so run it rather than approximating it.
+def test_a_conforming_demo_passes_smairt_check(name: str) -> None:
+    """The demos claim `smairt check` passes, so run the command rather than approximating it.
 
-    The earlier version of this test asserted that `smairt.yaml` *existed*. It passed while all
-    three demos were stranded on the previous scaffold version, because a scaffold bump made
-    `project_check()` report `scaffold-version-mismatch` on files nobody had touched. The
-    documentation said the check passed; the check did not pass; the test agreed with the
-    documentation instead of with the tool.
-
-    Asserting the thing that is claimed is the only version of this test worth having.
+    The earlier version asserted that `smairt.yaml` *existed*. It passed while all three demos were
+    stranded on the previous scaffold version: a version bump made the check report
+    `scaffold-version-mismatch` on files nobody had touched, so the documentation said the check
+    passed, the check did not pass, and the test agreed with the documentation instead of the tool.
     """
     project = completed_project(DEMOS / name)
     assert project is not None, f"{name} has no single completed project directory"
 
-    issues = project_check(project)
-    assert not issues, f"{name} fails smairt check:\n" + "\n".join(
-        f"- [{issue.code}] {issue.message}" for issue in issues
+    checked = subprocess.run(
+        [str(Path(sys.executable).with_name("smairt")), "check", str(project)],
+        check=False,
+        capture_output=True,
+        text=True,
     )
+    assert checked.returncode == 0, f"{name} fails smairt check:\n{checked.stdout}{checked.stderr}"
 
 
 @pytest.mark.parametrize("name", sorted(CONFORMING_DEMOS))
 def test_a_conforming_demo_records_the_installed_scaffold(name: str) -> None:
-    """A current demo must be on the installed scaffold, not merely carry some contract."""
+    """A current demo must be on the installed scaffold, not merely carry some contract.
+
+    Same failure as above, caught one step earlier. All three demos recorded `0.5.0` against an
+    installed `0.5.1`, which is what made `smairt check` refuse them. Asserting the version directly
+    names the cause, so a future bump that forgets the demos says so instead of only failing.
+    """
     project = completed_project(DEMOS / name)
     assert project is not None
-    contract = load_contract(project)
-    assert contract.scaffold_version == __version__, (
-        f"{name} records scaffold {contract.scaffold_version} against installed {__version__}; "
-        "run `smairt upgrade` on it and commit the result"
+    contract = (project / "smairt.yaml").read_text()
+    assert f"scaffold_version: {__version__}" in contract, (
+        f"{name} does not record installed scaffold {__version__}; "
+        f"run `smairt upgrade` on it and commit the result:\n{contract}"
     )
     for required in ("analysis/ITERATION_LOG.md", "analysis/RUN_HISTORY.md", "LICENSE"):
         assert (project / required).is_file(), f"{name} is missing {required}"

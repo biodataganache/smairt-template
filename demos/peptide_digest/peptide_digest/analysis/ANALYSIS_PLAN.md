@@ -1,5 +1,13 @@
 # Analysis Plan
 
+> **Unfilled starter.** This project's science predates the current scaffold, so this file is the
+> shipped template rather than a record of the work. Its checklists describe what the current
+> workflow asks for; they are not claims about this project. The original runs' logs were not
+> retained — see `analysis/RUN_HISTORY.md` — so nothing here should be read as asserting a complete
+> execution record. The actual interpretations are in `analysis/ANALYSIS_NN.md` and
+> `analysis/FINAL_REPORT.md`.
+
+
 ## Project: Peptide Digestion
 
 **Researcher**: Peptide Digestion

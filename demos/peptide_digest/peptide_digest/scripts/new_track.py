@@ -26,17 +26,9 @@ import re
 import sys
 from pathlib import Path
 
-try:
-    import yaml
-except ModuleNotFoundError:  # pragma: no cover - exercised by the no-PyYAML path
-    # These helpers run under whatever `python3` the researcher has, which is not the interpreter
-    # the installed tool ships with. `_rigor_settings()` falls back to reading the contract's
-    # shallow `rigor:` block as text, so a missing PyYAML changes nothing a researcher recorded.
-    yaml = None  # type: ignore[assignment]
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scripts.shared.iterations import PHASES, project_root, slugify  # noqa: E402
+from scripts.shared.iterations import PHASES, project_root, rigor_settings, slugify  # noqa: E402
 
 
 def main() -> None:
@@ -60,7 +52,7 @@ def main() -> None:
         if path.exists():
             parser.error(f"refusing to overwrite existing file: {path}")
 
-    rigor = _rigor_settings(root)
+    rigor = rigor_settings(root)
     hypothesis = _hypothesis(
         _template(parser, root / "hypotheses" / "HYPOTHESIS_TEMPLATE.md"),
         hypothesis_id=hypothesis_id,
@@ -137,53 +129,6 @@ def _hypothesis(
     )
     filled = filled.replace("- **Phase**: synthetic | downloaded | real", f"- **Phase**: {phase}")
     return filled.replace("HYPOTHESIS_XX", f"HYPOTHESIS_{number:02d}")
-
-
-def _rigor_settings(root: Path) -> dict[str, bool]:
-    """Return the rigor declarations the researcher enabled in `smairt.yaml`.
-
-    Read without PyYAML when PyYAML is absent. That matters more than it looks: these booleans are
-    the researcher's recorded decision about what every new research file must declare, so a helper
-    that cannot read them would quietly produce files missing a commitment the project asked for.
-    An optional dependency may degrade; a recorded decision may not.
-
-    The block this parses is deliberately shallow -- `rigor:` followed by indented `key: bool` --
-    so a few lines of text handling covers it exactly. Anything more nested is left to PyYAML, which
-    is what the installed tool always has.
-    """
-    try:
-        text = (root / "smairt.yaml").read_text()
-    except OSError:
-        return {}
-
-    if yaml is not None:
-        try:
-            contract = yaml.safe_load(text)
-        except yaml.YAMLError:
-            return {}
-        rigor = contract.get("rigor", {}) if isinstance(contract, dict) else {}
-        if not isinstance(rigor, dict):
-            return {}
-        return {key: value for key, value in rigor.items() if isinstance(value, bool)}
-
-    # This checkout has PyYAML, so mypy proves the fallback dead here. It is not dead in a
-    # generated project run with an interpreter that lacks it, which is the case it exists for.
-    settings: dict[str, bool] = {}  # type: ignore[unreachable]
-    inside = False
-    for line in text.splitlines():
-        if not line.strip() or line.lstrip().startswith("#"):
-            continue
-        if not line[:1].isspace():
-            # A new top-level key ends the block, so nothing outside `rigor:` is ever read.
-            inside = line.split(":", 1)[0].strip() == "rigor"
-            continue
-        if not inside or ":" not in line:
-            continue
-        key, _, raw = line.partition(":")
-        value = raw.strip()
-        if value in ("true", "false"):
-            settings[key.strip()] = value == "true"
-    return settings
 
 
 def _rigor_block(rigor: dict[str, bool]) -> str:
