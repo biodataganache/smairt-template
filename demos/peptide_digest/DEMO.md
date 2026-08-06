@@ -6,6 +6,12 @@ record existed, so `analysis/ITERATION_LOG.md` is an imported index and `analysi
 is empty. The science and its interpretations are original; the per-execution record for those
 original runs was never captured and has not been invented.
 
+> **About the numbers in this guide.** The figures quoted below were produced by an earlier SMAIRT
+> release with unpinned scientific dependencies, and no CI job re-runs this science. They record
+> what the original runs reported; they are not a promise about what your machine will print. A
+> small numerical difference usually means a different `numpy`/`scipy` build, not a broken demo.
+
+
 **Level:** beginner. **Runtime:** under a second per iteration. Pure standard library except for
 one plot. No network, no data download.
 
@@ -49,7 +55,7 @@ From this folder:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate          # Windows PowerShell: .venv\Scripts\Activate.ps1
+source .venv/bin/activate          # On Windows, use WSL: the SMAIRT CLI is not supported natively
 pip install -r requirements.txt
 cd peptide_digest
 python experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py

@@ -3,15 +3,15 @@ message: If you use SMAIRT in your research, please cite it.
 title: "SMAIRT: Scientific Method with AI Research Toolkit"
 abstract: >-
   SMAIRT creates and manages readable, file-based scientific research workspaces
-  that keep a traceable record. Every reported result links back to the hypothesis
-  it tested, the script that produced it, and the raw log it came from.
+  that keep a traceable record. A result produced through the workflow links back to
+  the hypothesis it tested, the script that produced it, and the raw log it came from.
 type: software
 authors:
   - name: PNNL Computational Biology
     website: https://github.com/PNNL-CompBio
 repository-code: https://github.com/PNNL-CompBio/smairt-template
 license: MIT
-version: 0.5.1
+version: 0.5.2
 keywords:
   - reproducible research
   - scientific workflow

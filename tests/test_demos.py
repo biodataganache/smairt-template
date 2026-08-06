@@ -14,6 +14,9 @@ from pathlib import Path
 
 import pytest
 
+from smairt import __version__
+from smairt.project import load_contract, project_check
+
 REPOSITORY_ROOT = Path(__file__).parents[1]
 DEMOS = REPOSITORY_ROOT / "demos"
 
@@ -201,16 +204,36 @@ def test_the_demo_status_taxonomy_covers_every_demo() -> None:
 
 
 @pytest.mark.parametrize("name", sorted(CONFORMING_DEMOS))
-def test_a_conforming_demo_is_a_project_the_tool_recognises(name: str) -> None:
-    """A demo claiming to be current must carry the contract that makes that true.
+def test_a_conforming_demo_passes_the_real_project_check(name: str) -> None:
+    """The demos claim `smairt check` passes, so run it rather than approximating it.
 
-    None of the legacy demos had `smairt.yaml`, so `smairt check` refused all eight. Passing that
-    check is the minimum for a demo whose guide teaches the current workflow.
+    The earlier version of this test asserted that `smairt.yaml` *existed*. It passed while all
+    three demos were stranded on the previous scaffold version, because a scaffold bump made
+    `project_check()` report `scaffold-version-mismatch` on files nobody had touched. The
+    documentation said the check passed; the check did not pass; the test agreed with the
+    documentation instead of with the tool.
+
+    Asserting the thing that is claimed is the only version of this test worth having.
     """
     project = completed_project(DEMOS / name)
     assert project is not None, f"{name} has no single completed project directory"
-    contract = project / "smairt.yaml"
-    assert contract.is_file(), f"{name} claims to be current but has no smairt.yaml"
+
+    issues = project_check(project)
+    assert not issues, f"{name} fails smairt check:\n" + "\n".join(
+        f"- [{issue.code}] {issue.message}" for issue in issues
+    )
+
+
+@pytest.mark.parametrize("name", sorted(CONFORMING_DEMOS))
+def test_a_conforming_demo_records_the_installed_scaffold(name: str) -> None:
+    """A current demo must be on the installed scaffold, not merely carry some contract."""
+    project = completed_project(DEMOS / name)
+    assert project is not None
+    contract = load_contract(project)
+    assert contract.scaffold_version == __version__, (
+        f"{name} records scaffold {contract.scaffold_version} against installed {__version__}; "
+        "run `smairt upgrade` on it and commit the result"
+    )
     for required in ("analysis/ITERATION_LOG.md", "analysis/RUN_HISTORY.md", "LICENSE"):
         assert (project / required).is_file(), f"{name} is missing {required}"
 
@@ -357,3 +380,84 @@ def test_the_epidemic_demo_does_not_commit_the_global_snapshot() -> None:
         "the JHU fetch no longer pins a commit and verifies checksums"
     )
     assert "--offline" in script, "the offline fixture path was removed"
+
+
+# Phrases that assert a complete execution record. In a demo whose logs were never retained, each
+# one is a claim the project cannot support.
+COMPLETENESS_CLAIMS = (
+    "logs for all completed runs",
+    "raw execution logs for all",
+    "every run is logged",
+    "all runs are logged",
+)
+
+
+@pytest.mark.parametrize("name", sorted(IMPORTED_HISTORY_DEMOS))
+def test_an_imported_demo_never_claims_a_complete_execution_record(name: str) -> None:
+    """An imported demo must not describe its evidence as complete.
+
+    Peptide's reproducibility manifest said `results/logs/` held "Raw execution logs for all
+    completed runs" forty lines below a table marking every one of those logs "(not retained)". The
+    migration note in `RUN_HISTORY.md` was careful; the surrounding report was not, and a reader
+    meeting the manifest first would have believed the trail was intact.
+    """
+    project = completed_project(DEMOS / name)
+    assert project is not None
+
+    offences: list[str] = []
+    for document in sorted(project.rglob("*.md")):
+        lowered = document.read_text().lower()
+        for claim in COMPLETENESS_CLAIMS:
+            if claim in lowered:
+                offences.append(f"{document.relative_to(project)}: {claim!r}")
+    assert not offences, (
+        f"{name} carries imported history but claims a complete record:\n" + "\n".join(offences)
+    )
+
+
+@pytest.mark.parametrize("name", sorted(IMPORTED_HISTORY_DEMOS))
+def test_an_imported_demo_declares_its_records_are_imported(name: str) -> None:
+    """The records a reader lands on must say where they came from.
+
+    `RUN_HISTORY.md` explaining the migration is not enough on its own: a reader arriving at
+    `FINAL_REPORT.md` or a contribution log has no reason to look there first.
+    """
+    project = completed_project(DEMOS / name)
+    assert project is not None
+
+    for relative in (
+        "analysis/FINAL_REPORT.md",
+        "analysis/ITERATION_LOG.md",
+        "analysis/RUN_HISTORY.md",
+        "prompts/intellectual_contribution.md",
+    ):
+        document = project / relative
+        if not document.is_file():
+            continue
+        text = document.read_text().lower()
+        assert "imported" in text or "not retained" in text or "migration" in text, (
+            f"{name}/{relative} does not say its content predates the current workflow"
+        )
+
+
+def test_no_demo_guide_documents_native_windows_activation() -> None:
+    """The support boundary and the instructions must agree.
+
+    `README.md` says native Windows is not supported and to use WSL. Every demo guide nonetheless
+    gave PowerShell activation and execution-policy instructions, and those same guides invoke
+    `smairt`. A newcomer was told both that the platform is unsupported and exactly how to use it.
+    """
+    offences: list[str] = []
+    forbidden = ("Set-ExecutionPolicy", "Scripts\\Activate.ps1", "Scripts\\activate.bat")
+    for document in sorted(DEMOS.rglob("*.md")):
+        # Legacy completed projects hold historical records; the guides are what a reader follows.
+        if document.name not in {"DEMO.md", "README.md", "USING_ZOO_CODE.md"}:
+            continue
+        text = document.read_text()
+        for phrase in forbidden:
+            if phrase in text:
+                offences.append(f"{document.relative_to(DEMOS)}: {phrase}")
+    assert not offences, (
+        "demo guidance documents native Windows activation while the CLI is WSL-only:\n"
+        + "\n".join(offences)
+    )

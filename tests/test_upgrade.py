@@ -423,3 +423,33 @@ def test_a_failed_write_leaves_the_previous_file_intact(
     assert target.read_text() == "original content\n"
     # The neighbour is cleaned up even when the move fails, so a retry is not blocked by it.
     assert not list(tmp_path.glob(".guidance.md.smairt-tmp"))
+
+
+def test_a_failed_contract_write_leaves_the_previous_contract_intact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The contract is a file too, and `docs/upgrading.md` promises *each* file is atomic.
+
+    `save_contract()` wrote directly while every scaffold asset around it went through
+    `_replace_atomically()`. That inverts the risk: `smairt.yaml` is the one file whose loss makes a
+    project unreadable, because `load_contract()` is what identifies a directory as a SMAIRT
+    project at all. A full disk while saving it could leave a truncated contract and a project that
+    no longer reports its own version.
+    """
+    from smairt import project as project_module  # noqa: PLC0415
+
+    destination = tmp_path / "project"
+    create_project(destination)
+    original = (destination / "smairt.yaml").read_text()
+    contract = project_module.load_contract(destination)
+
+    def fail(*args: object, **kwargs: object) -> None:
+        raise OSError("no space left on device")
+
+    monkeypatch.setattr("smairt.project.os.replace", fail)
+
+    with pytest.raises(OSError):
+        project_module.save_contract(destination, contract)
+
+    assert (destination / "smairt.yaml").read_text() == original
+    assert not list(destination.glob(".smairt.yaml.*")), "a temporary contract was left behind"

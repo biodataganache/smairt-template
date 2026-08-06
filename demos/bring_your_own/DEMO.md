@@ -41,15 +41,14 @@ answer so you can confirm your method works before trusting it on real data.
 0. **Set up your environment first** (run from this folder, `bring_your_own/`):
    ```bash
    python3 -m venv .venv
-   source .venv/bin/activate     # Windows PowerShell: .venv\Scripts\Activate.ps1
+   source .venv/bin/activate     # On Windows, use WSL: the SMAIRT CLI is not supported natively
    pip install -r requirements.txt
    ```
    later means this step was skipped or your venv isn't active.
 
-   Windows users: if PowerShell blocks activation, run
-   `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that terminal,
-   then try `.venv\Scripts\Activate.ps1` again. In Command Prompt, use
-   `.venv\Scripts\activate.bat`.
+   Windows users: run this demo inside WSL. The SMAIRT CLI is not supported on native
+   Windows, so PowerShell activation instructions have been removed rather than left to
+   imply support that does not exist.
 
 1. **Fill in [`QUESTION_WORKSHEET.md`](QUESTION_WORKSHEET.md)** first. It forces
    your idea into a shape one SMAIRT iteration can move (computable, evaluable,

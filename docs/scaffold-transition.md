@@ -1,5 +1,24 @@
 # Scientific Scaffold Transition Record
 
+## Scaffold version 0.5.2
+
+Making the PyYAML import optional in `0.5.1` fixed a crash and introduced something worse.
+
+The rigor declarations live in `smairt.yaml`. A helper that could not import PyYAML read no
+settings, so it added no declarations -- silently. The same project and the same command produced a
+hypothesis carrying a multiplicity declaration under the interpreter the tool ships with, and one
+without it under a bare `python3`. An adversarial review caught it; the `0.5.1` transition note
+below described this as degrading to "not requested", which was wrong. The contract said the
+researcher *had* requested it.
+
+"Optional dependency" was the wrong frame. The dependency is optional; the researcher's recorded
+decision is not. `_rigor_settings()` now reads the contract's `rigor:` block as text when PyYAML is
+absent. The block is deliberately shallow -- one key per line, boolean values -- so a few lines of
+text handling covers it exactly, and both readers were compared on the real contract shape
+including a nested key immediately after the block.
+
+`0.5.2` because the same two tool-owned files changed content again.
+
 ## Scaffold version 0.5.1
 
 `scripts/new_track.py` and `scripts/new_iteration.py` imported PyYAML at module scope. Both read it

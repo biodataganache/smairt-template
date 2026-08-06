@@ -84,16 +84,15 @@ Full context, hypothesis, and metrics are in
    `protein_lm/`):
    ```bash
    python3 -m venv .venv
-   source .venv/bin/activate     # Windows PowerShell: .venv\Scripts\Activate.ps1
+   source .venv/bin/activate     # On Windows, use WSL: the SMAIRT CLI is not supported natively
    pip install -r requirements.txt
    ```
    This installs only the scientific Python dependencies for the demo.
 
 
-   Windows users: if PowerShell blocks activation, run
-   `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that terminal,
-   then try `.venv\Scripts\Activate.ps1` again. In Command Prompt, use
-   `.venv\Scripts\activate.bat`.
+   Windows users: run this demo inside WSL. The SMAIRT CLI is not supported on native
+   Windows, so PowerShell activation instructions have been removed rather than left to
+   imply support that does not exist.
 
 1. **Create a fresh SMAIRT project** with the installed CLI:
    ```bash

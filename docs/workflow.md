@@ -137,8 +137,12 @@ whether your science is correct, and never will.
 SMAIRT does not perform science. It does not validate a conclusion, judge a hypothesis, or
 decide whether a result is good. The question, the evidence, and the interpretation are yours.
 
-What it does is make the trail hard to lose: every number resolves, every run is logged, and
-every claim can be traced to the log that supports it.
+What it does is make the trail hard to lose: a run through the generated frame is logged, and a
+claim recorded through the workflow can be traced to the log that supports it.
+
+The guarantee is about what the workflow records going forward, not about work that predates it.
+Two of the demos carry science that ran before this execution record existed, and they say so
+rather than presenting a reconstructed trail as a captured one.
 
 ## Next
 

@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "smairt"
-version = "0.5.1"
+version = "0.5.2"
 description = "Create readable SMAIRT research workspaces."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 license = { text = "MIT" }
 authors = [{ name = "PNNL Computational Biology" }]
 classifiers = [
@@ -33,6 +33,11 @@ dependencies = [
   "rich>=13.0",
   "typer>=0.12",
 ]
+
+[project.urls]
+Homepage = "https://github.com/PNNL-CompBio/smairt-template"
+Repository = "https://github.com/PNNL-CompBio/smairt-template"
+Changelog = "https://github.com/PNNL-CompBio/smairt-template/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [

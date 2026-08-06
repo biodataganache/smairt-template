@@ -55,11 +55,9 @@ repo) so Zoo Code's file context is focused:
 - Open the built in terminal with **Terminal > New Terminal** (or
   `` Ctrl+` ``). Make sure your virtual environment is active. Your prompt
   should show `.venv`. If not, run `source .venv/bin/activate`.
-- **Windows tip:** if you are using PowerShell, activate with
-  `.venv\Scripts\Activate.ps1`. If PowerShell blocks scripts, run
-  `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that terminal
-  and try the activation command again. In Command Prompt, use
-  `.venv\Scripts\activate.bat`.
+- **Windows:** work inside WSL and open the project from there. The SMAIRT CLI is not supported
+  on native Windows, so `source .venv/bin/activate` is the activation command in every documented
+  setup.
 - **Markdown preview tip:** while viewing any `.md` instruction file in VS Code,
   press `Cmd+Shift+V` on Mac or `Ctrl+Shift+V` on Windows to render it as a
   formatted preview.

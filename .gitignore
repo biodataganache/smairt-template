@@ -225,3 +225,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local issue tracker and specs. See docs/agents/issue-tracker.md for the convention.
+# Kept out of the published repository; the durable outcomes live in docs/ and CHANGELOG.md.
+.scratch/

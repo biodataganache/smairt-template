@@ -10,6 +10,45 @@ changed.
 
 ## Unreleased
 
+### Scaffold 0.5.2
+
+- **A rigor declaration the researcher enabled no longer depends on which interpreter ran the
+  helper.** Making PyYAML optional in 0.5.1 fixed a crash and introduced something worse: the rigor
+  settings live in `smairt.yaml`, so a helper that could not read the contract added none of the
+  declarations it asked for, silently. The same project and command produced a hypothesis with a
+  multiplicity declaration under one interpreter and without it under another. The contract's
+  `rigor:` block is now read without PyYAML when PyYAML is absent. An optional dependency may
+  degrade; a recorded decision may not.
+
+### Scaffold 0.5.1
+
+- **`new_track.py` and `new_iteration.py` run under a bare `python3` again.** Both imported PyYAML
+  at module scope, so on a machine whose system interpreter lacked it, the first two commands of the
+  documented loop died with `ModuleNotFoundError`. The installed tool ships its own environment, so
+  `smairt new` succeeded and the failure appeared only afterwards. Found by verifying the README
+  from a clean clone rather than from the environment that wrote it.
+
+### Scaffold 0.5.0
+
+- **`scripts/utilities/` now arrives with a README.** It shipped as a declared but empty directory,
+  and Git does not track an empty directory, so it was absent from every clone and from the golden
+  fixtures. The scaffold-drift comparison passed on the machine that wrote it and failed on a fresh
+  checkout. A `0.4.0` project is told `scaffold-version-mismatch` and `smairt upgrade` creates the
+  file.
+- **`analysis/RUN_HISTORY.md` is a declared scaffold asset.** Helpers wrote it while the blueprint
+  did not declare it, so the execution record was invisible to `check`, `inspect`, and `upgrade`.
+
+### Documentation and examples
+
+- **Demo status is now stated rather than implied.** Three levels: `enzyme_kinetics` is current;
+  `lunar` and `peptide_digest` are current scaffolds carrying imported history; the remaining five
+  are legacy, kept for their scientific reasoning. Two of them documented a complete execution
+  record while marking every log "not retained" — an imported project now says what it does and does
+  not retain.
+- **[NOTICE.md](NOTICE.md) inventories redistributed third-party data.** The root MIT license does
+  not relicense the demo payloads, and two limitations that bound what their demos can claim are
+  recorded rather than left in a script.
+
 ### Licensing
 
 - **Removed Apache-2.0, GPL-3.0, and the proprietary notice from the license picker.** All

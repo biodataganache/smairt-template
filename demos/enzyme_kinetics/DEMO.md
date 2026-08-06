@@ -1,5 +1,11 @@
 # Demo: Enzyme kinetics (Michaelis-Menten)
 
+> **About the numbers in this guide.** The figures quoted below were produced by an earlier SMAIRT
+> release with unpinned scientific dependencies, and no CI job re-runs this science. They record
+> what the original runs reported; they are not a promise about what your machine will print. A
+> small numerical difference usually means a different `numpy`/`scipy` build, not a broken demo.
+
+
 **Level:** beginner. **Runtime:** under a minute per iteration, CPU only, no network.
 
 **The question:** given reaction velocity measured at several substrate concentrations, what are
@@ -40,7 +46,7 @@ From this folder:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate          # Windows PowerShell: .venv\Scripts\Activate.ps1
+source .venv/bin/activate          # On Windows, use WSL: the SMAIRT CLI is not supported natively
 pip install -r requirements.txt
 cd enzyme_kinetics
 python experiments/01_synthetic/script_01_synthetic_nonlinear_fit.py

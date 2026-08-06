@@ -1,5 +1,12 @@
 # Final Report — Lunar Free Return
 
+> **Imported record.** This report was written before the project moved onto the current SMAIRT
+> scaffold. The scripts, figures, and interpretations below are original. The raw execution logs
+> from those runs were **not retained**, so entries marked "(not retained)" name the log that was
+> produced rather than one you can open. See `analysis/RUN_HISTORY.md` for why no execution rows
+> were reconstructed.
+
+
 | Field | Details |
 |---|---|
 | Research Project | Lunar Free Return |
@@ -50,7 +57,7 @@ This is not a mission-grade trajectory design model. It omits lunar eccentricity
 
 ## 3. Research Audit Trail
 
-The research record connects each hypothesis to its implementation, run log, interpretation, and final status:
+The research record connects each hypothesis to its implementation, interpretation, and final status. The run logs from these original executions were not retained, so the log column names what was produced rather than a file you can open:
 
 | Iteration | Hypothesis | Script | Log | Analysis | Status |
 |---|---|---|---|---|---|
@@ -288,7 +295,7 @@ This provenance is scientifically important: assumptions were actively tested, f
 4. Extend the model to three dimensions and evaluate inclination effects.
 5. Model active correction maneuvers near apolune to test whether exactly three-loop returns can be stabilized.
 6. Build a paper-style narrative from the selected results and figures. This project was
-   created without the Paper capability; enable it with `smairt capability paper enable` to
+   created without the Paper capability; enable it with `smairt paper enable .` to
    get a `paper/` workspace and a `FINAL_MANIFEST.md` claim map.
 
 ---

@@ -2,9 +2,9 @@
 
 **Scientific Method with AI Research Toolkit**
 
-SMAIRT creates research workspaces that keep an honest record. Every result traces back to the
-hypothesis it tested, the script that produced it, and the raw log it came from — so a question
-asked six months later has an answer.
+SMAIRT creates research workspaces that keep an honest record. A result produced through the
+workflow traces back to the hypothesis it tested, the script that produced it, and the raw log it
+came from — so a question asked six months later has an answer.
 
 It is built for working alongside a coding assistant, but nothing in a SMAIRT project depends on
 one. A project is ordinary readable files: Markdown, Python, YAML.
@@ -139,5 +139,8 @@ reference only. It is unsupported and receives no fixes. Use the installed `smai
 
 ## License
 
-[MIT](LICENSE). Generated projects choose MIT or BSD-3-Clause and receive the complete license
-text.
+[MIT](LICENSE) for SMAIRT's own source, documentation, and scaffold assets. Generated projects
+choose MIT or BSD-3-Clause and receive the complete license text.
+
+The MIT license does not relicense the third-party data redistributed under `demos/`, which keeps
+its own terms. [NOTICE.md](NOTICE.md) inventories every such payload with its source and license.

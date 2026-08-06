@@ -1,5 +1,12 @@
 # Intellectual Contribution Log
 
+> **Imported, and not known to be contemporaneous.** This project's science predates the current
+> scaffold. The attributions below were recorded at some point during that original work, but
+> nothing retained establishes *when* relative to the runs they describe. Read them as the
+> researcher's account rather than as a timestamped record. `prompts/session_log.md` holds only the
+> current template, because reconstructing session decisions after the fact would be a guess.
+
+
 Track where YOU made the critical steps vs. where AI generated ideas.
 
 ---

@@ -6,6 +6,12 @@ record existed, so `analysis/ITERATION_LOG.md` is an imported index and `analysi
 is empty. The science and its interpretations are original; the per-execution record for those
 original runs was never captured and has not been invented.
 
+> **About the numbers in this guide.** The figures quoted below were produced by an earlier SMAIRT
+> release with unpinned scientific dependencies, and no CI job re-runs this science. They record
+> what the original runs reported; they are not a promise about what your machine will print. A
+> small numerical difference usually means a different `numpy`/`scipy` build, not a broken demo.
+
+
 **Level:** beginner. **Runtime:** seconds to a couple of minutes per iteration. CPU only, no
 network, no data download.
 
@@ -47,7 +53,7 @@ From this folder:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate          # Windows PowerShell: .venv\Scripts\Activate.ps1
+source .venv/bin/activate          # On Windows, use WSL: the SMAIRT CLI is not supported natively
 pip install -r requirements.txt
 cd lunar_free_return
 python experiments/01_synthetic/script_01_trajectory_sweep.py
@@ -55,8 +61,12 @@ python experiments/01_synthetic/script_02_lunar_intercept.py
 python experiments/01_synthetic/script_03_multi_loop_return.py
 ```
 
-Iteration 01 should reprint the corridor `10.9270 to 10.9360 km/s` and a closest lunar approach of
-`23938.3 km`. If those numbers move, something in your environment changed the integration.
+Iteration 01 printed the corridor `10.9270 to 10.9360 km/s` and a closest lunar approach of
+`23938.3 km` when this project was recorded, under an earlier SMAIRT release and whatever
+`numpy`/`scipy` versions were current then. Those figures are **not pinned and not checked by CI**,
+so treat a difference as a prompt to look at your solver versions and integration tolerances rather
+than as a defect. The scientific conclusion — that a free-return corridor exists and is narrow — is
+what the iteration establishes.
 
 Check the project's structure at any time:
 

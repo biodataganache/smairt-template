@@ -1,5 +1,12 @@
 # Final Report — Peptide Digest
 
+> **Imported record.** This report was written before the project moved onto the current SMAIRT
+> scaffold. The scripts, figures, and interpretations below are original. The raw execution logs
+> from those runs were **not retained**, so entries marked "(not retained)" name the log that was
+> produced rather than one you can open. See `analysis/RUN_HISTORY.md` for why no execution rows
+> were reconstructed.
+
+
 | Field | Details |
 |---|---|
 | Research Project | Peptide Digest |
@@ -95,7 +102,7 @@ The third iteration added monoisotopic peptide mass calculation and MS-observabl
 | [script_01_tryptic_digestion_smoke_test.py](../experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py) | Validates canonical cleavage and proline exceptions. |
 | [script_02_missed_cleavages_validation.py](../experiments/01_synthetic/script_02_missed_cleavages_validation.py) | Validates missed-cleavage enumeration. |
 | [script_03_peptide_filtration.py](../experiments/01_synthetic/script_03_peptide_filtration.py) | Computes masses and MS-observable peptide fractions. |
-| [results/logs/](../results/logs) | Raw execution logs for all completed runs. |
+| [results/logs/](../results/logs) | Execution logs from runs after the migration. The original runs' logs were not retained. |
 | [analysis/](.) | Interpretation files for all completed iterations. |
 
 ---

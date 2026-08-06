@@ -220,7 +220,10 @@ def save_contract(root: Path, contract: ProjectContract) -> None:
         data.pop("conventions", None)
     if not any(contract.rigor.model_dump().values()):
         data.pop("rigor", None)
-    (root / CONTRACT_PATH).write_text(yaml.safe_dump(data, sort_keys=False))
+    # Atomically, like every scaffold asset. This is the file whose loss makes a project
+    # unreadable: `load_contract()` is what identifies a directory as a SMAIRT project, so a
+    # truncated contract is worse than a truncated guidance file, not better.
+    _replace_atomically(root / CONTRACT_PATH, yaml.safe_dump(data, sort_keys=False))
 
 
 def record_recent(root: Path) -> None:

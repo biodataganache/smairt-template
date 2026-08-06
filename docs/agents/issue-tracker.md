@@ -1,6 +1,9 @@
 # Issue tracker: Local Markdown
 
-Issues and specs (you may know a spec as a PRD) for this repo live as markdown files in `.scratch/`.
+Issues and specs (you may know a spec as a PRD) for this repo live as markdown files in
+`.scratch/`, which is **git-ignored**. The tracker is a local working aid, not published
+material: a reader of the repository should never need it, so anything durable that a ticket
+establishes has to land in `docs/`, an ADR, or `CHANGELOG.md` before the ticket is resolved.
 
 ## Conventions
 

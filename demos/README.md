@@ -161,17 +161,13 @@ Run these commands **from the demo folder you chose**. For example, if you choos
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate     # Windows PowerShell: .venv\Scripts\Activate.ps1
+source .venv/bin/activate     # On Windows, use WSL: the SMAIRT CLI is not supported natively
 pip install -r requirements.txt
 ```
 
-If PowerShell blocks activation on Windows, run:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-```
-
-Then try activation again.
+On Windows, work inside WSL. The SMAIRT CLI is not supported on native Windows — see the
+[repository README](../README.md#install) — so these demos are documented for macOS, Linux, and WSL
+only.
 
 ### 3. Generate a fresh SMAIRT project
 

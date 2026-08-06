@@ -387,47 +387,80 @@ def test_creation_refuses_a_capability_flag_it_would_silently_ignore(tmp_path: P
     assert not list(tmp_path.iterdir())
 
 
-def test_the_documented_loop_runs_under_a_bare_python(tmp_path: Path) -> None:
-    """The README's loop must work with the `python3` it tells the reader to use.
+def without_pyyaml(project: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
+    """Run a generated helper under an interpreter that cannot import PyYAML.
 
-    Verifying the README from a clean clone found this: `new_track.py` and `new_iteration.py`
-    imported PyYAML at module scope, so on a machine whose system `python3` lacks it, the first two
-    commands in the documented loop both died with `ModuleNotFoundError`. The tool itself was fine
-    -- it ships its own environment -- which is exactly why the development machine never showed it.
-
-    PyYAML is read only for the optional rigor declarations, which already degrade to "not
-    requested" when the contract cannot be read, so the import is now optional.
+    `-S` skips `site`, so site-packages is never added to the path and PyYAML is unavailable
+    regardless of what the machine happens to have installed. The earlier version of this helper
+    probed `/usr/bin/python3` and skipped when it found PyYAML, which meant a CI runner with PyYAML
+    installed silently exercised nothing.
     """
-    system_python = Path("/usr/bin/python3")
-    if not system_python.exists():
-        pytest.skip("no system python3 to test the bare-interpreter path against")
-    probe = subprocess.run(
-        [str(system_python), "-c", "import yaml"],
+    return subprocess.run(
+        [sys.executable, "-S", *arguments],
+        cwd=project,
         check=False,
         capture_output=True,
+        text=True,
     )
-    if probe.returncode == 0:
-        pytest.skip("this system python3 has PyYAML, so it cannot exercise the missing-import path")
 
+
+def test_the_documented_loop_runs_without_pyyaml(tmp_path: Path) -> None:
+    """The README's loop must work with the `python3` it tells the reader to use.
+
+    Verifying the README from a clean clone found this: both helpers imported PyYAML at module
+    scope, so on a machine whose system `python3` lacks it, the first two documented commands died
+    with `ModuleNotFoundError`. The tool ships its own environment, so `smairt new` worked and the
+    failure appeared only afterwards, which is why the development machine never showed it.
+    """
     destination = tmp_path / "bare"
     assert create_project(destination).returncode == 0
 
-    def bare(*arguments: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run(
-            [str(system_python), *arguments],
-            cwd=destination,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
+    probe = without_pyyaml(destination, "-c", "import yaml")
+    assert probe.returncode != 0, "`-S` did not produce an interpreter without PyYAML"
 
-    track = bare("scripts/new_track.py", "Label noise degrades calibration", "synthetic")
-    assert track.returncode == 0, f"new_track.py failed under a bare python3:\n{track.stderr}"
+    track = without_pyyaml(
+        destination, "scripts/new_track.py", "Label noise degrades calibration", "synthetic"
+    )
+    assert track.returncode == 0, f"new_track.py failed without PyYAML:\n{track.stderr}"
 
-    iteration = bare(
-        "scripts/new_iteration.py", "baseline", "synthetic", "--hypothesis", "HYPOTHESIS_01"
+    iteration = without_pyyaml(
+        destination,
+        "scripts/new_iteration.py",
+        "baseline",
+        "synthetic",
+        "--hypothesis",
+        "HYPOTHESIS_01",
     )
-    assert iteration.returncode == 0, (
-        f"new_iteration.py failed under a bare python3:\n{iteration.stderr}"
-    )
+    assert iteration.returncode == 0, f"new_iteration.py failed without PyYAML:\n{iteration.stderr}"
     assert (destination / "experiments/01_synthetic/script_01_baseline.py").is_file()
+
+
+def test_an_enabled_rigor_declaration_survives_a_missing_pyyaml(tmp_path: Path) -> None:
+    """A declaration the researcher switched on must not depend on which interpreter ran the helper.
+
+    Making the PyYAML import optional fixed a crash and introduced something worse. The rigor
+    settings live in `smairt.yaml`, so a helper that cannot read the contract read no settings and
+    added no declarations -- silently. The same project and the same command produced a hypothesis
+    with the declaration under one interpreter and without it under another.
+
+    "Optional dependency" was the wrong frame. The dependency is optional; the researcher's recorded
+    decision is not.
+    """
+    destination = tmp_path / "rigorous"
+    assert create_project(destination).returncode == 0
+
+    enabled = run("settings", str(destination), "--declare-multiplicity-policy")
+    assert enabled.returncode == 0, enabled.stdout + enabled.stderr
+    contract = (destination / "smairt.yaml").read_text()
+    assert "declare_multiplicity_policy: true" in contract, contract
+
+    created = without_pyyaml(
+        destination, "scripts/new_track.py", "Does the result generalize?", "synthetic"
+    )
+    assert created.returncode == 0, created.stdout + created.stderr
+
+    hypothesis = (destination / "hypotheses" / "HYPOTHESIS_01.md").read_text()
+    assert "Multiplicity declaration" in hypothesis, (
+        "the enabled declaration is missing, so the interpreter decided whether a recorded "
+        f"commitment appears:\n{hypothesis}"
+    )
