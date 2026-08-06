@@ -27,6 +27,8 @@ This branch is ready to replace `main` as SMAIRT's publication-facing framework 
 
 - [Decide whether Run History is a declared scaffold asset](issues/03-decide-run-history-ownership.md) — declared as `researcher-work` and shipped with every project, because ADR 0001 makes the blueprint authoritative and an evidence record should not be invisible to check, inspect, and upgrade. Found and fixed two defects on the way: the golden updater deleted fixtures before proving the tool worked, and nothing asserted the blueprint was loadable.
 
+- [Design one newcomer path and a smaller documentation hierarchy](issues/05-design-one-newcomer-path.md) — README as the only introduction; `docs/workflow.md`, `docs/capabilities.md`, `docs/upgrading.md`, `docs/development.md` for depth; the four root tutorials deleted rather than redirected. The overlap was the visible problem, but the real one is that no reader-facing doc teaches the helper-driven loop and two actively contradict it by telling researchers to hand-create numbered scripts.
+
 ## Not yet specified
 
 - Whether demo verification belongs in every CI matrix cell, one representative cell, or a separate scheduled job. This becomes decidable after the demo smoke interface and runtime are known.
