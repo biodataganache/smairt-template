@@ -48,7 +48,7 @@ The hypothesis was **fully supported** by the Phase 1 numerical sweep over 51 TL
 - **Optimal Impact Case**: Found at $v_{\text{inj}} = 10.9700\text{ km/s}$ and $\phi = 224.0^\circ$ with a short time-of-flight of **$2.441\text{ days}$** and a steep impact angle of **$65.5^\circ$** from the horizontal.
 - **Energy Conservation**: Maximum Jacobi Constant drift across all runs was extremely low at **$1.79 \times 10^{-10}$**, verifying high integration fidelity.
 
-See [`analysis/ANALYSIS_02.md`](smairt_template_demos/lunar/lunar_free_return/analysis/ANALYSIS_02.md) for full interpretation.
+See [`analysis/ANALYSIS_02.md`](../analysis/ANALYSIS_02.md) for full interpretation.
 
 ## Notes
 

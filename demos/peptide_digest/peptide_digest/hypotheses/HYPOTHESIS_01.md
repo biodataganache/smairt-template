@@ -32,5 +32,5 @@ We will implement a pure-Python tryptic digestion function in `experiments/01_sy
 * **Proline block exception violation rate:** 0% of output peptides may terminate in `K` or `R` when the next character in the original sequence was `P`.
 
 ## 4. References & Context
-* Background Document: [`smairt_template_demos/peptide_digest/background/01_initial_question.md`](smairt_template_demos/peptide_digest/background/01_initial_question.md)
-* Code Conventions: [`smairt_template_demos/peptide_digest/peptide_digest/prompts/CODE_CONVENTIONS.md`](smairt_template_demos/peptide_digest/peptide_digest/prompts/CODE_CONVENTIONS.md)
+* Background Document: [`background/01_initial_question.md`](../background/01_initial_question.md)
+* Code Conventions: [`prompts/CODE_CONVENTIONS.md`](../prompts/CODE_CONVENTIONS.md)

@@ -46,9 +46,9 @@ The current implementation does not model post-translational modifications, isot
 
 | Iteration | Hypothesis | Script or Method | Log or Evidence | Analysis | Status |
 |---|---|---|---|---|---|
-| 01 | [HYPOTHESIS_01.md](../hypotheses/HYPOTHESIS_01.md) | [script_01_tryptic_digestion_smoke_test.py](../experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py) | [script_01_tryptic_digestion_smoke_test_20260629_084613.log](../results/logs/script_01_tryptic_digestion_smoke_test_20260629_084613.log) | [ANALYSIS_01.md](ANALYSIS_01.md) | Supported |
-| 02 | [HYPOTHESIS_02.md](../hypotheses/HYPOTHESIS_02.md) | [script_02_missed_cleavages_validation.py](../experiments/01_synthetic/script_02_missed_cleavages_validation.py) | [script_02_missed_cleavages_validation_20260629_085242.log](../results/logs/script_02_missed_cleavages_validation_20260629_085242.log) | [ANALYSIS_02.md](ANALYSIS_02.md) | Supported |
-| 03 | [HYPOTHESIS_03.md](../hypotheses/HYPOTHESIS_03.md) | [script_03_peptide_filtration.py](../experiments/01_synthetic/script_03_peptide_filtration.py) | [script_03_peptide_filtration_20260629_090845.log](../results/logs/script_03_peptide_filtration_20260629_090845.log) | [ANALYSIS_03.md](ANALYSIS_03.md) | Supported |
+| 01 | [HYPOTHESIS_01.md](../hypotheses/HYPOTHESIS_01.md) | [script_01_tryptic_digestion_smoke_test.py](../experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py) | `script_01_tryptic_digestion_smoke_test_20260629_084613.log` (not retained) | [ANALYSIS_01.md](ANALYSIS_01.md) | Supported |
+| 02 | [HYPOTHESIS_02.md](../hypotheses/HYPOTHESIS_02.md) | [script_02_missed_cleavages_validation.py](../experiments/01_synthetic/script_02_missed_cleavages_validation.py) | `script_02_missed_cleavages_validation_20260629_085242.log` (not retained) | [ANALYSIS_02.md](ANALYSIS_02.md) | Supported |
+| 03 | [HYPOTHESIS_03.md](../hypotheses/HYPOTHESIS_03.md) | [script_03_peptide_filtration.py](../experiments/01_synthetic/script_03_peptide_filtration.py) | `script_03_peptide_filtration_20260629_090845.log` (not retained) | [ANALYSIS_03.md](ANALYSIS_03.md) | Supported |
 
 ---
 

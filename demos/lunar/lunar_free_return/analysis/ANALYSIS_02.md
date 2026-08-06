@@ -6,9 +6,9 @@ This analysis successfully documents the results of Phase 1 (synthetic numerical
 
 ## Experiment Details
 
-- **Script**: [`experiments/01_synthetic/script_02_lunar_intercept.py`](smairt_template_demos/lunar/lunar_free_return/experiments/01_synthetic/script_02_lunar_intercept.py)
-- **Hypothesis**: [`hypotheses/HYPOTHESIS_02.md`](smairt_template_demos/lunar/lunar_free_return/hypotheses/HYPOTHESIS_02.md)
-- **Log**: [`results/logs/script_02_lunar_intercept_20260625_112846.log`](smairt_template_demos/lunar/lunar_free_return/results/logs/script_02_lunar_intercept_20260625_112846.log)
+- **Script**: [`experiments/01_synthetic/script_02_lunar_intercept.py`](../experiments/01_synthetic/script_02_lunar_intercept.py)
+- **Hypothesis**: [`hypotheses/HYPOTHESIS_02.md`](../hypotheses/HYPOTHESIS_02.md)
+- **Log**: `script_02_lunar_intercept_20260625_112846.log` (not retained)
 - **Track**: Core
 - **Phase**: synthetic
 
@@ -77,9 +77,9 @@ The results demonstrate that we can reliably target specific hemispheres of a pr
 
 ## Files Generated
 
-- [`results/logs/script_02_lunar_intercept_20260625_112846.log`](smairt_template_demos/lunar/lunar_free_return/results/logs/script_02_lunar_intercept_20260625_112846.log) — Raw execution log
-- [`results/figures/script_02_lunar_intercept_trajectories.png`](smairt_template_demos/lunar/lunar_free_return/results/figures/script_02_lunar_intercept_trajectories.png) — Trajectory paths in rotating frame showing the direct intercept curves
-- [`results/figures/script_02_lunar_intercept_impacts.png`](smairt_template_demos/lunar/lunar_free_return/results/figures/script_02_lunar_intercept_impacts.png) — Distribution of impact points on leading/trailing hemispheres
+- `script_02_lunar_intercept_20260625_112846.log` (not retained) — Raw execution log
+- [`results/figures/script_02_lunar_intercept_trajectories.png`](../results/figures/script_02_lunar_intercept_trajectories.png) — Trajectory paths in rotating frame showing the direct intercept curves
+- [`results/figures/script_02_lunar_intercept_impacts.png`](../results/figures/script_02_lunar_intercept_impacts.png) — Distribution of impact points on leading/trailing hemispheres
 
 ## Intellectual Contribution Notes
 

@@ -12,7 +12,7 @@ Plans are created **before** embarking on multi-step work. They serve as:
 ## When to Create a Plan
 
 Create a plan document when:
-- Starting a new experimental track (e.g., `PLAN_TRACK_B_FITNESS_DATA.md`)
+- Starting a new research track
 - Designing a complex multi-script experiment
 - Proposing an architecture change
 - Coordinating work across team members
@@ -20,53 +20,25 @@ Create a plan document when:
 
 ## Plan Template
 
-```markdown
-# Plan: [Brief Title]
+`PLAN_TEMPLATE.md` in this directory is the template. `scripts/new_track.py` fills it in
+when it starts a track, so a plan you write by hand and a plan the helper creates have the
+same shape. Edit the template to suit your field and both follow.
 
-## Status: DRAFT | ACTIVE | COMPLETED | ABANDONED
-
-## Problem Statement
-[What problem does this plan address?]
-
-## Approach
-[High-level description of the approach]
-
-## Success Criteria
-[How will we know this worked?]
-
-## Dependencies
-[What must exist before this can start?]
-- [ ] Data: [specific data needed]
-- [ ] Code: [specific modules/scripts needed]
-- [ ] Results: [prior experiments that must complete]
-
-## Steps
-1. [ ] [First concrete step]
-2. [ ] [Second concrete step]
-3. [ ] [Third concrete step]
-
-## Expected Outputs
-- [Script(s) to produce]
-- [Analysis document(s)]
-- [Figures or results]
-
-## Risks & Mitigations
-| Risk | Likelihood | Mitigation |
-|------|-----------|------------|
-| [Risk 1] | High/Med/Low | [How to handle] |
-
-## Notes
-[Any additional context, links to related work, etc.]
+```bash
+python3 scripts/new_track.py "The wider layer exceeds the baseline" synthetic
 ```
 
 ## Naming Convention
 
 ```
-PLAN_[TRACK]_[BRIEF_DESCRIPTION].md
+PLAN_[BRIEF_DESCRIPTION].md
 ```
 
 Examples:
-- `PLAN_D05_RAY_TUNE_STRATEGY.md`
+- `PLAN_RAY_TUNE_STRATEGY.md`
 - `PLAN_MULTIMODAL_INTEGRATION.md`
-- `PLAN_X3_FITNESS_EMBEDDING_DYNAMICS.md`
-- `COLLABORATION_GUIDE.md`
+- `PLAN_FITNESS_EMBEDDING_DYNAMICS.md`
+
+A track is named by what it investigates, not by a letter. Track identity lives in
+`analysis/ANALYSIS_PLAN.md` and in the hypothesis a plan points at, never in a prefix on a
+filename — a letter in front of a number would make the iteration numbering unreadable.

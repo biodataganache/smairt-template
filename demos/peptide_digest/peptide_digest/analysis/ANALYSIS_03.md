@@ -40,5 +40,5 @@ Our audit trail, logs, and files are fully documented and ready for deployment o
 
 ---
 *Created on: 2026-06-29*
-*Experiment Script:* [`smairt_template_demos/peptide_digest/peptide_digest/experiments/01_synthetic/script_03_peptide_filtration.py`](smairt_template_demos/peptide_digest/peptide_digest/experiments/01_synthetic/script_03_peptide_filtration.py)
+*Experiment Script:* [`experiments/01_synthetic/script_03_peptide_filtration.py`](../experiments/01_synthetic/script_03_peptide_filtration.py)
 *Log File:* `results/logs/script_03_peptide_filtration_20260629_090845.log`

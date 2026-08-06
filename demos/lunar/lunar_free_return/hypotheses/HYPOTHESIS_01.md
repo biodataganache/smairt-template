@@ -46,7 +46,7 @@ The hypothesis was **fully supported** by the Phase 1 numerical sweep over 301 T
 - **Lunar Flyby Distance**: At this nominal speed, the closest approach to the lunar surface is **$23,938.3\text{ km}$** (safely above the Moon's radius of $1,737.4\text{ km}$).
 - **Energy Conservation**: Jacobi Constant drift was exceptionally low, with a maximum drift of **$6.32 \times 10^{-10}$** across all simulation runs, well below the success threshold of $10^{-6}$.
 
-See [`analysis/ANALYSIS_01.md`](smairt_template_demos/lunar/lunar_free_return/analysis/ANALYSIS_01.md) for full interpretation.
+See [`analysis/ANALYSIS_01.md`](../analysis/ANALYSIS_01.md) for full interpretation.
 
 ## Notes
 

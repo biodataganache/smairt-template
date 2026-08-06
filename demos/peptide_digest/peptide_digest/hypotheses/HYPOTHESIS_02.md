@@ -41,5 +41,5 @@ We will modify or extend the digestion algorithm to support `max_missed_cleavage
 * **Segment Yield Metric:** The number of unique peptides generated for any sequence of $M$ segments must perfectly match the subset sum bound.
 
 ## 4. References & Context
-* Background Document: [`smairt_template_demos/peptide_digest/background/01_initial_question.md`](smairt_template_demos/peptide_digest/background/01_initial_question.md)
-* First Iteration Analysis: [`smairt_template_demos/peptide_digest/peptide_digest/analysis/ANALYSIS_01.md`](smairt_template_demos/peptide_digest/peptide_digest/analysis/ANALYSIS_01.md)
+* Background Document: [`background/01_initial_question.md`](../background/01_initial_question.md)
+* First Iteration Analysis: [`analysis/ANALYSIS_01.md`](../analysis/ANALYSIS_01.md)

@@ -3,3 +3,7 @@
 # no heavy dependencies and no data download needed. matplotlib is optional, for
 # a simple peptide-length / mass histogram.
 matplotlib
+
+# Needed by the project's own helper scripts (scripts/new_iteration.py and friends), which read
+# smairt.yaml. Declared here because DEMO.md tells you to run them.
+PyYAML

@@ -1,0 +1,22 @@
+schema_version: 1
+scaffold_version: 0.5.0
+project:
+  name: Lunar Free Return
+  slug: lunar_free_return
+  description: Circumlunar free-return trajectory corridors in the Earth-Moon CR3BP
+  domain: Astrodynamics
+people:
+  researcher:
+    name: SMAIRT Demo
+assistant: opencode
+starting_phase: synthetic
+current_phase: synthetic
+license_year: 2026
+license: MIT
+git_requested: false
+git_initialized: false
+capabilities:
+  paper:
+    state: never_enabled
+  hpc:
+    state: never_enabled

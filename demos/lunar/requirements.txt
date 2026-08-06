@@ -3,3 +3,7 @@
 numpy
 scipy
 matplotlib
+
+# Needed by the project's own helper scripts (scripts/new_iteration.py and friends), which read
+# smairt.yaml. Declared here because DEMO.md tells you to run them.
+PyYAML

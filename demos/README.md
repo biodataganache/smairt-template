@@ -1,16 +1,20 @@
 # SMAIRT Demo Collection
 
-> **These demos show a superseded workflow.** They were built against an earlier scaffold and
-> still ship helpers that no longer exist — `new_script.py`, `new_experiment.py`, and
-> `finalize_iteration.py` — along with the retired `iter_NN → final/` directory tree and
-> letter-prefixed script names. The current workflow is a track, then numbered iterations
-> recorded in `analysis/ITERATION_LOG.md`, with outcomes recorded by `record_outcome.py` and
-> reportable results named by `select_result.py`.
+> ### How current is each demo?
 >
-> Read them for the *scientific reasoning* they demonstrate, which is still sound and still
-> the point. Do not copy their commands or directory layouts. For the current workflow, create
-> a project with `smairt new` and read [docs/workflow.md](../docs/workflow.md). Rewriting these
-> demos against the current toolkit is tracked separately.
+> Three levels. Check a demo's status before following its instructions, because two of these
+> levels will teach you a workflow that no longer exists.
+>
+> | Status | What it means | Demos |
+> |---|---|---|
+> | **current** | A valid SMAIRT project. `smairt check` passes, the guide teaches the current helpers, and its runs are recorded in `analysis/RUN_HISTORY.md`. | `enzyme_kinetics` |
+> | **current scaffold, imported history** | A valid SMAIRT project with a current guide, but its science ran before the execution record existed. `ITERATION_LOG.md` is an imported index and `RUN_HISTORY.md` is empty. | `lunar`, `peptide_digest` |
+> | **legacy** | Kept for its scientific reasoning. No `smairt.yaml`, so `smairt check` refuses it, and it still ships retired helpers. Its guide describes hand-creating numbered scripts, which is not how the workflow works now. | `epidemic_sird`, `proteomics_de`, `protein_properties`, `ppi_network`, `protein_lm` |
+>
+> The legacy demos' *science* still runs correctly. What is stale is the workflow around it.
+>
+> For the current workflow, create a project with `smairt new` and read
+> [docs/workflow.md](../docs/workflow.md).
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE)
 [![Framework: SMAIRT](https://img.shields.io/badge/framework-SMAIRT-6f42c1.svg)](../README.md)
@@ -115,12 +119,12 @@ These are the main scientist-facing showcase demos for learning the framework.
 
 | Track                        | Domain                  | Difficulty               | Data style                           | What you learn                                                       | Start here                                                |
 | ---------------------------- | ----------------------- | ------------------------ | ------------------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------- |
-| Lunar free-return trajectory | Physics                 | Beginner                 | Synthetic only                       | Numerical modeling, parameter sweeps, trajectory interpretation      | [`lunar/DEMO.md`](lunar/DEMO.md)                           |
-| Enzyme kinetics              | Biochemistry            | Beginner                 | Synthetic first                      | Nonlinear fitting, parameter recovery, noisy-data interpretation     | [`enzyme_kinetics/DEMO.md`](enzyme_kinetics/DEMO.md)       |
-| Peptide digestion            | Proteomics              | Beginner                 | Synthetic first                      | Rule-based biology, exact validation, observable peptide filtering   | [`peptide_digest/DEMO.md`](peptide_digest/DEMO.md)         |
-| Protein sequence properties  | Protein biochemistry    | Beginner to intermediate | Synthetic first, optional real later | MW, pI, GRAVY, thresholding, simple classification                   | [`protein_properties/DEMO.md`](protein_properties/DEMO.md) |
-| Differential abundance       | Quantitative proteomics | Advanced                 | Synthetic first, optional real later | Statistics, multiple testing, planted truth, false discovery control | [`proteomics_de/DEMO.md`](proteomics_de/DEMO.md)           |
-| Protein interaction networks | Network biology         | Intermediate             | Synthetic first                      | Graph analysis, centrality, communities, planted structure recovery  | [`ppi_network/DEMO.md`](ppi_network/DEMO.md)               |
+| Lunar free-return trajectory | Physics | Beginner | Synthetic only | Numerical modeling, parameter sweeps, trajectory interpretation | [`lunar/DEMO.md`](lunar/DEMO.md) *(imported history)* |
+| Enzyme kinetics | Biochemistry | Beginner | Synthetic, then real | Nonlinear fitting, parameter recovery, and a refuted prediction worth reading | [`enzyme_kinetics/DEMO.md`](enzyme_kinetics/DEMO.md) **(current)** |
+| Peptide digestion | Proteomics | Beginner | Synthetic only | Rule-based biology, exact validation, observable peptide filtering | [`peptide_digest/DEMO.md`](peptide_digest/DEMO.md) *(imported history)* |
+| Protein sequence properties  | Protein biochemistry    | Beginner to intermediate | Synthetic first, optional real later | MW, pI, GRAVY, thresholding, simple classification                   | [`protein_properties/DEMO.md`](protein_properties/DEMO.md) *(legacy)* |
+| Differential abundance       | Quantitative proteomics | Advanced                 | Synthetic first, optional real later | Statistics, multiple testing, planted truth, false discovery control | [`proteomics_de/DEMO.md`](proteomics_de/DEMO.md) *(legacy)*           |
+| Protein interaction networks | Network biology         | Intermediate             | Synthetic first                      | Graph analysis, centrality, communities, planted structure recovery  | [`ppi_network/DEMO.md`](ppi_network/DEMO.md) *(legacy)*               |
 
 ### Extended tracks
 
@@ -128,16 +132,19 @@ These extend the collection beyond the six core showcase demos.
 
 | Track                  | Domain                          | Difficulty | Data style      | Notes                                                                                                                  | Start here                                        |
 | ---------------------- | ------------------------------- | ---------- | --------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| Epidemic Modeling (SIRD) | Mathematics / epidemiology    | Intermediate | Synthetic first | Models infection/recovery/death with the SIRD ODEs; checks population conservation and R0-driven outbreak growth       | [`epidemic_sird/DEMO.md`](epidemic_sird/DEMO.md)   |
-| Protein language model | Computational biology / ML      | Advanced   | Synthetic first | Nano masked-language-model demo with planted motifs, masked-token baselines, and optional family-separation embeddings | [`protein_lm/DEMO.md`](protein_lm/DEMO.md)         |
+| Epidemic Modeling (SIRD) | Mathematics / epidemiology    | Intermediate | Synthetic first | Models infection/recovery/death with the SIRD ODEs; checks population conservation and R0-driven outbreak growth       | [`epidemic_sird/DEMO.md`](epidemic_sird/DEMO.md) *(legacy)*   |
+| Protein language model | Computational biology / ML      | Advanced   | Synthetic first | Nano masked-language-model demo with planted motifs, masked-token baselines, and optional family-separation embeddings | [`protein_lm/DEMO.md`](protein_lm/DEMO.md) *(legacy)*         |
 | Bring your own problem | Any scientific domain           | Flexible   | Your choice     | Best if you already have a question and want the SMAIRT scaffold plus guardrails                                       | [`bring_your_own/DEMO.md`](bring_your_own/DEMO.md) |
 
 ### Track Selection Guide
 
-- Pick **Lunar**, **Enzyme Kinetics**, or **Peptide Digestion** if you want the fastest setup.
-- Pick **Protein Properties** or **PPI Network** if you want a biology-first showcase with a few natural iterations.
+- Pick **Enzyme Kinetics** first if you want the current workflow end to end, including an
+  iteration whose prediction was refuted.
+- Pick **Lunar** or **Peptide Digestion** for the fastest setup with a current guide.
+- Pick **Protein Properties** or **PPI Network** for a biology-first showcase, reading them as
+  legacy science rather than as workflow guides.
 - Pick **Epidemic Modeling (SIRD)** if you want a math / epidemiology track modeling an outbreak over time.
-- Pick **Differential Abundance** or **Protein Language Model** if you are up for an advanced challange.
+- Pick **Differential Abundance** or **Protein Language Model** if you are up for an advanced challenge.
 - Pick **Bring Your Own Problem** if you already have a research idea.
   
 ---

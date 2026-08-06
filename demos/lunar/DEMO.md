@@ -1,217 +1,153 @@
-# Demo: Lunar / Artemis II Free-Return
+# Demo: Lunar free-return trajectory
 
-**You are given:** the background and the research question.  
+**Status: current scaffold, imported history.** This is a valid SMAIRT project on the installed
+scaffold and `smairt check` passes. Its three iterations were run before the current execution
+record existed, so `analysis/ITERATION_LOG.md` is an imported index and `analysis/RUN_HISTORY.md`
+is empty. The science and its interpretations are original; the per-execution record for those
+original runs was never captured and has not been invented.
 
-**You build:** the orbital model and the free-return search using SMAIRT.
+**Level:** beginner. **Runtime:** seconds to a couple of minutes per iteration. CPU only, no
+network, no data download.
 
-There are **no solution scripts here**. The goal is to experience using SMAIRT
-to go from a question to an answer with an AI assistant.
-
-> New to AI assistants? Read [`../USING_ZOO_CODE.md`](../USING_ZOO_CODE.md) first
-> (install, sign in, attach files, approve edits).
-
----
-
-## Background / Why this matters
-
-**The field:** This is **orbital mechanics** (astrodynamics) - the physics of how
-spacecraft move under gravity. It is the math NASA uses to plan every mission to
-the Moon, including **Artemis II**, the crewed flight that will loop around the
-Moon and return.
-
-**The core idea:** a spacecraft in a low orbit around Earth fires its engine once
-(the **trans-lunar injection**, or TLI, burn) to fling itself toward the Moon. If
-the aim and speed are just right, the Moon's gravity bends the path around the far
-side and slings the craft *back* to Earth with **no further engine burns** - a
-**free-return** trajectory. This is exactly the safety feature that brought the
-Apollo 13 crew home after their spacecraft was crippled.
+**The question:** can a translunar-injection burn from a low-Earth parking orbit produce a
+free-return — looping behind the Moon and coming back to a low Earth perigee with no further burns?
 
 ---
 
-## The question
+## Why this matters
 
-Can you find a **Trans-Lunar Injection (TLI) burn** from a low-Earth parking orbit that produces a
-**free-return** trajectory that loops behind the Moon and comes back to a low
-Earth perigee with no further burns?
+Artemis II will fly astronauts on a lunar free-return: a path that uses only the Moon's gravity to
+swing the spacecraft around the far side and back to Earth, needing no major return burn. If the
+main engine failed after translunar injection, the spacecraft would still come home. That is the
+principle that brought Apollo 13 back.
 
-Full context, hypothesis, and metrics are in
-[`background/01_initial_question.md`](background/01_initial_question.md).
+This project reproduces one in the planar **Circular Restricted Three-Body Problem** for the
+Earth-Moon system: simplified, but physically real, and pure Python.
 
-### Key terms
+## What the three iterations establish
 
-- **Parking orbit:** a low circular orbit (here ~400 km altitude) where a
-  spacecraft coasts before heading to the Moon.
-- **TLI (trans-lunar injection) burn:** the engine firing that boosts the
-  spacecraft out of its parking orbit and onto a path toward the Moon. "How much
-  burn" = how much speed (delta-v) you add.
-- **Free-return:** a trajectory shaped so the Moon's gravity slings the craft
-  back to Earth on its own, with no return engine burn needed (the Apollo 13
-  safety trick).
-- **Perigee / return perigee:** the closest point to Earth; the *return* perigee
-  is how close the craft comes back to Earth after the lunar flyby. Low ≈ good.
-- **CR3BP (Circular Restricted Three-Body Problem):** the standard simplified
-  model of a small body moving under Earth + Moon gravity, with the Moon on a
-  circular orbit. Your simulator will use it.
-- **Jacobi constant:** an energy-like quantity that stays fixed along a correct
-  CR3BP trajectory. If your simulation conserves it, the math is trustworthy; if
-  it drifts, the result is junk.
-- **delta-v:** change in velocity (km/s), the standard "cost" measure for a burn.
+| Iteration | Hypothesis | Result |
+|---|---|---|
+| 01 | A free-return corridor exists and can be found by sweeping TLI speed | Supported. Corridor at 10.9270–10.9360 km/s; best case returns to 118.0 km perigee after a 23,938.3 km lunar flyby |
+| 02 | A slower burn gives a direct leading-hemisphere lunar impact | Supported. Found below the free-return corridor, with Jacobi-constant drift under 1e-6 |
+| 03 | A resonant burn can produce three loops before returning | **Partially supported.** Safe flight and low-Earth return achieved, but only 1.2711 loops — a physical constraint, not a bug |
+
+Iteration 03 is the one worth reading. The prediction asked for three loops and the physics
+allowed 1.27. The analysis records that as a constraint it identified rather than restating the
+prediction as though it had held.
+
+Each iteration checks the **Jacobi constant**, a quantity the CR3BP conserves. Drift below 1e-6
+is what makes the trajectory a result rather than an integration artefact.
 
 ---
 
-## Steps
+## Run it
 
-0. **Set up your environment first** (run from this folder, `lunar/`):
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate     # Windows PowerShell: .venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   ```
-   This installs only the scientific Python dependencies for the demo.
+From this folder:
 
+```bash
+python3 -m venv .venv
+source .venv/bin/activate          # Windows PowerShell: .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+cd lunar_free_return
+python experiments/01_synthetic/script_01_trajectory_sweep.py
+python experiments/01_synthetic/script_02_lunar_intercept.py
+python experiments/01_synthetic/script_03_multi_loop_return.py
+```
 
-   Windows users: if PowerShell blocks activation, run
-   `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in that terminal,
-   then try `.venv\Scripts\Activate.ps1` again. In Command Prompt, use
-   `.venv\Scripts\activate.bat`.
+Iteration 01 should reprint the corridor `10.9270 to 10.9360 km/s` and a closest lunar approach of
+`23938.3 km`. If those numbers move, something in your environment changed the integration.
 
-1. **Create a fresh SMAIRT project** with the installed CLI:
-   ```bash
-   smairt new
-   ```
-   Use the guided prompts to choose the demo name, research question, domain,
-   starting phase, and assistant. The installed `smairt` command is the only
-   supported generator.
+Check the project's structure at any time:
 
+```bash
+smairt check
+```
 
-
-2. **Seed your project with the background:**
-   ```bash
-   cp lunar_free_return/background/01_initial_question.md <your-new-project>/background/
-   ```
-
-3. **Configure Zoo Code, then open the project in VS Code and prime it.** New to
-   AI assistants? Read [`../USING_ZOO_CODE.md`](../USING_ZOO_CODE.md) first. It
-   covers installing Zoo Code, signing in, and how to attach files and approve
-   edits.
-
-   Basic Zoo Code configuration for this demo:
-   - Install **Zoo Code** from the VS Code Extensions panel.
-   - Set **API Provider** to **OpenAI Compatible**. Any OpenAI-compatible
-     endpoint works (OpenAI, Anthropic, OpenRouter, Azure OpenAI, a local server
-     such as Ollama / LM Studio, or an institutional gateway).
-   - Use **API Base URL**: your provider's documented base URL (for example,
-     `https://api.openai.com/v1` for OpenAI).
-   - Paste an **API Key** from your chosen provider.
-   - Select a **Model** by difficulty. This is a **beginner** track, so a fast,
-     lightweight reasoning model is usually plenty. Step up to a larger model
-     only if the assistant struggles.
-   >
-   > **Markdown preview tip:** press `Cmd+Shift+V` on Mac or `Ctrl+Shift+V` on
-   > Windows to render this file in VS Code.
-
-   Open your new `lunar_free_return/` folder in VS Code
-   (**File > Open Folder...**). In the Zoo Code chat, paste this direct prompt:
-
-   ```text
-   I'm starting a SMAIRT project to answer the question in
-   background/01_initial_question.md. Please read these files before doing any
-   work:
-   1. prompts/AI_CONTEXT.md
-   2. prompts/CODE_CONVENTIONS.md
-   3. background/01_initial_question.md
-
-   Follow the SMAIRT workflow described there: numbered scripts, output to console
-   + results/logs/; use the tracked raw log as the execution record.
-   Don't write any code yet. First summarize the question and propose a first
-   hypothesis and an experiment to test it.
-   ```
-
-   Read its reply. You decide whether the proposed hypothesis/experiment is
-   reasonable before moving on.
-
-4. **Start the SMAIRT loop with one focused request.** After the assistant has
-   summarized the question and proposed a first hypothesis, paste a prompt like
-   this. Treat the reply as a proposal: you may accept, narrow, or redirect it.
-
-   ```text
-   Based on background/01_initial_question.md and the SMAIRT conventions, start
-   with an example that tests the key assumptions for the lunar free-return
-   question. Create the first numbered script in experiments/01_synthetic/.
-
-   Before writing code, briefly state what assumptions the script tests, what
-   result would make those assumptions credible, and how we could scale up in
-   further scripts once this first example is validated to model more and more of
-   the realistic lunar free-return case. Follow the project code conventions for
-   logging, figures, and the output comment block.
-   ```
-
-   How to handle the AI response:
-   - If the plan tests assumptions clearly and the script is focused enough to
-     review, say: `Proceed with building the script.`
-   - Before running anything, check whether the code conserves the Jacobi constant,
-     keeps units explicit, and measures return perigee **after** the lunar flyby.
-   - If the assistant jumps straight to a final answer, redirect it:
-     `Slow down. First create a focused assumption-testing script and explain the
-     assumptions I should review before running it. `
-   - If the run finds no free-return, prompt it further. Ask it to inspect the log,
-     refine the TLI search near escape speed, and explain why the new range makes
-   sense.
-   - If the reported numbers look implausible, for example TLI burn far from
-     ~3.1 km/s or LEO speed far from ~7.7 km/s, ask the assistant to show the unit
-     conversion and compare against textbook values before continuing.
-
-5. **Interpret and log.** In `analysis/ANALYSIS_01.md`, note: did the loop
-   close? is the burn sensible? what are the model's limits (planar, point-mass,
-   circular Moon)? Record your key judgment call in
-   `prompts/intellectual_contribution.md`. That reasoning is the science.
+Note that these scripts predate the current generated frame: they write logs through `TeeLogger`
+but do not call `record_run_status`, so running them adds nothing to `analysis/RUN_HISTORY.md`.
+A project you build yourself with `new_iteration.py` will record every run there automatically.
 
 ---
+
+## Build it yourself
+
+```bash
+smairt new
+```
+
+Answer the prompts, then seed the question:
+
+```bash
+cp lunar_free_return/background/01_initial_question.md <your-project>/background/
+```
+
+New to AI assistants? Read [`../USING_ZOO_CODE.md`](../USING_ZOO_CODE.md) first.
+
+Prime the assistant before asking for code:
+
+```text
+I'm starting a SMAIRT project to answer the question in
+background/01_initial_question.md. Read these first:
+1. prompts/AI_CONTEXT.md
+2. prompts/CODE_CONVENTIONS.md
+3. background/01_initial_question.md
+
+Follow the workflow described there. Don't write code yet. Summarize the question
+and propose a first hypothesis with quantitative success criteria.
+```
+
+Then run the loop. The helpers own the numbering, so you never name a script yourself:
+
+```bash
+python3 scripts/new_track.py "Can a TLI burn produce a free-return trajectory?" synthetic
+# Write the prediction and both criteria into hypotheses/HYPOTHESIS_01.md. Commit them.
+python3 scripts/new_iteration.py "trajectory sweep" synthetic --hypothesis HYPOTHESIS_01
+# Implement the science in the generated script, then run it.
+# Write analysis/ANALYSIS_01.md.
+python3 scripts/record_outcome.py 01 --outcome "..."
+python3 scripts/select_result.py 01 --claim "..."
+```
+
+`new_track.py` deliberately does not create a script: the criteria get committed first, which is
+what keeps the test a test. `record_outcome.py` refuses until the analysis exists.
+
+Suggested sequence: sweep TLI speed for a free-return corridor, then look for a direct lunar
+intercept, then try a resonant multi-loop return.
+
+### What to watch for
+
+- **Check a conserved quantity.** In the CR3BP that is the Jacobi constant. Without it you cannot
+  tell a real trajectory from an integrator that drifted.
+- **Use an event-terminated integration** for impacts, so the run stops at the surface rather than
+  integrating through the Moon.
+- **Watch your units.** Non-dimensional CR3BP units are easy to mix with km and km/s; the scripts
+  print the conversion factors for that reason.
+- **Record what the sweep resolution was.** A corridor 0.009 km/s wide is invisible at 0.05 km/s
+  steps, and "no corridor found" would be the wrong conclusion.
 
 ## What "done" looks like
 
-A trajectory that reaches the Moon and returns to a near-Earth perigee, reported
-in real units with its assumptions stated honestly and reproducible from your
-in Step 0; CPU-only, no network needed.)
-
-> **Going further (optional, later):** relax the simplifying assumptions one at a
-> time, for example add the Sun's perturbation or move from the planar to a 3D
-> model, and report how much the required TLI burn and return perigee shift.
+Criteria committed before each run, an analysis per iteration, a passing `smairt check`, and
+conclusions traceable to a log in `results/logs/`. If a prediction only partly holds, say so —
+iteration 03 here is the model for that.
 
 ---
 
 ## Troubleshooting
 
-| Symptom | Likely cause / fix |
-|---------|--------------------|
-| `No such file or directory: .../.venv/bin/...` | The venv was deleted/moved. Recreate it: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`. |
-| Jacobi drift is large (≫ 1e-6) | Integration is inaccurate. Ask the AI to lower solver tolerances (`rtol`/`atol`) or use a higher-order method. |
-| "No free-return found" | Expected at first. Widen/refine the TLI sweep near escape speed, and integrate long enough to capture the return leg. |
-| Trajectory escapes or never reaches the Moon | TLI burn too large (escapes) or too small (falls back). Narrow the sweep between those extremes. |
-| Numbers look implausible (e.g. burn ≫ 3 km/s) | Check units. Mixing non-dimensional and SI is the usual culprit. Ask the AI to show the unit conversion. |
-| Zoo Code edits the wrong file / drifts | Re-attach `AI_CONTEXT.md` + your `background/01_initial_question.md` and restate the current step. |
+| Symptom | Fix |
+|---|---|
+| `No module named scipy` | Activate the venv and `pip install -r requirements.txt` from this folder |
+| Trajectory escapes or hits Earth | TLI speed is outside the corridor. Sweep more finely; the corridor is under 0.01 km/s wide |
+| Jacobi constant drifts above 1e-6 | Tighten the integrator tolerances (`rtol`/`atol`) before trusting anything else |
+| Integration runs forever | No terminating event, or the trajectory is on an escape path. Cap the integration time |
+| Numbers differ from those above | Check the scipy version and the integration tolerances |
+| `record_outcome.py` refuses | Write `analysis/ANALYSIS_NN.md` first. An outcome before interpretation is a guess |
+| Assistant edits the wrong file | Re-attach `prompts/AI_CONTEXT.md` and restate the current step |
 
-### Zoo Code is stuck (an error a retry won't fix)
+### The assistant is stuck
 
-If the assistant gets into a broken state, don't keep retrying. **Start a fresh
-task/chat** (in Zoo Code, open a new task with the `+` button) and re-prime it
-from your breadcrumb trail. SMAIRT is designed for exactly this: your project
-files hold the context.
-
-1. Save your work (your scripts/logs are already on disk).
-2. Open the new task with your project folder still open.
-3. Attach `prompts/AI_CONTEXT.md`, `prompts/CODE_CONVENTIONS.md`, and
-   `background/01_initial_question.md`, then paste:
-
-   ```text
-   I'm resuming a SMAIRT project (the question is in
-   background/01_initial_question.md) after my previous AI session got stuck.
-   Please read AI_CONTEXT.md and CODE_CONVENTIONS.md and follow the SMAIRT
-   workflow. To get back up to speed, read my existing files:
-   - experiments/ (my numbered scripts so far)
-   - results/logs/ (run outputs)
-   - analysis/ANALYSIS_01.md (what I concluded so far)
-   Summarize where the project stands and what the next step is. Don't rewrite
-   working code. Continue from here.
-   ```
-   to hand over the whole trail at once.
+Start a fresh chat rather than retrying. Attach `prompts/AI_CONTEXT.md`,
+`prompts/CODE_CONVENTIONS.md`, and `background/01_initial_question.md`, then ask it to read
+`experiments/`, `results/logs/`, and `analysis/ITERATION_LOG.md` and summarize where the work stands.

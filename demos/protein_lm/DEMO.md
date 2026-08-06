@@ -1,5 +1,26 @@
 # Demo: Protein Language Model
 
+> ### Status: legacy
+>
+> **Read this demo for its scientific reasoning, not as a guide to the current workflow.**
+>
+> Its science still runs — the dependencies are declared and correct, and the analyses are sound.
+> But the completed project below predates the current toolkit, so it is not a SMAIRT project the
+> installed tool recognises: it has no `smairt.yaml`, `smairt check` will refuse it, and it still
+> ships retired helpers (`new_script.py`, `new_experiment.py`, `finalize_iteration.py`) that the
+> current scaffold does not create.
+>
+> The steps in this file describe hand-creating numbered scripts. That is not how the current
+> workflow works. Today a track starts with `scripts/new_track.py`, iterations come from
+> `scripts/new_iteration.py`, outcomes are recorded with `scripts/record_outcome.py`, and
+> reportable results with `scripts/select_result.py` — so numbering is the tool's job, not yours.
+>
+> **For the current workflow**, see [`../enzyme_kinetics/DEMO.md`](../enzyme_kinetics/DEMO.md)
+> (fully current), [`../lunar/DEMO.md`](../lunar/DEMO.md), or
+> [`../peptide_digest/DEMO.md`](../peptide_digest/DEMO.md), and
+> [`../../docs/workflow.md`](../../docs/workflow.md).
+
+
 **You are given:** the background and the research question.
 
 **You build:** a tiny masked-language-model workflow that learns a planted protein

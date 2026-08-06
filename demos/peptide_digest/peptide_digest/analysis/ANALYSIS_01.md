@@ -41,5 +41,5 @@ Based on this successful validation, we can now progress to the next rungs of th
 
 ---
 *Created on: 2026-06-29*
-*Experiment Script:* [`smairt_template_demos/peptide_digest/peptide_digest/experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py`](smairt_template_demos/peptide_digest/peptide_digest/experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py)
+*Experiment Script:* [`experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py`](../experiments/01_synthetic/script_01_tryptic_digestion_smoke_test.py)
 *Log File:* `results/logs/script_01_tryptic_digestion_smoke_test_20260629_084613.log`

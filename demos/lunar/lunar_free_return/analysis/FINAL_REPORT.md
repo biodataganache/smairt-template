@@ -54,9 +54,9 @@ The research record connects each hypothesis to its implementation, run log, int
 
 | Iteration | Hypothesis | Script | Log | Analysis | Status |
 |---|---|---|---|---|---|
-| 01 | [HYPOTHESIS_01.md](../hypotheses/HYPOTHESIS_01.md) | [script_01_trajectory_sweep.py](../experiments/01_synthetic/script_01_trajectory_sweep.py) | [script_01_trajectory_sweep_20260625_095910.log](../results/logs/script_01_trajectory_sweep_20260625_095910.log) | [ANALYSIS_01.md](ANALYSIS_01.md) | Supported |
-| 02 | [HYPOTHESIS_02.md](../hypotheses/HYPOTHESIS_02.md) | [script_02_lunar_intercept.py](../experiments/01_synthetic/script_02_lunar_intercept.py) | [script_02_lunar_intercept_20260625_112846.log](../results/logs/script_02_lunar_intercept_20260625_112846.log) | [ANALYSIS_02.md](ANALYSIS_02.md) | Supported |
-| 03 | [HYPOTHESIS_03.md](../hypotheses/HYPOTHESIS_03.md) | [script_03_multi_loop_return.py](../experiments/01_synthetic/script_03_multi_loop_return.py) | [script_03_multi_loop_return_20260625_122118.log](../results/logs/script_03_multi_loop_return_20260625_122118.log) | [ANALYSIS_03.md](ANALYSIS_03.md) | Partially supported; physical constraint discovered |
+| 01 | [HYPOTHESIS_01.md](../hypotheses/HYPOTHESIS_01.md) | [script_01_trajectory_sweep.py](../experiments/01_synthetic/script_01_trajectory_sweep.py) | `script_01_trajectory_sweep_20260625_095910.log` (not retained) | [ANALYSIS_01.md](ANALYSIS_01.md) | Supported |
+| 02 | [HYPOTHESIS_02.md](../hypotheses/HYPOTHESIS_02.md) | [script_02_lunar_intercept.py](../experiments/01_synthetic/script_02_lunar_intercept.py) | `script_02_lunar_intercept_20260625_112846.log` (not retained) | [ANALYSIS_02.md](ANALYSIS_02.md) | Supported |
+| 03 | [HYPOTHESIS_03.md](../hypotheses/HYPOTHESIS_03.md) | [script_03_multi_loop_return.py](../experiments/01_synthetic/script_03_multi_loop_return.py) | `script_03_multi_loop_return_20260625_122118.log` (not retained) | [ANALYSIS_03.md](ANALYSIS_03.md) | Partially supported; physical constraint discovered |
 
 Note: [HYPOTHESIS_03.md](../hypotheses/HYPOTHESIS_03.md) still lists its status as pending, but [ANALYSIS_03.md](ANALYSIS_03.md) provides the post-run assessment: the original exactly-three-loop prediction was not supported, while the broader multi-loop return concept was partially supported through the discovery of a 1.25-loop passive return boundary.
 
@@ -99,7 +99,7 @@ The hypothesis was supported. The free-return trajectory sits on a sharp transit
 
 ### Generated Artifacts
 
-- Log: [script_01_trajectory_sweep_20260625_095910.log](../results/logs/script_01_trajectory_sweep_20260625_095910.log)
+- Log: `script_01_trajectory_sweep_20260625_095910.log` (not retained)
 - Trajectory figure: [script_01_trajectory_sweep_trajectories.png](../results/figures/script_01_trajectory_sweep_trajectories.png)
 - Metrics figure: [script_01_trajectory_sweep_metrics.png](../results/figures/script_01_trajectory_sweep_metrics.png)
 
@@ -133,7 +133,7 @@ The hypothesis was supported. Direct impacts occur in a different phase-angle co
 
 ### Generated Artifacts
 
-- Log: [script_02_lunar_intercept_20260625_112846.log](../results/logs/script_02_lunar_intercept_20260625_112846.log)
+- Log: `script_02_lunar_intercept_20260625_112846.log` (not retained)
 - Trajectory figure: [script_02_lunar_intercept_trajectories.png](../results/figures/script_02_lunar_intercept_trajectories.png)
 - Impact-distribution figure: [script_02_lunar_intercept_impacts.png](../results/figures/script_02_lunar_intercept_impacts.png)
 
@@ -170,7 +170,7 @@ This is a scientifically useful outcome: the analysis did not force a positive r
 
 ### Generated Artifacts
 
-- Log: [script_03_multi_loop_return_20260625_122118.log](../results/logs/script_03_multi_loop_return_20260625_122118.log)
+- Log: `script_03_multi_loop_return_20260625_122118.log` (not retained)
 - Summary table: [script_03_multi_loop_return_summary.txt](../results/logs/script_03_multi_loop_return_summary.txt)
 - Trajectory figure: [script_03_multi_loop_return_trajectories.png](../results/figures/script_03_multi_loop_return_trajectories.png)
 - Lunar close-up figure: [script_03_multi_loop_return_lunar_closeup.png](../results/figures/script_03_multi_loop_return_lunar_closeup.png)
@@ -242,9 +242,9 @@ This provenance is scientifically important: assumptions were actively tested, f
 
 | Log | Notes |
 |---|---|
-| [script_01_trajectory_sweep_20260625_095910.log](../results/logs/script_01_trajectory_sweep_20260625_095910.log) | Final selected Iteration 1 run. |
-| [script_02_lunar_intercept_20260625_112846.log](../results/logs/script_02_lunar_intercept_20260625_112846.log) | Final selected Iteration 2 run. |
-| [script_03_multi_loop_return_20260625_122118.log](../results/logs/script_03_multi_loop_return_20260625_122118.log) | Final selected Iteration 3 run. |
+| `script_01_trajectory_sweep_20260625_095910.log` (not retained) | Final selected Iteration 1 run. |
+| `script_02_lunar_intercept_20260625_112846.log` (not retained) | Final selected Iteration 2 run. |
+| `script_03_multi_loop_return_20260625_122118.log` (not retained) | Final selected Iteration 3 run. |
 | [script_03_multi_loop_return_summary.txt](../results/logs/script_03_multi_loop_return_summary.txt) | Sorted valid multi-loop return trajectories. |
 
 ### Figures
@@ -287,7 +287,9 @@ This provenance is scientifically important: assumptions were actively tested, f
 3. Add stochastic injection errors and compute the mid-course correction budget needed to preserve safe return.
 4. Extend the model to three dimensions and evaluate inclination effects.
 5. Model active correction maneuvers near apolune to test whether exactly three-loop returns can be stabilized.
-6. Build a paper-style narrative in [paper_draft/](../paper_draft) using the selected results and figures.
+6. Build a paper-style narrative from the selected results and figures. This project was
+   created without the Paper capability; enable it with `smairt capability paper enable` to
+   get a `paper/` workspace and a `FINAL_MANIFEST.md` claim map.
 
 ---
 

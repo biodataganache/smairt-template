@@ -12,9 +12,9 @@ The optimal passive multi-loop free-return trajectory was discovered at $v_{\tex
 
 ## Experiment Details
 
-- **Script**: [`experiments/01_synthetic/script_03_multi_loop_return.py`](smairt_template_demos/lunar/lunar_free_return/experiments/01_synthetic/script_03_multi_loop_return.py)
-- **Hypothesis**: [`hypotheses/HYPOTHESIS_03.md`](smairt_template_demos/lunar/lunar_free_return/hypotheses/HYPOTHESIS_03.md)
-- **Log**: [`results/logs/script_03_multi_loop_return_20260625_122118.log`](smairt_template_demos/lunar/lunar_free_return/results/logs/script_03_multi_loop_return_20260625_122118.log)
+- **Script**: [`experiments/01_synthetic/script_03_multi_loop_return.py`](../experiments/01_synthetic/script_03_multi_loop_return.py)
+- **Hypothesis**: [`hypotheses/HYPOTHESIS_03.md`](../hypotheses/HYPOTHESIS_03.md)
+- **Log**: `script_03_multi_loop_return_20260625_122118.log` (not retained)
 - **Track**: Core
 - **Phase**: synthetic
 
@@ -78,10 +78,10 @@ By stepping from Iteration 1 (1-loop, single flyby) and Iteration 2 (lunar inter
 
 ## Files Generated
 
-- [`results/logs/script_03_multi_loop_return_20260625_122118.log`](smairt_template_demos/lunar/lunar_free_return/results/logs/script_03_multi_loop_return_20260625_122118.log) — Execution raw log
-- [`results/logs/script_03_multi_loop_return_summary.txt`](smairt_template_demos/lunar/lunar_free_return/results/logs/script_03_multi_loop_return_summary.txt) — Sorted table of successful return cases
-- [`results/figures/script_03_multi_loop_return_trajectories.png`](smairt_template_demos/lunar/lunar_free_return/results/figures/script_03_multi_loop_return_trajectories.png) — Rotating-frame view of multiple return orbits
-- [`results/figures/script_03_multi_loop_return_lunar_closeup.png`](smairt_template_demos/lunar/lunar_free_return/results/figures/script_03_multi_loop_return_lunar_closeup.png) — Close-up view of the spacecraft's orbital loop inside the Moon's vicinity
+- `script_03_multi_loop_return_20260625_122118.log` (not retained) — Execution raw log
+- [`results/logs/script_03_multi_loop_return_summary.txt`](../results/logs/script_03_multi_loop_return_summary.txt) — Sorted table of successful return cases
+- [`results/figures/script_03_multi_loop_return_trajectories.png`](../results/figures/script_03_multi_loop_return_trajectories.png) — Rotating-frame view of multiple return orbits
+- [`results/figures/script_03_multi_loop_return_lunar_closeup.png`](../results/figures/script_03_multi_loop_return_lunar_closeup.png) — Close-up view of the spacecraft's orbital loop inside the Moon's vicinity
 
 ## Intellectual Contribution Notes
 

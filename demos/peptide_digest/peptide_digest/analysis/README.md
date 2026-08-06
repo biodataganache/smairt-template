@@ -1,42 +1,42 @@
 # Analysis
 
-Interpretation of results and documentation of the research journey.
+Analysis connects experimental evidence to scientific decisions.
 
-### The 4-Part Structure
+## Four-Part Record
 
-The template records **4 pieces of information in separate files**:
+1. Background records the question, prior work, and earlier results.
+2. A hypothesis states a testable prediction and criteria.
+3. Experiment scripts and data implement the test.
+4. Logs preserve execution evidence; analysis interprets that evidence.
 
-1. **Background** - The question that went into prompting it, what has been done on that area, what's known about that question from the literature, and a summary of the previous results that have come up to this point
-2. **Hypothesis** - Could be in a separate file or at the end of the background
-3. **Methods** - The actual code and data required to test the hypothesis
-4. **Results + Interpretation** - The output logs (auto-captured by TeeLogger) plus analysis through the lens of the hypothesis
-
-The **next steps** from your analysis feed right back into the background for the next iteration.
+The next steps from an analysis feed into the next background update, plan, or hypothesis.
 
 ## Files
 
-- `ANALYSIS_TEMPLATE.md` - Template for documenting each iteration's results, interpretation, and next steps
-- `BREADCRUMB_TRAIL.md` - Running log of all analyses performed (optional Paper workspace)
-- `ANALYSIS_PLAN.md` - Paper structure mapping and iteration planning (optional Paper workspace)
-- `REPOSITORY_PLAN.md` - Repository organization plan (optional Paper workspace)
+- `ANALYSIS_TEMPLATE.md` interprets one experiment. Copy it per experiment as
+  `ANALYSIS_XX.md`; the number matches the script and its hypothesis.
+- `ANALYSIS_PLAN.md` records planned comparisons, metrics, and outputs.
+- `BREADCRUMB_TRAIL.md` indexes analyses and decisions.
+- `REPOSITORY_PLAN.md` records project-specific organization decisions.
+- `STUDY_REPORT_TEMPLATE.md` creates a project-level synthesis at a major checkpoint.
+- `XX_figures/README.md` explains figure provenance.
 
-## The Audit Trail
+## One number, one chain
 
-The modern SMAIRT audit trail connects:
+An experiment's number ties its four records together, so any one of them leads to the
+other three:
 
 ```
-hypotheses/H1_*.md → experiments/script_XX_*.py → results/logs/script_XX_*.log → analysis/ANALYSIS_TEMPLATE.md
+hypotheses/HYPOTHESIS_04.md  ->  experiments/*/script_04_*.py
+                             ->  results/logs/script_04_*.log
+                             ->  analysis/ANALYSIS_04.md
 ```
 
-- **Hypotheses** are documented in `hypotheses/` using `HYPOTHESIS_TEMPLATE.md`
-- **Scripts** test hypotheses; TeeLogger auto-captures output to `results/logs/`
-- **Analysis** interprets log results through the lens of the hypothesis
+Interpretation belongs here. The log it interprets stays unedited in `results/logs/`.
 
-## What Goes Here
+## Study Report Checkpoints
 
-1. Did results support the hypothesis?
-2. What limitations were identified?
-3. What secondary observations were made?
-4. What are the logical next steps?
-
-Next steps (#4) will often be used to seed the next round of experimentation. Document any reusable patterns or recurring errors in `prompts/KNOWN_PATTERNS.md`.
+Create `analysis/STUDY_REPORT.md` from the template when one or more iterations establish a
+coherent finding, before a phase transition or handoff, before Paper drafting, or whenever
+the researcher requests a project-level synthesis. It is a living report, not evidence that
+the study has ended.

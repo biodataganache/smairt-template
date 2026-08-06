@@ -45,5 +45,5 @@ We will digest the canonical mature Bovine Serum Albumin sequence (minus its sig
 * **Observable Maxima:** Verify if $N=1$ or $N=2$ yields more absolute observable peptides than $N=0$.
 
 ## 4. References & Context
-* Background Document: [`smairt_template_demos/peptide_digest/background/01_initial_question.md`](smairt_template_demos/peptide_digest/background/01_initial_question.md)
-* Second Iteration Analysis: [`smairt_template_demos/peptide_digest/peptide_digest/analysis/ANALYSIS_02.md`](smairt_template_demos/peptide_digest/peptide_digest/analysis/ANALYSIS_02.md)
+* Background Document: [`background/01_initial_question.md`](../background/01_initial_question.md)
+* Second Iteration Analysis: [`analysis/ANALYSIS_02.md`](../analysis/ANALYSIS_02.md)

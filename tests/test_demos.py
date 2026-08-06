@@ -159,3 +159,121 @@ def test_a_demo_never_tells_a_reader_to_copy_a_file_that_is_not_there(demo: Path
     assert not missing, f"{demo.name} documents copying files that do not exist:\n" + "\n".join(
         missing
     )
+
+
+# How current each demo is. A reader has to be able to tell, because two of these levels document
+# a workflow that no longer exists. Recorded here so the classification cannot drift from what the
+# demos actually contain.
+CURRENT_DEMOS = {"enzyme_kinetics"}
+IMPORTED_HISTORY_DEMOS = {"lunar", "peptide_digest"}
+LEGACY_DEMOS = {
+    "epidemic_sird",
+    "ppi_network",
+    "protein_lm",
+    "protein_properties",
+    "proteomics_de",
+}
+CONFORMING_DEMOS = CURRENT_DEMOS | IMPORTED_HISTORY_DEMOS
+
+# Helpers the current scaffold does not create. A conforming demo that still ships one is telling a
+# reader to run something that no longer exists.
+RETIRED_HELPERS = ("new_script.py", "new_experiment.py", "finalize_iteration.py")
+
+
+def completed_project(demo: Path) -> Path | None:
+    """Return the completed project inside a demo folder, if it has one."""
+    candidates = [
+        path
+        for path in demo.iterdir()
+        if path.is_dir() and not path.name.startswith(".") and path.name != "background"
+    ]
+    return candidates[0] if len(candidates) == 1 else None
+
+
+def test_the_demo_status_taxonomy_covers_every_demo() -> None:
+    """Every demo carries exactly one status, so none is silently unclassified."""
+    classified = CONFORMING_DEMOS | LEGACY_DEMOS
+    present = {demo.name for demo in demo_directories()} - {"bring_your_own"}
+    assert present == classified, (
+        f"unclassified demos: {sorted(present - classified)}; "
+        f"classified but absent: {sorted(classified - present)}"
+    )
+
+
+@pytest.mark.parametrize("name", sorted(CONFORMING_DEMOS))
+def test_a_conforming_demo_is_a_project_the_tool_recognises(name: str) -> None:
+    """A demo claiming to be current must carry the contract that makes that true.
+
+    None of the legacy demos had `smairt.yaml`, so `smairt check` refused all eight. Passing that
+    check is the minimum for a demo whose guide teaches the current workflow.
+    """
+    project = completed_project(DEMOS / name)
+    assert project is not None, f"{name} has no single completed project directory"
+    contract = project / "smairt.yaml"
+    assert contract.is_file(), f"{name} claims to be current but has no smairt.yaml"
+    for required in ("analysis/ITERATION_LOG.md", "analysis/RUN_HISTORY.md", "LICENSE"):
+        assert (project / required).is_file(), f"{name} is missing {required}"
+
+
+@pytest.mark.parametrize("name", sorted(CONFORMING_DEMOS))
+def test_a_conforming_demo_ships_no_retired_helper(name: str) -> None:
+    """A stale helper in a current demo is an instruction to run something that is gone."""
+    project = completed_project(DEMOS / name)
+    assert project is not None
+    for helper in RETIRED_HELPERS:
+        assert not (project / "scripts" / helper).exists(), (
+            f"{name} still ships scripts/{helper}, which the current scaffold does not create"
+        )
+
+
+@pytest.mark.parametrize("name", sorted(CONFORMING_DEMOS))
+def test_a_conforming_demo_teaches_the_current_helpers(name: str) -> None:
+    """The guide is what a reader follows, so structural conformance alone is not enough.
+
+    Every demo guide once said "There are no solution scripts here" while shipping a complete
+    project, and told readers to hand-create numbered scripts. A demo can pass `smairt check` and
+    still teach the retired workflow, which is the failure this catches.
+    """
+    guide = (DEMOS / name / "DEMO.md").read_text()
+    for helper in ("new_track.py", "new_iteration.py", "record_outcome.py"):
+        assert helper in guide, f"{name}/DEMO.md never mentions {helper}"
+    assert "no solution scripts" not in guide.lower(), (
+        f"{name}/DEMO.md claims it has no solution scripts while shipping a completed project"
+    )
+
+
+@pytest.mark.parametrize("name", sorted(LEGACY_DEMOS))
+def test_a_legacy_demo_says_so_before_its_instructions(name: str) -> None:
+    """A reader must learn a demo is legacy before following steps that no longer apply."""
+    guide = (DEMOS / name / "DEMO.md").read_text()
+    # "Before its instructions" means before the first top-level section, not merely present
+    # somewhere in the file. Splitting on any "## " would match the banner's own subheading.
+    lines = guide.splitlines()
+    first_section = next(
+        (index for index, line in enumerate(lines) if line.startswith("## ")), len(lines)
+    )
+    banner = "\n".join(lines[:first_section])
+    assert "Status: legacy" in banner, (
+        f"{name}/DEMO.md has no legacy status banner before its first section"
+    )
+    assert "docs/workflow.md" in guide, (
+        f"{name}/DEMO.md marks itself legacy without pointing at the current workflow"
+    )
+
+
+@pytest.mark.parametrize("name", sorted(CONFORMING_DEMOS))
+def test_a_conforming_demo_has_no_dangling_local_link(name: str) -> None:
+    """A link into the project is a promise it can be followed.
+
+    The migrated demos carried 47 broken links: some to a repository-root-style prefix that
+    resolved nowhere, and some to execution logs that were never committed. The second kind
+    matters most, because a link to missing evidence looks like evidence.
+    """
+    project = completed_project(DEMOS / name)
+    assert project is not None
+    dangling: list[str] = []
+    for document in sorted(project.rglob("*.md")):
+        for target in re.findall(r"\]\((?!https?://|#|mailto:)([^)#]+)", document.read_text()):
+            if not (document.parent / target.strip()).resolve().exists():
+                dangling.append(f"{document.relative_to(project)} -> {target.strip()}")
+    assert not dangling, f"{name} has dangling local links:\n" + "\n".join(dangling)

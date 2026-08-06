@@ -6,9 +6,9 @@ This analysis successfully documents the results of Phase 1 (synthetic numerical
 
 ## Experiment Details
 
-- **Script**: [`experiments/01_synthetic/script_01_trajectory_sweep.py`](smairt_template_demos/lunar/lunar_free_return/experiments/01_synthetic/script_01_trajectory_sweep.py)
-- **Hypothesis**: [`hypotheses/HYPOTHESIS_01.md`](smairt_template_demos/lunar/lunar_free_return/hypotheses/HYPOTHESIS_01.md)
-- **Log**: [`results/logs/script_01_trajectory_sweep_20260625_095910.log`](smairt_template_demos/lunar/lunar_free_return/results/logs/script_01_trajectory_sweep_20260625_095910.log)
+- **Script**: [`experiments/01_synthetic/script_01_trajectory_sweep.py`](../experiments/01_synthetic/script_01_trajectory_sweep.py)
+- **Hypothesis**: [`hypotheses/HYPOTHESIS_01.md`](../hypotheses/HYPOTHESIS_01.md)
+- **Log**: `script_01_trajectory_sweep_20260625_095910.log` (not retained)
 - **Track**: Core / Phase 1
 - **Phase**: synthetic
 
@@ -77,9 +77,9 @@ The findings confirm that a single impulsive burn from LEO is sufficient to esta
 
 ## Files Generated
 
-- [`results/logs/script_01_trajectory_sweep_20260625_095910.log`](smairt_template_demos/lunar/lunar_free_return/results/logs/script_01_trajectory_sweep_20260625_095910.log) — Raw console execution log
-- [`results/figures/script_01_trajectory_sweep_trajectories.png`](smairt_template_demos/lunar/lunar_free_return/results/figures/script_01_trajectory_sweep_trajectories.png) — Trajectory paths in rotating frame showing the free-return loop
-- [`results/figures/script_01_trajectory_sweep_metrics.png`](smairt_template_demos/lunar/lunar_free_return/results/figures/script_01_trajectory_sweep_metrics.png) — Sensitivity analysis plots of lunar approach and return altitude vs. TLI speed
+- `script_01_trajectory_sweep_20260625_095910.log` (not retained) — Raw console execution log
+- [`results/figures/script_01_trajectory_sweep_trajectories.png`](../results/figures/script_01_trajectory_sweep_trajectories.png) — Trajectory paths in rotating frame showing the free-return loop
+- [`results/figures/script_01_trajectory_sweep_metrics.png`](../results/figures/script_01_trajectory_sweep_metrics.png) — Sensitivity analysis plots of lunar approach and return altitude vs. TLI speed
 
 ## Intellectual Contribution Notes
 

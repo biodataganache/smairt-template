@@ -40,5 +40,5 @@ With the cleavage rules and missed-cleavage mechanics completely validated, we a
 
 ---
 *Created on: 2026-06-29*
-*Experiment Script:* [`smairt_template_demos/peptide_digest/peptide_digest/experiments/01_synthetic/script_02_missed_cleavages_validation.py`](smairt_template_demos/peptide_digest/peptide_digest/experiments/01_synthetic/script_02_missed_cleavages_validation.py)
+*Experiment Script:* [`experiments/01_synthetic/script_02_missed_cleavages_validation.py`](../experiments/01_synthetic/script_02_missed_cleavages_validation.py)
 *Log File:* `results/logs/script_02_missed_cleavages_validation_20260629_085242.log`

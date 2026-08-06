@@ -26,7 +26,7 @@ For each iteration, document:
 **Phase:** Synthetic
 
 **Hypothesis being tested:**
-- [Discovery of Free-Return Trajectory Band in CR3BP](smairt_template_demos/lunar/lunar_free_return/hypotheses/HYPOTHESIS_01.md)
+- [Discovery of Free-Return Trajectory Band in CR3BP](../hypotheses/HYPOTHESIS_01.md)
 
 **AI suggested:**
 - Setting up the initial Earth-Moon CR3BP equations of motion and standard `solve_ivp` numerical integration structure.
@@ -41,7 +41,7 @@ For each iteration, document:
 - Realized that launching from the third quadrant ($\phi = 245.0^\circ$) offsets the Coriolis deflection, allowing the trajectory to safely loop behind the Moon (crossing the $x = 1 - \mu$ plane from $y > 0$ to $y < 0$) and return directly to Earth's re-entry corridor.
 
 **Decision I made:**
-- Hard-coded the optimized phase angle $\phi = 245.0^\circ$ into the main sweep script [`experiments/01_synthetic/script_01_trajectory_sweep.py`](smairt_template_demos/lunar/lunar_free_return/experiments/01_synthetic/script_01_trajectory_sweep.py) to replace the failing $\phi = 180^\circ$ geometry.
+- Hard-coded the optimized phase angle $\phi = 245.0^\circ$ into the main sweep script [`experiments/01_synthetic/script_01_trajectory_sweep.py`](../experiments/01_synthetic/script_01_trajectory_sweep.py) to replace the failing $\phi = 180^\circ$ geometry.
 - Used a dedicated, temporary python script to append execution output logs to circumvent Windows CMD command pipeline characters (`|`) and multi-line limitations.
 
 **Where I pushed past a dead end:**
@@ -54,7 +54,7 @@ For each iteration, document:
 **Phase:** Synthetic
 
 **Hypothesis being tested:**
-- [Direct Minimum-Energy Lunar Intercept (Hohmann-like Impact)](smairt_template_demos/lunar/lunar_free_return/hypotheses/HYPOTHESIS_02.md)
+- [Direct Minimum-Energy Lunar Intercept (Hohmann-like Impact)](../hypotheses/HYPOTHESIS_02.md)
 
 **AI suggested:**
 - Set up a basic 2D search grid focused tightly on the same parameter region as free-return ($v_{\text{inj}} \in [10.82, 10.92]\text{ km/s}$, $\phi \in [210.0^\circ, 250.0^\circ]$).
@@ -67,7 +67,7 @@ For each iteration, document:
 - Realized that because the spacecraft moves slower than the Moon at apogee, low-energy trajectories will naturally result in impacts on the Moon's leading hemisphere ($y > 0$). Verified that $83\%$ of discovered direct impact cases hit the leading hemisphere.
 
 **Decision I made:**
-- Narrowed the final sweep parameters to a highly targeted, high-density grid ($v_{\text{inj}} \in [10.920, 10.970]\text{ km/s}$ and $\phi \in [224.0^\circ, 238.0^\circ]$) in [`experiments/01_synthetic/script_02_lunar_intercept.py`](smairt_template_demos/lunar/lunar_free_return/experiments/01_synthetic/script_02_lunar_intercept.py) to map a high concentration of direct hits.
+- Narrowed the final sweep parameters to a highly targeted, high-density grid ($v_{\text{inj}} \in [10.920, 10.970]\text{ km/s}$ and $\phi \in [224.0^\circ, 238.0^\circ]$) in [`experiments/01_synthetic/script_02_lunar_intercept.py`](../experiments/01_synthetic/script_02_lunar_intercept.py) to map a high concentration of direct hits.
 
 **Where I pushed past a dead end:**
 - Overcame the original "0 impacts found" dead-end of the initial grid bounds by writing fast, parallel scripts (`search_intercept.py` and `fine_intercept_search.py`) to systematically map the boundaries and identify the exact narrow band of impact coordinates.
@@ -79,7 +79,7 @@ For each iteration, document:
 **Phase:** Synthetic
 
 **Hypothesis being tested:**
-- [Multi-Loop (3-Revolution) Resonant Lunar Free-Return Orbits](smairt_template_demos/lunar/lunar_free_return/hypotheses/HYPOTHESIS_03.md)
+- [Multi-Loop (3-Revolution) Resonant Lunar Free-Return Orbits](../hypotheses/HYPOTHESIS_03.md)
 
 **AI suggested:**
 - Running a coarse 2D grid sweep and searching for a specific candidate with exactly 3 loops ($N_{\text{loops}} \ge 1.5$ in filter) using polar angle accumulator centered on the Moon.

@@ -1,117 +1,51 @@
-#!/usr/bin/env python
-"""
-Generate a manifest of all final results and their sources.
+#!/usr/bin/env python3
+"""Print or write a non-destructive inventory of project research artifacts."""
 
-Usage:
-    python scripts/generate_manifest.py
+from __future__ import annotations
 
-This scans all analysis directories and creates/updates FINAL_MANIFEST.md
-with information about which iterations produced the final results.
-"""
-
+import argparse
 from pathlib import Path
-from datetime import datetime
+
+AREAS = ("hypotheses", "experiments", "results/logs", "results/figures", "analysis", "paper")
 
 
-def generate_manifest():
-    """Generate FINAL_MANIFEST.md from all finalized analyses."""
-    analysis_dir = Path("analysis")
-    date = datetime.now().strftime("%Y-%m-%d")
-    
-    if not analysis_dir.exists():
-        print("ERROR: analysis/ directory not found")
+def build_manifest(root: Path) -> str:
+    lines = [
+        "# Project Evidence Inventory",
+        "",
+        "Generated from existing files; no evidence was modified.",
+        "",
+    ]
+    for area in AREAS:
+        directory = root / area
+        if not directory.is_dir():
+            continue
+        lines.extend((f"## {area}", ""))
+        files = sorted(path for path in directory.rglob("*") if path.is_file())
+        if files:
+            lines.extend(f"- `{path.relative_to(root).as_posix()}`" for path in files)
+        else:
+            lines.append("- No files recorded.")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, help="Optional new output file.")
+    arguments = parser.parse_args()
+    root = Path(__file__).resolve().parents[1]
+    manifest = build_manifest(root)
+    if arguments.output is None:
+        print(manifest, end="")
         return
-    
-    # Collect all finalized analyses
-    finalized = []
-    
-    for section_dir in sorted(analysis_dir.iterdir()):
-        if not section_dir.is_dir():
-            continue
-        if section_dir.name.startswith('XX_'):
-            continue  # Skip figures directory
-        
-        # Check for nested analysis directories
-        for analysis_subdir in sorted(section_dir.iterdir()):
-            if not analysis_subdir.is_dir():
-                continue
-            
-            final_dir = analysis_subdir / "final"
-            selected_file = final_dir / "SELECTED.md"
-            
-            if selected_file.exists():
-                # Read selected iteration info
-                content = selected_file.read_text()
-                
-                # Count files
-                results_count = len(list((final_dir / "results").glob("*"))) if (final_dir / "results").exists() else 0
-                figures_count = len(list((final_dir / "figures").glob("*"))) if (final_dir / "figures").exists() else 0
-                
-                finalized.append({
-                    "path": f"{section_dir.name}/{analysis_subdir.name}",
-                    "results": results_count,
-                    "figures": figures_count,
-                    "selected_file": selected_file
-                })
-    
-    # Generate manifest
-    manifest_content = f"""# Final Manifest
-
-**Generated**: {date}
-**Project**: Lunar Free Return
-
-This file maps all final results to their source analyses and iterations.
-
----
-
-## Summary
-
-| Analysis | Results | Figures | Status |
-|----------|---------|---------|--------|
-"""
-    
-    for item in finalized:
-        manifest_content += f"| {item['path']} | {item['results']} | {item['figures']} | ✓ Finalized |\n"
-    
-    # Add not-finalized analyses
-    for section_dir in sorted(analysis_dir.iterdir()):
-        if not section_dir.is_dir():
-            continue
-        if section_dir.name.startswith('XX_'):
-            continue
-        
-        for analysis_subdir in sorted(section_dir.iterdir()):
-            if not analysis_subdir.is_dir():
-                continue
-            
-            path = f"{section_dir.name}/{analysis_subdir.name}"
-            if not any(f["path"] == path for f in finalized):
-                manifest_content += f"| {path} | - | - | ⏳ In progress |\n"
-    
-    manifest_content += "\n---\n\n## Detailed Entries\n\n"
-    
-    for item in finalized:
-        manifest_content += f"""### {item['path']}
-
-- **Results**: {item['results']} files
-- **Figures**: {item['figures']} files
-- **Details**: `analysis/{item['path']}/final/SELECTED.md`
-
----
-
-"""
-    
-    # Write manifest
-    manifest_path = Path("FINAL_MANIFEST.md")
-    manifest_path.write_text(manifest_content)
-    
-    print(f"✓ Generated FINAL_MANIFEST.md")
-    print(f"  Finalized analyses: {len(finalized)}")
-    print()
-    print("Contents:")
-    for item in finalized:
-        print(f"  - {item['path']}: {item['results']} results, {item['figures']} figures")
+    output = arguments.output if arguments.output.is_absolute() else root / arguments.output
+    if output.exists():
+        parser.error(f"refusing to overwrite existing file: {output}")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(manifest)
+    print(f"Created {output.relative_to(root)}")
 
 
 if __name__ == "__main__":
-    generate_manifest()
+    main()

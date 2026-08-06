@@ -1,136 +1,104 @@
 # Lunar Free Return
 
-Artemis II free-return trajectory
+Circumlunar free-return trajectory corridors in the Earth-Moon CR3BP
 
-**Author:** Your Name (you@example.com)
-**Domain:** physics  
-**AI Tool:** roo_zoo
+**Domain:** Astrodynamics
 
----
+## Start here
 
-## Research Question
+Point an assistant at `docs/12_STEPS.md` and `prompts/AI_CONTEXT.md`. The first
+describes the workflow and who owns which decision; the second describes the
+assistant's role in this project. `prompts/CONTEXT_INDEX.md` says which files to read
+for a given task.
 
-Can we find a TLI burn that yeilds a free-return?
+Ready-made prompts for common situations are in `prompts/00_priming_prompts.md`.
 
----
+## One pass through the loop
 
-## About This Project
+```bash
+# 1. Start a track: writes the plan and the hypothesis, and no script yet
+python3 scripts/new_track.py "The baseline exceeds chance" synthetic
 
-This project uses the **SMAIRT** (Scientific Method with AI Research Template) framework.
+# 2. Write the prediction and both criteria in the hypothesis file, and commit them
+#    before any experiment exists
 
-### Core Philosophy
+# 3. Create the iteration, then implement and run it from the project root
+python3 scripts/new_iteration.py baseline synthetic --hypothesis HYPOTHESIS_01
+python3 experiments/01_synthetic/script_01_baseline.py
 
-AI excels at regression toward the mean—it can get you quickly to the frontier of what's already known. The human contribution remains essential for:
-- Making innovative connections
-- Identifying truly novel questions
-- Recognizing where AI suggestions fall short
+# 4. Interpret the log it produced, against the criteria you committed in step 2
+cp analysis/ANALYSIS_TEMPLATE.md analysis/ANALYSIS_01.md
 
-### The Loop
+# 5. Record what the iteration showed, in your own words
+python3 scripts/record_outcome.py 1 --outcome "Criterion met, 0.71 against a 0.65 target"
 
-```
-Background → Hypothesis → Methods/Code → Results → Analysis → Next Steps → (repeat)
-```
-
-### The 4-Part Structure
-
-The template records **4 pieces of information in separate files**:
-
-1. **Background** - The question that went into prompting it, what has been done on that area, what's known about that question from the literature, and a summary of the previous results that have come up to this point
-2. **Hypothesis** - Documented in `hypotheses/` using `HYPOTHESIS_TEMPLATE.md`
-3. **Methods** - The actual code and data required to test the hypothesis
-4. **Results + Interpretation** - Output logs (auto-captured by TeeLogger to `results/logs/`) plus analysis through the lens of the hypothesis
-
-The **next steps** from your analysis feed right back into the background for the next iteration.
-
-### Data Progression
-
-1. **Synthetic data** (`experiments/01_synthetic/`) - Fast iteration, no dependencies
-2. **Downloaded data** (`experiments/02_downloaded/`) - Benchmark datasets for validation
-3. **Real data** (`experiments/03_real_data/`) - Your actual target data
-
----
-
-## Quick Start
-
-1. Review the philosophy: `docs/SMAIRT_PHILOSOPHY.md`
-2. Review the 10 steps: `docs/12_STEPS.md`
-3. Define your question: `background/01_initial_question.md`
-4. Set up your AI session: `prompts/00_priming_prompts.md`
-5. Start experimenting: `experiments/01_synthetic/`
-6. Track your contributions: `prompts/intellectual_contribution.md`
-
----
-
-## Project Structure
-
-```
-├── docs/              # SMAIRT philosophy and 10-step guide
-├── prompts/           # AI context, known patterns, code conventions
-├── plans/             # AI-generated plans (git-tracked for review)
-├── background/        # Research question, literature, prior results
-├── hypotheses/        # Hypothesis tracking (HYPOTHESIS_TEMPLATE.md)
-├── experiments/       # Scripts organized by data phase
-│   ├── 01_synthetic/
-│   ├── 02_downloaded/
-│   └── 03_real_data/
-├── results/           # Auto-captured logs and figures
-│   ├── logs/          # TeeLogger output (named to match scripts)
-│   └── figures/       # Generated visualizations
-├── analysis/          # Interpretation and analysis documentation
-├── data/              # Data files by phase
-│   └── shared/        # TeeLogger and shared utilities
-└── paper_draft/       # Parallel narrative and figure generation
+# 6. Say which iteration you would report, and what it is evidence for
+python3 scripts/select_result.py 1 --claim "The baseline exceeds chance"
 ```
 
----
+Step 5 refuses until `analysis/ANALYSIS_01.md` exists, because an outcome recorded before
+the run was read is a guess wearing a record's clothes. Step 6 reads the iteration log
+rather than the filesystem, so an iteration that was never recorded cannot be reported.
 
-## Key Conventions
+The number ties the four records together, so any one of them leads to the rest:
+hypothesis, script, log, analysis. Every numbered script is an iteration and appears in
+`analysis/ITERATION_LOG.md`; utilities that test nothing live in `scripts/utilities/` and
+take no number.
 
-### Script Naming
+`smairt open` reports where the project stands and which of these commands comes next, so
+you do not have to hold the sequence in your head.
+
+## Layout
+
 ```
-script_01_description.py
-script_02_another_test.py
-script_03_noise_robustness.py
+smairt.yaml       Project contract: question, phase, capabilities, license
+AGENTS.md         Pointer that directs an assistant to the project context
+docs/             The research loop and project practice
+prompts/          Assistant context, conventions, patterns, contribution record
+background/       Research question, prior work, constraints
+hypotheses/       One file per hypothesis, criteria recorded before the run
+plans/            Plans for work spanning several experiments
+experiments/      Numbered scripts in 01_synthetic, 02_downloaded, 03_real_data
+data/             Inputs and their provenance, by phase
+results/logs/     Raw execution records, never edited
+results/figures/  Generated figures
+analysis/         Interpretation per experiment, plus the study report
+scripts/          Helpers, with shared library code in scripts/shared/
 ```
 
-### The Audit Trail
+All three experiment phases are always present. The contract records
+`starting_phase`, which never changes, and `current_phase`, which advances as the work
+does.
 
-Every experiment connects through the audit trail:
+## Managing this project
+
+```bash
+smairt              # Dashboard for this project
+smairt check        # Report structural or configuration problems
+smairt --help       # All commands
 ```
-hypotheses/H1_*.md → experiments/script_XX_*.py → results/logs/script_XX_*.log → analysis/
-```
 
-TeeLogger automatically captures all script output to `results/logs/`, creating the permanent record without manual copy-paste.
+`smairt check` never modifies anything. Repairs are previewed and applied only on
+confirmation, and they never touch researcher work.
 
-### Known Patterns & Error Prevention
+## Capabilities
 
-Track reusable patterns and recurring errors in `prompts/KNOWN_PATTERNS.md`. This prevents repeating the same mistakes and preserves working solutions across sessions.
+Paper and HPC are optional and independent. Enabling either adds files; disabling
+marks the capability inactive and leaves existing files untouched. Toggle them from the
+dashboard.
 
-### Feeding Back to AI
+With Paper enabled: `paper/` for drafts and reviewer feedback, `FINAL_MANIFEST.md`
+mapping claims to evidence, and three further prompts in `prompts/`.
 
-For **IDE-native** workflows (Roo/Zoo, Cursor, Windsurf): AI reads project files directly—use `prompts/AI_CONTEXT.md` and `prompts/KNOWN_PATTERNS.md` as context.
-
-
----
-
-## Parallel Story Generation
-
-As a parallel output to the 4-part structure:
-- A **paragraph** for each section
-- A **figure** for the results section
-- A **schematic diagram** for the methods showing the workflow
-
-The final scientific product won't have all experiments together—it will be based on selected results. Use `paper_draft/` to build this narrative alongside your experiments.
-
----
-
-## Caveats
-
-- **Literature limitations:** LLMs can't do a deep dive on the literature. Be suspicious about what they bring from the literature—verify important claims independently.
-- **Regression toward the mean:** AI is good at known approaches but less good at truly innovative connections. That's your job.
-
----
+With HPC enabled: `hpc/` for cluster configuration and job scripts. SMAIRT does not
+submit, monitor, or cancel jobs.
 
 ## License
 
-MIT
+Lunar Free Return is licensed under the terms recorded in `LICENSE`.
+
+SMAIRT writes `LICENSE` only for the licenses whose complete official text it ships, so
+the file is never an abbreviation of the license it names. To use a different license,
+replace `LICENSE` with its full official text yourself and record the choice with your
+institution. `smairt check` then reports `LICENSE` as researcher-modified and will not
+replace it.
