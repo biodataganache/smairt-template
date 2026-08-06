@@ -2265,6 +2265,16 @@ def run_interactive_dashboard(
                 break
         if not sent and b"Choose an action" in output:
             os.write(master, input_text.encode())
+            # A lone `\x1b` is the prefix of every escape sequence, so Prompt Toolkit must wait
+            # to learn whether more bytes follow before it can treat it as the Escape key. On a
+            # loaded runner that wait outlives the write, and the selector sits holding an
+            # ambiguous byte. Flushing a second Escape resolves it the way a real terminal does:
+            # `\x1b\x1b` cannot be the start of any sequence, so the first is unambiguously a
+            # keypress. Sending it here rather than at each call site keeps every pty test
+            # honest about what it is asserting, which is the dashboard's behaviour and not
+            # Prompt Toolkit's input timer.
+            if input_text == "\x1b":
+                os.write(master, b"\x1b")
             sent = True
     if process.poll() is None:
         process.kill()
