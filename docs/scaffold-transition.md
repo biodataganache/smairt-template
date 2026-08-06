@@ -1,5 +1,26 @@
 # Scientific Scaffold Transition Record
 
+## Scaffold version 0.5.0
+
+`scripts/utilities/` shipped as a declared directory with nothing in it. Git does not track
+an empty directory, so the directory did not exist in any clone of a generated project, and it
+did not exist in the golden fixtures either. The comparison that exists to catch scaffold drift
+passed on the machine that wrote it and failed on a fresh checkout, because the fixture was
+incomplete in the repository and complete only in a working tree.
+
+The fix is a README in the directory rather than a placeholder, because the directory needed
+one anyway: every other declared directory either carries its own README or holds declared
+children that do, and `scripts/utilities/` is where the distinction between a utility and an
+iteration has to be stated. Numbering a utility would put a row in `analysis/ITERATION_LOG.md`
+for something that settles no question.
+
+`0.5.0` rather than `0.4.1` because the blueprint gained a declared asset, so what a generated
+project contains has changed. A `0.4.0` project is now told `scaffold-version-mismatch` and
+`smairt upgrade` creates the missing README, which is the behavior
+[ADR 0001](adr/0001-protect-generated-project-surface.md:21) specifies. Verified rather than
+assumed: before the bump, `check` reported the missing file while `upgrade` and `repair` both
+declined to act on it, because the installed version already matched the project's.
+
 ## Scaffold version 0.3.0
 
 The re-enrichment and the readopted iteration workflow both changed what a generated

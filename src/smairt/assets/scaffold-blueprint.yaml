@@ -75,6 +75,7 @@ assets:
   - {id: monitor-template, path: scripts/monitor_template.py, kind: file, purpose: Non-destructive progress-file observer., ownership: tool-guidance, condition: always, source: scripts/monitor_template.py}
   - {id: generate-manifest, path: scripts/generate_manifest.py, kind: file, purpose: Non-destructive project evidence inventory., ownership: tool-guidance, condition: always, source: scripts/generate_manifest.py}
   - {id: utilities-directory, path: scripts/utilities, kind: directory, purpose: Researcher utility scripts that are not iterations and take no iteration number., ownership: researcher-work, condition: always}
+  - {id: utilities-readme, path: scripts/utilities/README.md, kind: file, purpose: What separates a utility from an iteration., ownership: tool-guidance, condition: always, source: scripts/utilities/README.md}
   - {id: shared-directory, path: scripts/shared, kind: directory, purpose: Package-maintained shared helpers plus researcher-added modules., ownership: tool-guidance, condition: always}
   - {id: shared-init, path: scripts/shared/__init__.py, kind: file, purpose: Shared helper exports., ownership: tool-guidance, condition: always, source: scripts/shared/__init__.py}
   - {id: shared-logging, path: scripts/shared/logging.py, kind: file, purpose: Complete terminal and execution-log capture., ownership: tool-guidance, condition: always, source: scripts/shared/logging.py}

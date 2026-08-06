@@ -1,7 +1,7 @@
 # Prove the supported platform matrix before the pull request
 
 Type: task
-Status: unclaimed
+Status: claimed
 Blocked by: None
 
 ## Question

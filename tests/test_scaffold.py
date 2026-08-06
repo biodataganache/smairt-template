@@ -106,3 +106,26 @@ def test_blueprint_diff_calls_out_product_surface_changes() -> None:
         "ownership_changed": ["GUIDE.md: tool-guidance -> editable-starter"],
         "condition_changed": ["paper/outline.md: paper -> always"],
     }
+
+
+def test_every_declared_directory_arrives_with_something_in_it() -> None:
+    """An empty directory does not survive Git, so it cannot be part of a shared record.
+
+    `scripts/utilities` shipped empty. A researcher who committed a new project pushed a tree
+    without it, and the golden fixtures silently lost it too, so the comparison that exists to
+    catch drift passed locally and failed on a fresh clone. Every other declared directory
+    either carries its own README or holds declared children that do.
+    """
+    blueprint = load_blueprint()
+    declared = {asset.path for asset in blueprint.assets}
+    empty: list[str] = []
+    for asset in blueprint.assets:
+        if asset.kind != "directory":
+            continue
+        if any(other.startswith(f"{asset.path}/") for other in declared):
+            continue
+        empty.append(asset.path)
+    assert not empty, (
+        "declared directories that ship with no content and cannot survive Git:\n"
+        + "\n".join(empty)
+    )
