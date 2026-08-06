@@ -1,7 +1,7 @@
 # Rewrite the protein language model demo as a current generated project
 
 Type: task
-Status: unclaimed
+Status: dropped
 Blocked by: 08, 09
 
 ## Question
@@ -20,3 +20,15 @@ Can the largest demo preserve its nine-step scientific narrative while remaining
 ## Resolution
 
 Resolve when a clean environment can run the documented default path, the optional ESM-2 rung is independently reproducible, `smairt check` passes, and all claims in the demo are traceable to current logs and analyses.
+
+## Outcome: dropped, not deferred
+
+Decided against rewriting this demo. It is ~4,300 lines across nine rungs, needs PyTorch,
+optional `fair-esm`, and a model-weight download, so it is the most expensive demo to migrate
+and the least likely to be run by a newcomer.
+
+It stays in the repository as a legacy demo under the `demos/README.md` warning. The cost of
+migration is not repaid by what it teaches about the current workflow: the light and medium
+demos already show every helper in the loop, on data a reader can obtain in seconds.
+
+Ticket 09's recipe is written so this demo *could* be migrated later. Nothing here blocks it.

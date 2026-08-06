@@ -20,3 +20,14 @@ Can protein properties, proteomics differential expression, PPI networks, and ep
 ## Resolution
 
 Resolve when all four pass `smairt check`, reproduce their stated scientific invariants from documented environments, and contain no cookiecutter-era tool guidance or empty capability scaffolding.
+
+## Open question, to settle inside this ticket
+
+Whether `protein_properties`' calculators need a migration seam at all is not decided up front.
+Its legacy scripts import calculator functions from the cookiecutter-era `scripts/shared/`,
+which the current scaffold uses for logging and run-status helpers instead. The cheaper reading
+is that these calculators are ordinary scientific code that belongs in `scripts/utilities/` or
+inside the iteration that uses them, needing no framework change.
+
+Do not add a seam speculatively. Carry the light demos and the first medium demos through the
+recipe, then look at what the calculators actually need.

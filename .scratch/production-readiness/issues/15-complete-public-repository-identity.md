@@ -59,3 +59,8 @@ GitHub license detection resolves itself on merge: `LICENSE` exists on this bran
 
 No code of conduct was added. Adding an unapproved one to a PNNL repository would be presumptuous
 about an organizational policy I cannot verify.
+
+## Held by decision
+
+The GitHub description and topics are deliberately not being changed yet. Revisit once the
+front-repo state is final. The suggested wording above stands until then.

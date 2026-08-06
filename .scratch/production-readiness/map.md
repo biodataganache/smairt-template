@@ -39,6 +39,16 @@ This branch is ready to replace `main` as SMAIRT's publication-facing framework 
 
 - Platform matrix re-verified green twice consecutively after three layers of pty-harness fixes: a 60s ceiling, waiting for the screen to settle before answering, and bounding answer length below the Linux canonical-input limit. Each failure looked like a product hang and was the harness.
 
+## Decisions taken during implementation
+
+- The protein language model demo (ticket 12) is dropped, not deferred. Too expensive to migrate,
+  least likely to be run. It stays as a legacy demo behind the `demos/README.md` warning.
+- The GitHub description and topics stay as they are for now. Revisit when the front-repo state is final.
+- Whether `protein_properties`' calculators need a migration seam is judged *after* tickets 09-11,
+  not before. No speculative framework change.
+- The platform matrix is verified once, at the end. During implementation, the gates are local:
+  `ruff check`, `mypy src tests`, `pytest`.
+
 ## Not yet specified
 
 - Whether demo verification belongs in every CI matrix cell, one representative cell, or a separate scheduled job. This becomes decidable after the demo smoke interface and runtime are known.
