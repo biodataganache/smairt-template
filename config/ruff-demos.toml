@@ -1,0 +1,30 @@
+# Lint rules for the example science under `demos/`.
+#
+# Demos are example science, not framework code, so they are held to a lower bar than the package.
+# Five of the nine are labelled legacy and kept as historical scientific records; reformatting or
+# restyling them would rewrite the evidence. Running the project's own `E,F,I` selection over them
+# reports 298 findings that are almost entirely cosmetic.
+#
+# What is not acceptable is shipping copyable example code that cannot run. These rules catch
+# exactly that class of defect and nothing else:
+#
+#   E9   syntax errors
+#   F63  comparisons that are always true or always false
+#   F7   misplaced statements, such as `break` outside a loop
+#   F82  undefined names
+#
+# All four are green today, so a failure here means a real break, not a new opinion.
+#
+# This file lives outside `demos/` on purpose. Ruff discovers a configuration file by walking up
+# from each linted file, so a `demos/ruff.toml` would also become the *formatter's* configuration
+# for that directory — overriding the root `include` and pulling 89 demo files into
+# `ruff format --check`. Keeping it here means it applies only when passed explicitly:
+#
+#   uv run ruff check --config config/ruff-demos.toml demos/
+#
+# Paths are relative to this file, so `demos/` must be reached from the repository root.
+target-version = "py311"
+line-length = 100
+
+[lint]
+select = ["E9", "F63", "F7", "F82"]

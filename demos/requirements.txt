@@ -1,1 +1,0 @@
-# Needed by ALL demos to generate a SMAIRT project.

@@ -1,5 +1,12 @@
 # Using Zoo Code (for first time AI users)
 
+Zoo Code is one of several assistants SMAIRT supports. This page is the click-by-click setup guide
+for that one, written for readers who have never used an AI assistant before.
+
+**If you chose a different assistant**, read
+[`USING_AN_AI_ASSISTANT.md`](USING_AN_AI_ASSISTANT.md) instead: the SMAIRT workflow is identical,
+and only the installation and button names below are specific to Zoo Code.
+
 Zoo Code is an AI assistant built into VS Code. In these demos it reads your
 project files, writes code for you, and can run commands in the terminal.
 **You stay in charge**: you review and approve everything. This page explains
@@ -133,7 +140,7 @@ After a run, review the complete tracked output in `results/logs/`
   right because... please change it to..."*. Catching mistakes is good science.
 - **Command fails?** Copy the error into the chat and ask it to fix it.
 - **Lost the thread?** Ask: *"Summarize what we've done so far and what the next
-  in.
+  step is."*
 - **`command not found`?** Your virtual environment probably isn't active. See
   step 3 above.
 - **Assistant stuck in a way a retry won't fix?** Don't keep retrying. Open a

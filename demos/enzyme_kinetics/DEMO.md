@@ -97,7 +97,8 @@ Answer the prompts, then seed the question and open a chat with an AI assistant:
 cp enzyme_kinetics/background/01_initial_question.md <your-project>/background/
 ```
 
-New to AI assistants? Read [`../USING_ZOO_CODE.md`](../USING_ZOO_CODE.md) for install and setup.
+New to AI assistants? Read [`../USING_AN_AI_ASSISTANT.md`](../USING_AN_AI_ASSISTANT.md).
+For click-by-click setup of one specific assistant, see [`../USING_ZOO_CODE.md`](../USING_ZOO_CODE.md).
 
 Prime the assistant:
 

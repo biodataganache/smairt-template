@@ -10,6 +10,22 @@ changed.
 
 ## Unreleased
 
+### Commands
+
+- **`smairt settings` with no options no longer rewrites `smairt.yaml`.** Showing settings replaced
+  the contract file with byte-identical content, because the command saved first and only afterwards
+  worked out that nothing had been asked of it. Nothing was corrupted, but `smairt.yaml` is the
+  project's provenance record and its modification time is evidence about when the project last
+  changed; a command that only reads must not disturb that. Each option group now names the store it
+  writes to, so asking for nothing writes nothing.
+
+### Packaging
+
+- **The package now ships a `py.typed` marker.** Every module is checked under strict mypy, and none
+  of that reached anyone installing SMAIRT: without the marker a consumer's type checker treats the
+  whole package as untyped. The annotations this project already maintains are now visible
+  downstream.
+
 ### Scaffold 0.5.2
 
 - **A rigor declaration the researcher enabled no longer depends on which interpreter ran the
@@ -40,6 +56,16 @@ changed.
 
 ### Documentation and examples
 
+- **The demo guides no longer assume one specific AI assistant.** SMAIRT supports six, and the
+  workflow is identical across all of them, but every demo pointed a newcomer at a Zoo Code setup
+  page as though it were the only route. A new
+  [demos/USING_AN_AI_ASSISTANT.md](demos/USING_AN_AI_ASSISTANT.md) teaches the loop in
+  assistant-neutral terms; the click-by-click Zoo Code guide remains as an appendix for readers who
+  want one concrete path.
+- **Four demo guides linked to a research question that was not where they said.** Each pointed at
+  `background/01_initial_question.md` while the file is inside the completed project directory. The
+  existing link check only descended into the projects, so the guides a reader actually opens first
+  were never checked. It now covers them.
 - **Demo status is now stated rather than implied.** Three levels: `enzyme_kinetics` is current;
   `lunar` and `peptide_digest` are current scaffolds carrying imported history; the remaining five
   are legacy, kept for their scientific reasoning. Two of them documented a complete execution

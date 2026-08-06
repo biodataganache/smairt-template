@@ -30,7 +30,7 @@ There are **no solution scripts here**. The goal is to experience using SMAIRT
 to go from a question to an answer with an AI assistant, on a small, checkable
 epidemic-modeling problem you can iterate on.
 
-> New to AI assistants? Read [`../USING_ZOO_CODE.md`](../USING_ZOO_CODE.md) first
+> New to AI assistants? Read [`../USING_AN_AI_ASSISTANT.md`](../USING_AN_AI_ASSISTANT.md) first
 > (install, sign in, attach files, approve edits).
 
 ---
@@ -64,7 +64,7 @@ what fraction of the population ends up **recovered versus deceased** - and does
 the epidemic grow or fade as predicted by **R0**?
 
 Full context, hypothesis, and metrics are in
-[`background/01_initial_question.md`](background/01_initial_question.md).
+[`background/01_initial_question.md`](sird_epidemic_model/background/01_initial_question.md).
 
 ### Key terms
 
@@ -119,7 +119,7 @@ Full context, hypothesis, and metrics are in
    ```
 
 3. **Configure Zoo Code, then open the project in VS Code and prime it.** New to
-   AI assistants? Read [`../USING_ZOO_CODE.md`](../USING_ZOO_CODE.md) first. It
+   AI assistants? Read [`../USING_AN_AI_ASSISTANT.md`](../USING_AN_AI_ASSISTANT.md) first. It
    covers installing Zoo Code, signing in, and how to attach files and approve
    edits.
 

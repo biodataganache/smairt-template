@@ -18,7 +18,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE)
 [![Framework: SMAIRT](https://img.shields.io/badge/framework-SMAIRT-6f42c1.svg)](../README.md)
-[![Mode: Scientist in Control](https://img.shields.io/badge/AI%20workflow-human%20review%20required-darkgreen.svg)](USING_ZOO_CODE.md)
+[![Mode: Scientist in Control](https://img.shields.io/badge/AI%20workflow-human%20review%20required-darkgreen.svg)](USING_AN_AI_ASSISTANT.md)
 
 **A professional, scientist-friendly set of SMAIRT demos for learning how to do reproducible, AI-assisted research without giving up scientific judgment.**
 
@@ -177,11 +177,15 @@ smairt new
 
 Each track's [`DEMO.md`](lunar/DEMO.md) provides suggested answers for the guided CLI prompts.
 
-### 4. Configure Zoo Code
+### 4. Configure your AI assistant
 
-If you are new to the AI workflow, read [`USING_ZOO_CODE.md`](USING_ZOO_CODE.md). For a concrete mental model of how to begin, also read [`FIRST_SCRIPT_GUIDE.md`](FIRST_SCRIPT_GUIDE.md).
+If you are new to the AI workflow, read
+[`USING_AN_AI_ASSISTANT.md`](USING_AN_AI_ASSISTANT.md). For click-by-click setup of one specific
+assistant, see [`USING_ZOO_CODE.md`](USING_ZOO_CODE.md). For a concrete mental model of how to
+begin, also read [`FIRST_SCRIPT_GUIDE.md`](FIRST_SCRIPT_GUIDE.md).
 
-Recommended settings:
+SMAIRT recorded your assistant choice when you generated the project; `smairt settings` shows it.
+If your assistant asks for an OpenAI-compatible endpoint, these are the values it needs:
 
 | Setting      | Value                                                                                  |
 | ------------ | -------------------------------------------------------------------------------------- |
@@ -235,7 +239,8 @@ The completed lunar example shows what a multi-iteration trail can look like, bu
 | Path                                                 | What it contains                                                  |
 | ---------------------------------------------------- | ----------------------------------------------------------------- |
 | [`README.md`](README.md)                              | This landing page for the demo collection                         |
-| [`USING_ZOO_CODE.md`](USING_ZOO_CODE.md)              | First-time Zoo Code setup and human-in-the-loop workflow guidance |
+| [`USING_AN_AI_ASSISTANT.md`](USING_AN_AI_ASSISTANT.md) | The demo workflow with any supported assistant, and human-in-the-loop review |
+| [`USING_ZOO_CODE.md`](USING_ZOO_CODE.md)              | First-time click-by-click setup for one assistant, Zoo Code in VS Code |
 | [`demo_tracks.svg`](demo_tracks.svg)                  | Visual summary of the demo tracks                                 |
 | [`lunar/`](lunar/DEMO.md)                             | Physics demo with a completed 3-iteration reference project       |
 | [`enzyme_kinetics/`](enzyme_kinetics/DEMO.md)         | Small nonlinear-fitting demo                                      |

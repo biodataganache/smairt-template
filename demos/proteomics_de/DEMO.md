@@ -30,7 +30,7 @@ There are **no solution scripts here**. The goal is to experience using SMAIRT
 to go from a question to an answer with an AI assistant, on a biology workflow
 that lets you iterate a few times.
 
-> New to AI assistants? Read [`../USING_ZOO_CODE.md`](../USING_ZOO_CODE.md) first
+> New to AI assistants? Read [`../USING_AN_AI_ASSISTANT.md`](../USING_AN_AI_ASSISTANT.md) first
 > (install, sign in, attach files, approve edits).
 
 ---
@@ -61,7 +61,7 @@ test plus multiple-testing correction **recover the proteins we know are truly
 changed** while controlling false positives?
 
 Full context, hypothesis, and metrics are in
-[`background/01_initial_question.md`](background/01_initial_question.md).
+[`background/01_initial_question.md`](proteomics_de/background/01_initial_question.md).
 
 ### Key terms
 
@@ -114,7 +114,7 @@ Full context, hypothesis, and metrics are in
    ```
 
 3. **Configure Zoo Code, then open the project in VS Code and prime it.** New to
-   AI assistants? Read [`../USING_ZOO_CODE.md`](../USING_ZOO_CODE.md) first. It
+   AI assistants? Read [`../USING_AN_AI_ASSISTANT.md`](../USING_AN_AI_ASSISTANT.md) first. It
    covers installing Zoo Code, signing in, and how to attach files and approve
    edits.
 

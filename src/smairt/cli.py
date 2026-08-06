@@ -308,7 +308,40 @@ def settings(
 ) -> None:
     """Show or safely update approved project settings; slug and folder stay immutable."""
     root = project_or_exit(path)
+    # Each group names the store it writes to, so a reader can see that asking for nothing
+    # writes nothing. `--confirm-license` is deliberately absent: on its own it approves a
+    # license change that was never requested, which is not a change to make.
+    contract_changes = (
+        name,
+        description,
+        domain,
+        question,
+        assistant,
+        phase,
+        researcher,
+        email,
+        prompt_convention,
+        code_convention,
+        declare_multiplicity_policy,
+        separate_discovery_validation,
+        declare_unit_of_inference,
+        track_per_probe_status,
+    )
+    collaborator_changes = (collaborator_role, collaborator_name, collaborator_email)
+    preference_changes = (experience, motion)
+    requested_a_change = any(
+        value is not None
+        for value in (
+            *contract_changes,
+            *collaborator_changes,
+            *preference_changes,
+            license,
+        )
+    )
     try:
+        if not requested_a_change:
+            _show_settings(root)
+            return
         if license is not None:
             typer.echo("License changes can affect legal rights. This is not legal advice.")
             typer.echo(f"{license.value}: {LICENSE_EXPLANATIONS[license]}")
@@ -331,67 +364,49 @@ def settings(
                     "--collaborator-role and --collaborator-name must be provided together."
                 )
             update_collaborator(root, collaborator_role, collaborator_name, collaborator_email)
-        update_settings(
-            root,
-            name=name,
-            description=description,
-            domain=domain,
-            question=question,
-            assistant=assistant,
-            phase=phase,
-            researcher=researcher,
-            email=email,
-            prompt_convention=prompt_convention,
-            code_convention=code_convention,
-            declare_multiplicity_policy=declare_multiplicity_policy,
-            separate_discovery_validation=separate_discovery_validation,
-            declare_unit_of_inference=declare_unit_of_inference,
-            track_per_probe_status=track_per_probe_status,
-        )
-        preferences = local_preferences(root)
-        if experience is not None:
-            if experience not in {"standard", "advanced"}:
-                raise ProjectError("Experience must be standard or advanced.")
-            preferences["experience"] = experience
-        if motion is not None:
-            preferences["motion"] = motion
-        if experience is not None or motion is not None:
-            save_local_preferences(root, preferences)
-        if all(
-            value is None
-            for value in (
-                name,
-                description,
-                domain,
-                question,
-                assistant,
-                phase,
-                researcher,
-                email,
-                collaborator_role,
-                experience,
-                motion,
-                prompt_convention,
-                code_convention,
-                declare_multiplicity_policy,
-                separate_discovery_validation,
-                declare_unit_of_inference,
-                track_per_probe_status,
-                license,
+        if any(value is not None for value in contract_changes):
+            update_settings(
+                root,
+                name=name,
+                description=description,
+                domain=domain,
+                question=question,
+                assistant=assistant,
+                phase=phase,
+                researcher=researcher,
+                email=email,
+                prompt_convention=prompt_convention,
+                code_convention=code_convention,
+                declare_multiplicity_policy=declare_multiplicity_policy,
+                separate_discovery_validation=separate_discovery_validation,
+                declare_unit_of_inference=declare_unit_of_inference,
+                track_per_probe_status=track_per_probe_status,
             )
-        ):
-            contract = load_contract(root)
-            typer.echo(f"Project Settings: {contract.project.name}")
-            typer.echo(f"Slug (immutable): {contract.project.slug}")
-            typer.echo(f"Starting phase: {contract.starting_phase.value}")
-            typer.echo(f"Current phase: {contract.current_phase.value}")
-            typer.echo(f"Assistant: {contract.assistant.value}")
-            typer.echo(f"License: {contract.license.value}")
-            typer.echo(f"Collaborators: {', '.join(contract.people)}")
-        elif license is None:
+        if any(value is not None for value in preference_changes):
+            preferences = local_preferences(root)
+            if experience is not None:
+                if experience not in {"standard", "advanced"}:
+                    raise ProjectError("Experience must be standard or advanced.")
+                preferences["experience"] = experience
+            if motion is not None:
+                preferences["motion"] = motion
+            save_local_preferences(root, preferences)
+        if license is None:
             typer.echo("Project Settings updated. The project slug and folder were unchanged.")
     except ProjectError as error:
         _command_error(error)
+
+
+def _show_settings(root: Path) -> None:
+    """Print the settings a researcher is allowed to change, and the slug they are not."""
+    contract = load_contract(root)
+    typer.echo(f"Project Settings: {contract.project.name}")
+    typer.echo(f"Slug (immutable): {contract.project.slug}")
+    typer.echo(f"Starting phase: {contract.starting_phase.value}")
+    typer.echo(f"Current phase: {contract.current_phase.value}")
+    typer.echo(f"Assistant: {contract.assistant.value}")
+    typer.echo(f"License: {contract.license.value}")
+    typer.echo(f"Collaborators: {', '.join(contract.people)}")
 
 
 @app.command("inspect")

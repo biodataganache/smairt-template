@@ -26,6 +26,7 @@ jobs:
       - run: uv sync --all-extras --locked
       - run: uv run ruff format --check .
       - run: uv run ruff check .
+      - run: uv run ruff check --config config/ruff-demos.toml demos/
       - run: uv run mypy src tests
       - run: uv run python scripts/ci_scaffold_diff.py
       - run: uv run pytest

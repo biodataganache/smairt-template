@@ -87,7 +87,7 @@ Answer the prompts, then seed the question:
 cp peptide_digest/background/01_initial_question.md <your-project>/background/
 ```
 
-New to AI assistants? Read [`../USING_ZOO_CODE.md`](../USING_ZOO_CODE.md) first.
+New to AI assistants? Read [`../USING_AN_AI_ASSISTANT.md`](../USING_AN_AI_ASSISTANT.md) first.
 
 Prime the assistant before asking for code:
 

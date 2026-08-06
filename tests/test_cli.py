@@ -2324,3 +2324,74 @@ def run_interactive_dashboard(
         output.extend(chunk)
     os.close(master)
     return subprocess.CompletedProcess(command, process.wait(), output.decode(), "")
+
+
+def test_showing_settings_does_not_rewrite_the_project_contract(tmp_path: Path) -> None:
+    """Reading settings must leave the contract alone, not rewrite it with identical bytes.
+
+    `smairt settings` with no options only prints. It nonetheless replaced `smairt.yaml`, because
+    the command called `update_settings()` unconditionally and only afterwards worked out that it
+    had nothing to update. The content matched, so nothing was corrupted and nothing failed.
+
+    It is still wrong. `smairt.yaml` is the provenance record for the project, and its modification
+    time is evidence about when the project was last changed. A command that only displays must not
+    disturb that evidence, and an operation whose control flow decides "this was read-only" after
+    writing is one refactor away from being destructive.
+
+    Asserting bytes alone would pass on the broken code. The inode and modification time are what
+    distinguish "left alone" from "replaced with the same text".
+    """
+    destination = tmp_path / "read-only-settings"
+    assert create_project(destination).returncode == 0
+    contract = destination / "smairt.yaml"
+    before = contract.read_bytes()
+    before_stat = contract.stat()
+
+    shown = run_settings(destination)
+
+    assert shown.returncode == 0, shown.stderr
+    assert "Project Settings: Test Project" in shown.stdout
+    assert "Slug (immutable): test_project" in shown.stdout
+    after_stat = contract.stat()
+    assert contract.read_bytes() == before
+    assert after_stat.st_ino == before_stat.st_ino, "the contract was replaced by a display command"
+    assert after_stat.st_mtime_ns == before_stat.st_mtime_ns
+
+
+def test_an_incomplete_collaborator_is_still_rejected_rather_than_shown(tmp_path: Path) -> None:
+    """A malformed change must stay an error, not become a display.
+
+    The display branch is chosen when no option asks for a change. `--collaborator-name` without
+    `--collaborator-role` is an incomplete *change*, and the guard that rejects it sits between the
+    two. Deciding "read-only" from an option list that omitted the collaborator fields would turn
+    this error into a silent settings dump, which reports success for a command that did nothing the
+    researcher asked for.
+    """
+    destination = tmp_path / "incomplete-collaborator"
+    assert create_project(destination).returncode == 0
+
+    attempted = run_settings(destination, "--collaborator-name", "Ada Collaborator")
+
+    assert attempted.returncode != 0
+    assert "--collaborator-role and --collaborator-name must be provided together." in (
+        attempted.stdout + attempted.stderr
+    )
+
+
+def run_settings(destination: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
+    """Run `smairt settings` against a project, keeping recents out of the developer's real state.
+
+    `project_or_exit()` records the project as recently opened, so an unredirected run would write
+    to the machine's own data directory — a "read-only" test with a side effect on the person
+    running it.
+    """
+    return subprocess.run(
+        [str(installed_smairt()), "settings", str(destination), *arguments],
+        check=False,
+        capture_output=True,
+        text=True,
+        env={
+            **os.environ,
+            "XDG_DATA_HOME": str(destination.parent / ".smairt-test-data"),
+        },
+    )

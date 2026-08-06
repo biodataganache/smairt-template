@@ -454,9 +454,12 @@ def test_no_demo_guide_documents_native_windows_activation() -> None:
     """
     offences: list[str] = []
     forbidden = ("Set-ExecutionPolicy", "Scripts\\Activate.ps1", "Scripts\\activate.bat")
+    # Named rather than globbed, because these are the documents a reader follows. A new guide must
+    # be added here deliberately; forgetting loses the check silently, with no test turning red.
+    guides = {"DEMO.md", "README.md", "USING_AN_AI_ASSISTANT.md", "USING_ZOO_CODE.md"}
     for document in sorted(DEMOS.rglob("*.md")):
         # Legacy completed projects hold historical records; the guides are what a reader follows.
-        if document.name not in {"DEMO.md", "README.md", "USING_ZOO_CODE.md"}:
+        if document.name not in guides:
             continue
         text = document.read_text()
         for phrase in forbidden:
@@ -487,14 +490,35 @@ def test_no_demo_file_is_hidden_from_a_clone_by_gitignore() -> None:
         capture_output=True,
         text=True,
     )
-    # Build artefacts and virtualenvs are meant to be ignored; evidence is not.
+    # Tool caches, build artefacts, and virtualenvs are meant to be ignored; evidence is not. The
+    # list is deliberately short: anything not named here is treated as a demo file that a reader
+    # would expect to receive, which is the failure this test exists to catch.
+    DISPOSABLE = ("__pycache__", ".venv", ".DS_Store", ".smairt", ".ruff_cache", ".pytest_cache")
     evidence = [
         path
         for path in listed.stdout.split("\n")
-        if path
-        and not any(part in path for part in ("__pycache__", ".venv", ".DS_Store", ".smairt"))
+        if path and not any(part in path for part in DISPOSABLE)
     ]
     assert not evidence, (
         "these demo files exist locally but would be absent from a clone:\n"
         + "\n".join(f"  {path}" for path in evidence)
     )
+
+
+def test_no_demo_guide_has_a_dangling_local_link() -> None:
+    """The guide is where a reader starts, so its links are the first ones they click.
+
+    A sibling test already checks links *inside* each completed project, but it reaches them through
+    `completed_project()`, which only descends into the project directory. The `DEMO.md` files one
+    level up were never checked, and four of them pointed at `background/01_initial_question.md`
+    when the file is at `<project>/background/01_initial_question.md`.
+
+    That is the same shape as the earlier link repair, which fixed 47 links inside the projects and
+    missed these because the test that proved it looked in the wrong place.
+    """
+    dangling: list[str] = []
+    for guide in sorted(DEMOS.glob("*/DEMO.md")):
+        for target in re.findall(r"\]\((?!https?://|#|mailto:)([^)#]+)", guide.read_text()):
+            if not (guide.parent / target.strip()).resolve().exists():
+                dangling.append(f"{guide.relative_to(DEMOS)} -> {target.strip()}")
+    assert not dangling, "demo guides have dangling local links:\n" + "\n".join(dangling)

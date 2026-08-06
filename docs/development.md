@@ -20,6 +20,7 @@ These are exactly what CI runs:
 ```bash
 uv run ruff format --check .
 uv run ruff check .
+uv run ruff check --config config/ruff-demos.toml demos/
 uv run mypy src tests
 uv run python scripts/ci_scaffold_diff.py
 uv run pytest
@@ -27,6 +28,10 @@ uv build
 uv run python scripts/smoke_install.py --artifact dist --kind wheel --workspace .smoke/wheel
 uv run python scripts/smoke_install.py --artifact dist --kind sdist --workspace .smoke/sdist
 ```
+
+`demos/` is excluded from the project's own Ruff configuration and linted separately against a
+narrow rule set, because five demos are historical scientific records rather than current code.
+See `config/ruff-demos.toml` for which rules apply and why.
 
 GitHub Actions runs all of them on Ubuntu and macOS with Python 3.11, 3.12, and 3.13 — six
 cells. It also runs on any `verify/**` branch and by manual dispatch, so the matrix is reachable

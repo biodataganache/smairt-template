@@ -1409,14 +1409,6 @@ def _apply_convention_guidance(root: Path, contract: ProjectContract) -> None:
             path.write_text(content)
 
 
-def _managed_asset_content(root: Path, relative: str) -> str | None:
-    return managed_asset_contents(root).get(relative)
-
-
-def _hash_file(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def _hash_text(content: str) -> str:
     return hashlib.sha256(content.encode()).hexdigest()
 

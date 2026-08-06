@@ -47,6 +47,11 @@ def test_built_wheel_and_sdist_install_into_clean_environments_and_create_projec
     assert "smairt/assets/scaffold/scripts/monitor_template.py" in wheel_files
     assert "smairt/assets/scaffold/scripts/shared/logging.py" in wheel_files
     assert f"smairt-{__version__}.dist-info/METADATA" in wheel_files
+    # The package is checked under strict mypy, but a consumer's type checker ignores all of it
+    # unless the marker is installed alongside the code. Absent, every annotation this project
+    # maintains is invisible downstream, and no internal gate would ever notice.
+    assert "smairt/py.typed" in wheel_files
+    assert "src/smairt/py.typed" in source_files
     assert any(path.endswith(".dist-info/licenses/LICENSE") for path in wheel_files)
     # A gitignored file is invisible in review but still on disk for the build to copy, so
     # operating-system metadata must be excluded by the build rather than by tidiness.

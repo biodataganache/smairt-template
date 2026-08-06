@@ -22,15 +22,17 @@ Run the same gates used by CI before opening a pull request:
 ```bash
 uv run ruff format --check .
 uv run ruff check .
+uv run ruff check --config config/ruff-demos.toml demos/
 uv run mypy src tests
-uv run pytest tests/test_cli.py
 uv run pytest
 uv build
 uv run python scripts/smoke_install.py --artifact dist --kind wheel --workspace .smoke/wheel
 uv run python scripts/smoke_install.py --artifact dist --kind sdist --workspace .smoke/sdist
 ```
 
-The focused suite exercises the installed command seam.
+The demos are linted to a narrower rule set than the package, because five of them are
+historical records rather than current code. `config/ruff-demos.toml` explains which rules
+apply and why.
 The artifact smoke tests install the wheel and source distribution into clean
 environments, create a representative project, and run Project Check.
 

@@ -85,7 +85,7 @@ answer so you can confirm your method works before trusting it on real data.
    sections, plus any additional relevant context."* Then paste your worksheet.
 
 4. **Configure Zoo Code, then open the project in VS Code and prime it.** New to
-   AI assistants? Read [`../USING_ZOO_CODE.md`](../USING_ZOO_CODE.md) first
+   AI assistants? Read [`../USING_AN_AI_ASSISTANT.md`](../USING_AN_AI_ASSISTANT.md) first
    (install, sign in, attaching files, approving edits).
 
    Basic Zoo Code configuration for this demo:
