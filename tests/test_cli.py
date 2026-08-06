@@ -18,6 +18,12 @@ import yaml
 
 from smairt import __version__
 
+# A pty-driven wizard run takes well under a second on a warm machine. The generous ceiling is
+# for a cold CI runner doing first-import work under contention, where the same commit passed
+# repeatedly and then timed out once. A deadline tight enough to fail intermittently reports the
+# runner's load as a defect in the wizard, which is worse than no assertion at all.
+INTERACTIVE_TIMEOUT_SECONDS = 60
+
 
 def installed_smairt() -> Path:
     return Path(sys.executable).with_name("smairt")
@@ -2177,7 +2183,7 @@ def run_interactive_new(
     os.close(slave)
     output = bytearray()
     sent = False
-    deadline = time.monotonic() + 10
+    deadline = time.monotonic() + INTERACTIVE_TIMEOUT_SECONDS
     while process.poll() is None and time.monotonic() < deadline:
         readable, _, _ = select.select([master], [], [], 0.1)
         if readable:
@@ -2249,7 +2255,7 @@ def run_interactive_dashboard(
     os.close(slave)
     output = bytearray()
     sent = False
-    deadline = time.monotonic() + 10
+    deadline = time.monotonic() + INTERACTIVE_TIMEOUT_SECONDS
     while process.poll() is None and time.monotonic() < deadline:
         readable, _, _ = select.select([master], [], [], 0.1)
         if readable:
