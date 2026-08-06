@@ -22,6 +22,8 @@ Purpose:
 
 import csv
 import sys
+import argparse
+import hashlib
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime
@@ -44,8 +46,14 @@ LOG_DIR = PROJECT_ROOT / "results" / "logs"
 FIGURE_DIR = PROJECT_ROOT / "results" / "figures"
 DATA_DIR = PROJECT_ROOT / "data" / "downloaded" / "covid19_jhu"
 
+# Pinned to the final commit of the JHU CSSE repository, which was archived on 2023-03-10. The
+# previous URL tracked `master`, so what the demo fitted depended on when it was run: a moving
+# target for a result that claims to be reproducible. The repository is archived and will not
+# change again, but the commit is pinned anyway, because "archived" is a property of the host
+# rather than of the data.
+JHU_COMMIT = "4360e50239b4eb6b22f3a1759323748f36752177"
 JHU_BASE_URL = (
-    "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"
+    f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/{JHU_COMMIT}/"
     "csse_covid_19_data/csse_covid_19_time_series"
 )
 
@@ -53,6 +61,31 @@ FILES = {
     "confirmed": "time_series_covid19_confirmed_global.csv",
     "deaths": "time_series_covid19_deaths_global.csv",
     "recovered": "time_series_covid19_recovered_global.csv",
+}
+
+# SHA-256 of each file at JHU_COMMIT, verified against the pinned URLs. A cache that does not match
+# is refused rather than used: a truncated download leaves a file that is non-empty and wrong, and
+# the previous code accepted anything with a size above zero.
+JHU_CHECKSUMS = {
+    "time_series_covid19_confirmed_global.csv": (
+        "e6234a59eec4359d2577358b5220e1a7e3da74c162913cdb7d882db1413f98c2"
+    ),
+    "time_series_covid19_deaths_global.csv": (
+        "4e87757a3e059c45650a1e1856614f8e339ee3c70653c378a7ba6f7b0ee8c72e"
+    ),
+    "time_series_covid19_recovered_global.csv": (
+        "381bb7527a52114d3f07b40c25dc8aba0b6283aa535e97cba97152ce3cbdb526"
+    ),
+}
+
+# The global files are 3.9 MB for three rows this demo actually reads. The offline fixture holds
+# Italy's rows from the same pinned commit, so the documented default path runs with no network and
+# produces the same fit. It is a subset of the real data, not a synthetic stand-in.
+OFFLINE_FIXTURE_DIR = PROJECT_ROOT / "data" / "downloaded" / "covid19_jhu_italy"
+OFFLINE_FIXTURE_FILES = {
+    "confirmed": "italy_confirmed.csv",
+    "deaths": "italy_deaths.csv",
+    "recovered": "italy_recovered.csv",
 }
 
 CONFIG = {
@@ -93,28 +126,84 @@ class FitResult:
 
 
 # === DATA LOADING ===
+def checksum(path):
+    """Return the SHA-256 of a file, read in chunks so a large CSV is not held in memory."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def download_if_needed(name, filename):
-    """Download one JHU CSV if it is not already cached."""
+    """Return a verified local copy of one JHU CSV, downloading it only when necessary.
+
+    Three behaviours differ from the original, and each was a way to get a wrong answer quietly:
+
+    - A cached file is verified against its expected checksum instead of merely being non-empty.
+      An interrupted download leaves a valid-looking prefix of a CSV, and the aggregation would
+      have fitted whatever dates survived.
+    - The download goes to a temporary file and is renamed only after it verifies, so an
+      interrupted run cannot leave a partial file that the next run trusts.
+    - A checksum mismatch after a successful download is an error, not a warning. It means the
+      pinned commit no longer serves what it served, which invalidates the comparison this demo
+      exists to make.
+    """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     path = DATA_DIR / filename
     url = f"{JHU_BASE_URL}/{filename}"
+    expected = JHU_CHECKSUMS[filename]
 
-    if path.exists() and path.stat().st_size > 0:
-        print(f"Using cached {name} data: {path}")
-        return path, False, url
+    if path.exists():
+        actual = checksum(path)
+        if actual == expected:
+            print(f"Using verified cached {name} data: {path}")
+            return path, False, url
+        print(f"Cached {name} data failed verification and will be re-fetched: {path}")
+        print(f"  expected sha256 {expected}")
+        print(f"  found    sha256 {actual}")
+        path.unlink()
 
     print(f"Downloading {name} data from: {url}")
+    handle = None
     try:
         with urllib.request.urlopen(url, timeout=30) as response:
             content = response.read()
-        path.write_bytes(content)
-        print(f"  Saved to: {path}")
-        return path, True, url
     except Exception as exc:
         raise RuntimeError(
-            f"Could not download {name} data and no cache exists at {path}. "
+            f"Could not download {name} data and no verified cache exists at {path}.\n"
+            f"For an offline run, use the committed Italy fixture instead:\n"
+            f"  python3 {Path(__file__).name} --offline\n"
             f"Original error: {exc}"
         ) from exc
+
+    temporary = path.with_suffix(path.suffix + ".partial")
+    temporary.write_bytes(content)
+    actual = checksum(temporary)
+    if actual != expected:
+        temporary.unlink()
+        raise RuntimeError(
+            f"{filename} downloaded from the pinned commit does not match its expected checksum.\n"
+            f"  expected sha256 {expected}\n"
+            f"  found    sha256 {actual}\n"
+            "The pinned commit should be immutable, so this means the source changed or the "
+            "download was corrupted. Do not fit this data until the difference is explained."
+        )
+    temporary.replace(path)
+    print(f"  Saved and verified: {path}")
+    return path, True, url
+
+
+def offline_fixture(name):
+    """Return the committed Italy subset of one JHU file, for a run with no network."""
+    path = OFFLINE_FIXTURE_DIR / OFFLINE_FIXTURE_FILES[name]
+    if not path.exists():
+        raise RuntimeError(
+            f"The offline fixture {path} is missing. Its provenance is recorded in "
+            f"{OFFLINE_FIXTURE_DIR.name}/README.md."
+        )
+    print(f"Using committed offline fixture for {name}: {path}")
+    return path, False, f"{JHU_BASE_URL}/{FILES[name]} (Italy rows, committed subset)"
 
 
 def aggregate_country_series(csv_path, country):
@@ -136,19 +225,22 @@ def aggregate_country_series(csv_path, country):
     return dates, totals, matched_rows
 
 
-def load_covid_country_data(country):
-    """Download/read cached JHU data and return aligned country-level arrays."""
+def load_covid_country_data(country, *, offline=False):
+    """Read verified JHU data and return aligned country-level arrays."""
     paths = {}
     provenance_rows = []
     for name, filename in FILES.items():
-        path, downloaded, url = download_if_needed(name, filename)
+        if offline:
+            path, downloaded, url = offline_fixture(name)
+        else:
+            path, downloaded, url = download_if_needed(name, filename)
         paths[name] = path
         # Use relative path so we don't leak user's personal/absolute paths in the provenance file.
         try:
             rel_path = path.relative_to(PROJECT_ROOT)
         except ValueError:
             rel_path = path
-        provenance_rows.append((name, filename, url, str(rel_path), downloaded))
+        provenance_rows.append((name, filename, url, str(rel_path), downloaded, checksum(path)))
 
     dates, confirmed, confirmed_rows = aggregate_country_series(paths["confirmed"], country)
     death_dates, deaths, death_rows = aggregate_country_series(paths["deaths"], country)
@@ -164,9 +256,14 @@ def load_covid_country_data(country):
         handle.write(f"Generated: {datetime.now().isoformat()}\n")
         handle.write(f"Country: {country}\n")
         handle.write(f"Rows matched: confirmed={confirmed_rows}, deaths={death_rows}, recovered={recovered_rows}\n")
-        for name, filename, url, path, downloaded in provenance_rows:
-            handle.write(f"{name}: filename={filename}; url={url}; local_path={path}; downloaded_now={downloaded}\n")
+        for name, filename, url, path, downloaded, digest in provenance_rows:
+            handle.write(
+                f"{name}: filename={filename}; url={url}; local_path={path}; "
+                f"downloaded_now={downloaded}; sha256={digest}\n"
+            )
         handle.write("Source repository: Johns Hopkins University CSSE COVID-19 Data\n")
+        handle.write(f"Pinned commit: {JHU_COMMIT} (repository archived 2023-03-10)\n")
+        handle.write("License: CC BY 4.0 for the data, per the JHU CSSE repository terms.\n")
         handle.write("Use caveat: reported confirmed/recovered/deaths are not direct true SIRD compartments.\n")
 
     return {
@@ -361,6 +458,17 @@ def summarize_interval(values):
 
 # === MAIN CODE ===
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help=(
+            "Fit the committed Italy subset instead of downloading the global files. Same pinned "
+            "commit, same rows this script reads, no network."
+        ),
+    )
+    arguments = parser.parse_args()
+
     log_path = setup_logging(SCRIPT_NAME, LOG_DIR)
     FIGURE_DIR.mkdir(parents=True, exist_ok=True)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -379,11 +487,16 @@ def main():
         # ========================================
         print("Data source:")
         print("  Johns Hopkins University CSSE COVID-19 global time series")
+        print(f"  Pinned commit: {JHU_COMMIT}")
         print(f"  Base URL: {JHU_BASE_URL}")
-        print(f"  Cache directory: {DATA_DIR}")
+        if arguments.offline:
+            print(f"  Mode: offline, reading the committed Italy subset in {OFFLINE_FIXTURE_DIR}")
+        else:
+            print(f"  Mode: verified download or cache in {DATA_DIR}")
+        print("  Every file is checked against a recorded SHA-256 before it is fitted.")
         print()
 
-        data = load_covid_country_data(CONFIG["country"])
+        data = load_covid_country_data(CONFIG["country"], offline=arguments.offline)
         window = select_early_window(data)
 
         print("Selected fitting window:")

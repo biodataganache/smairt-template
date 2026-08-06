@@ -277,3 +277,83 @@ def test_a_conforming_demo_has_no_dangling_local_link(name: str) -> None:
             if not (document.parent / target.strip()).resolve().exists():
                 dangling.append(f"{document.relative_to(project)} -> {target.strip()}")
     assert not dangling, f"{name} has dangling local links:\n" + "\n".join(dangling)
+
+
+# Files that are data payloads rather than code, configuration, or documentation.
+DATA_SUFFIXES = {".csv", ".tsv", ".fasta", ".fa", ".json", ".parquet"}
+
+
+def data_payloads(demo: Path) -> list[Path]:
+    """Return every committed data file under a demo's `data/` directory."""
+    return sorted(
+        path
+        for path in (demo).rglob("data/**/*")
+        if path.is_file() and path.suffix.lower() in DATA_SUFFIXES
+    )
+
+
+@pytest.mark.parametrize("demo", demo_directories(), ids=lambda path: path.name)
+def test_every_committed_payload_has_recorded_provenance(demo: Path) -> None:
+    """A reviewer must be able to tell where a datum came from without reading experiment code.
+
+    Four demos shipped real data behind the scaffold's empty inventory template: STRING
+    interactions, UniProt sequences, and two synthetic matrices whose planted truth is what makes
+    their analyses meaningful. The template lists a `| | | |` table, so the file looked documented
+    while recording nothing.
+    """
+    payloads = data_payloads(demo)
+    if not payloads:
+        pytest.skip(f"{demo.name} commits no data payload")
+
+    undocumented: list[str] = []
+    for payload in payloads:
+        readme = payload.parent / "README.md"
+        if not readme.is_file():
+            undocumented.append(f"{payload.relative_to(demo)}: no README.md beside it")
+            continue
+        text = readme.read_text()
+        if payload.name not in text:
+            undocumented.append(f"{payload.relative_to(demo)}: not named in {readme.name}")
+    assert not undocumented, f"{demo.name} has undocumented payloads:\n" + "\n".join(undocumented)
+
+
+@pytest.mark.parametrize("demo", demo_directories(), ids=lambda path: path.name)
+def test_a_documented_payload_records_a_checksum(demo: Path) -> None:
+    """Provenance without a checksum cannot be verified, only believed.
+
+    A source and a URL say where a file was meant to come from. A checksum is what lets a reader
+    confirm the committed bytes are those bytes, which matters most for the live-service sources
+    whose queries are not expected to reproduce the file.
+    """
+    payloads = data_payloads(demo)
+    if not payloads:
+        pytest.skip(f"{demo.name} commits no data payload")
+
+    for readme in {payload.parent / "README.md" for payload in payloads}:
+        text = readme.read_text().lower()
+        assert "sha-256" in text or "sha256" in text, (
+            f"{readme.relative_to(demo)} documents a payload without recording a checksum"
+        )
+
+
+def test_the_epidemic_demo_does_not_commit_the_global_snapshot() -> None:
+    """The 3.9 MB JHU snapshot must stay fetched-and-verified rather than stored.
+
+    It was committed for three rows the script actually reads, and fetched from a mutable `master`
+    URL with no checksum, so what the demo fitted depended on when it ran.
+    """
+    demo = DEMOS / "epidemic_sird"
+    for name in (
+        "time_series_covid19_confirmed_global.csv",
+        "time_series_covid19_deaths_global.csv",
+        "time_series_covid19_recovered_global.csv",
+    ):
+        found = list(demo.rglob(name))
+        assert not found, f"the global JHU snapshot is committed again: {found}"
+
+    script = next(demo.rglob("script_04_fit_published_outbreak.py")).read_text()
+    assert "/master/" not in script, "the JHU URL tracks a mutable branch again"
+    assert "JHU_COMMIT" in script and "JHU_CHECKSUMS" in script, (
+        "the JHU fetch no longer pins a commit and verifies checksums"
+    )
+    assert "--offline" in script, "the offline fixture path was removed"
