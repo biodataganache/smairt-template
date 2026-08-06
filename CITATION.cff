@@ -11,7 +11,7 @@ authors:
     website: https://github.com/PNNL-CompBio
 repository-code: https://github.com/PNNL-CompBio/smairt-template
 license: MIT
-version: 0.5.0
+version: 0.5.1
 keywords:
   - reproducible research
   - scientific workflow

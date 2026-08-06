@@ -28,11 +28,11 @@ def installed_smairt() -> Path:
 
 
 def helper_python() -> Path:
-    """Return an interpreter that has the scaffold helpers' dependencies available.
+    """Return the interpreter the installed tool runs under.
 
-    The generated helpers import PyYAML, which a bare system `python3` may not have. Tests
-    exercise them with the interpreter running the installed tool, which is what a researcher
-    who installed via `uv tool install` or `pipx` actually has.
+    Most tests use this because it is what a researcher who installed via `uv tool install` or
+    `pipx` has on their path. The helpers no longer *require* it: PyYAML became an optional import,
+    so a bare `python3` works too. That is asserted separately below.
     """
     return Path(sys.executable)
 
@@ -385,3 +385,49 @@ def test_creation_refuses_a_capability_flag_it_would_silently_ignore(tmp_path: P
     assert "--paper" in refused.stderr
     assert "asks which capabilities" in refused.stderr
     assert not list(tmp_path.iterdir())
+
+
+def test_the_documented_loop_runs_under_a_bare_python(tmp_path: Path) -> None:
+    """The README's loop must work with the `python3` it tells the reader to use.
+
+    Verifying the README from a clean clone found this: `new_track.py` and `new_iteration.py`
+    imported PyYAML at module scope, so on a machine whose system `python3` lacks it, the first two
+    commands in the documented loop both died with `ModuleNotFoundError`. The tool itself was fine
+    -- it ships its own environment -- which is exactly why the development machine never showed it.
+
+    PyYAML is read only for the optional rigor declarations, which already degrade to "not
+    requested" when the contract cannot be read, so the import is now optional.
+    """
+    system_python = Path("/usr/bin/python3")
+    if not system_python.exists():
+        pytest.skip("no system python3 to test the bare-interpreter path against")
+    probe = subprocess.run(
+        [str(system_python), "-c", "import yaml"],
+        check=False,
+        capture_output=True,
+    )
+    if probe.returncode == 0:
+        pytest.skip("this system python3 has PyYAML, so it cannot exercise the missing-import path")
+
+    destination = tmp_path / "bare"
+    assert create_project(destination).returncode == 0
+
+    def bare(*arguments: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [str(system_python), *arguments],
+            cwd=destination,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+    track = bare("scripts/new_track.py", "Label noise degrades calibration", "synthetic")
+    assert track.returncode == 0, f"new_track.py failed under a bare python3:\n{track.stderr}"
+
+    iteration = bare(
+        "scripts/new_iteration.py", "baseline", "synthetic", "--hypothesis", "HYPOTHESIS_01"
+    )
+    assert iteration.returncode == 0, (
+        f"new_iteration.py failed under a bare python3:\n{iteration.stderr}"
+    )
+    assert (destination / "experiments/01_synthetic/script_01_baseline.py").is_file()

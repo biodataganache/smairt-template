@@ -1,5 +1,26 @@
 # Scientific Scaffold Transition Record
 
+## Scaffold version 0.5.1
+
+`scripts/new_track.py` and `scripts/new_iteration.py` imported PyYAML at module scope. Both read it
+for one thing only: the optional rigor declarations, which already degrade to "not requested" when
+the contract cannot be read. So a dependency that governs a docstring field was stopping the first
+two commands of the documented loop.
+
+It stopped them on exactly the machines that matter. The installed tool ships its own environment,
+so `smairt new` worked; the helpers then run under whatever `python3` the researcher has, and a
+system interpreter without PyYAML failed with `ModuleNotFoundError`. The development machine never
+showed it, because the interpreter running the tests has PyYAML. Verifying the README from a clean
+clone is what surfaced it.
+
+The import is now optional and the rigor reader returns no declarations when PyYAML is absent.
+
+`0.5.1` rather than a doc-only change because two tool-owned files changed content, and
+`project_check()` compares managed files against what the installed scaffold would render. Without
+the bump, every existing `0.5.0` project reported `modified-managed-file` for two files the
+researcher never touched. Verified: before the bump a 0.5.0 project reported that drift; after it,
+the project is told `scaffold-version-mismatch` and `smairt upgrade` replaces both helpers.
+
 ## Scaffold version 0.5.0
 
 `scripts/utilities/` shipped as a declared directory with nothing in it. Git does not track

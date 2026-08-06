@@ -18,7 +18,13 @@ import re
 import sys
 from pathlib import Path
 
-import yaml
+try:
+    import yaml
+except ModuleNotFoundError:  # pragma: no cover - exercised by the no-PyYAML path
+    # PyYAML is read only for the optional rigor declarations below, which already degrade to
+    # "not requested" when the contract cannot be read. A researcher running these helpers with a
+    # bare `python3` should not be stopped by a dependency that governs a docstring field.
+    yaml = None  # type: ignore[assignment]
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -211,6 +217,8 @@ def _without_leading_docstring(text: str) -> str:
 
 def _rigor_settings(root: Path) -> dict[str, bool]:
     """Return optional declaration switches from the generated project's contract."""
+    if yaml is None:
+        return {}  # type: ignore[unreachable]
     try:
         contract = yaml.safe_load((root / "smairt.yaml").read_text())
     except (OSError, yaml.YAMLError):

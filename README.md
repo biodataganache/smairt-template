@@ -119,11 +119,18 @@ Other current limits:
 ## Examples
 
 [`demos/`](demos/) holds worked studies across enzyme kinetics, orbital mechanics, proteomics,
-network biology, epidemiology, and protein language models.
+network biology, epidemiology, and protein language models. Each states how current it is, because
+the older ones document a workflow that has since changed:
 
-> **Note:** the completed demo projects predate the current CLI. Their scientific reasoning
-> holds; their commands and directory layouts do not. They are being rewritten against the
-> current toolkit.
+| Start with | Why |
+|---|---|
+| [enzyme kinetics](demos/enzyme_kinetics/DEMO.md) | The full current loop on real data. Its second iteration's prediction was **refuted**, and the demo keeps it that way — the clearest illustration of why criteria are committed before a run |
+| [lunar free-return](demos/lunar/DEMO.md) | Fastest to run. Numerical modelling with a conserved quantity as the correctness check |
+| [peptide digestion](demos/peptide_digest/DEMO.md) | Deterministic rules, so "correct" is exact and checkable by hand |
+
+The remaining five are labelled **legacy**: their science runs and their reasoning is sound, but
+they are not projects the installed tool recognises and their guides predate the current helpers.
+[`demos/README.md`](demos/README.md) has the full classification.
 
 ## Legacy
 
