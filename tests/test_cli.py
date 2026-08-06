@@ -2183,6 +2183,7 @@ def run_interactive_new(
     os.close(slave)
     output = bytearray()
     sent = False
+    idle = 0.0
     deadline = time.monotonic() + INTERACTIVE_TIMEOUT_SECONDS
     while process.poll() is None and time.monotonic() < deadline:
         readable, _, _ = select.select([master], [], [], 0.1)
@@ -2191,7 +2192,14 @@ def run_interactive_new(
                 output.extend(os.read(master, 4096))
             except OSError:
                 break
-        if not sent and b"Project name" in output:
+            idle = 0.0
+        else:
+            idle += 0.1
+        # Wait for the pty to go quiet before answering. Seeing the prompt text is not the same
+        # as the reader being ready for it: on a loaded runner the first screen can still be
+        # painting, and input written into that gap is dropped rather than queued, which strands
+        # the wizard on step one. A short silence means it has finished painting and is waiting.
+        if not sent and b"Project name" in output and idle >= 0.3:
             os.write(master, input_text.encode())
             sent = True
     if process.poll() is None:
@@ -2255,6 +2263,7 @@ def run_interactive_dashboard(
     os.close(slave)
     output = bytearray()
     sent = False
+    idle = 0.0
     deadline = time.monotonic() + INTERACTIVE_TIMEOUT_SECONDS
     while process.poll() is None and time.monotonic() < deadline:
         readable, _, _ = select.select([master], [], [], 0.1)
@@ -2263,7 +2272,12 @@ def run_interactive_dashboard(
                 output.extend(os.read(master, 4096))
             except OSError:
                 break
-        if not sent and b"Choose an action" in output:
+            idle = 0.0
+        else:
+            idle += 0.1
+        # Same reason as the wizard helper: wait for the screen to stop painting before
+        # answering, because input written mid-paint is dropped rather than queued.
+        if not sent and b"Choose an action" in output and idle >= 0.3:
             os.write(master, input_text.encode())
             # A lone `\x1b` is the prefix of every escape sequence, so Prompt Toolkit must wait
             # to learn whether more bytes follow before it can treat it as the Escape key. On a
