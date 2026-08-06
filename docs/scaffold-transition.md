@@ -25,7 +25,7 @@ declined to act on it, because the installed version already matched the project
 
 The re-enrichment and the readopted iteration workflow both changed what a generated
 project contains while `scaffold_version` stayed at `0.2.0`. Since
-[`project_check()`](../src/smairt/project.py:588) decides whether a project is current by
+[`project_check()`](../src/smairt/project.py) decides whether a project is current by
 comparing that string to the installed version, a project generated before those changes
 and one generated after were indistinguishable, and the check reported a stale project as
 current.
