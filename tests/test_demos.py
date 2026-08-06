@@ -493,11 +493,18 @@ def test_no_demo_file_is_hidden_from_a_clone_by_gitignore() -> None:
     # Tool caches, build artefacts, and virtualenvs are meant to be ignored; evidence is not. The
     # list is deliberately short: anything not named here is treated as a demo file that a reader
     # would expect to receive, which is the failure this test exists to catch.
-    DISPOSABLE = ("__pycache__", ".venv", ".DS_Store", ".smairt", ".ruff_cache", ".pytest_cache")
+    disposable_parts = (
+        "__pycache__",
+        ".venv",
+        ".DS_Store",
+        ".smairt",
+        ".ruff_cache",
+        ".pytest_cache",
+    )
     evidence = [
         path
         for path in listed.stdout.split("\n")
-        if path and not any(part in path for part in DISPOSABLE)
+        if path and not any(part in path for part in disposable_parts)
     ]
     assert not evidence, (
         "these demo files exist locally but would be absent from a clone:\n"

@@ -308,10 +308,11 @@ def settings(
 ) -> None:
     """Show or safely update approved project settings; slug and folder stay immutable."""
     root = project_or_exit(path)
-    # Each group names the store it writes to, so a reader can see that asking for nothing
-    # writes nothing. `--confirm-license` is deliberately absent: on its own it approves a
-    # license change that was never requested, which is not a change to make.
-    contract_changes = (
+    # Grouped so that every option capable of changing something is visibly accounted for, and a
+    # reader can see that asking for nothing writes nothing. `--confirm-license` is deliberately
+    # absent: on its own it approves a license change that was never requested, which is not a
+    # change to make.
+    project_setting_options = (
         name,
         description,
         domain,
@@ -327,14 +328,16 @@ def settings(
         declare_unit_of_inference,
         track_per_probe_status,
     )
-    collaborator_changes = (collaborator_role, collaborator_name, collaborator_email)
-    preference_changes = (experience, motion)
+    # Named rather than inlined so all three fields must be listed together. Omitting one from the
+    # predicate would turn an incomplete collaborator into a silent settings dump.
+    collaborator_options = (collaborator_role, collaborator_name, collaborator_email)
+    local_preference_options = (experience, motion)
     requested_a_change = any(
         value is not None
         for value in (
-            *contract_changes,
-            *collaborator_changes,
-            *preference_changes,
+            *project_setting_options,
+            *collaborator_options,
+            *local_preference_options,
             license,
         )
     )
@@ -364,7 +367,7 @@ def settings(
                     "--collaborator-role and --collaborator-name must be provided together."
                 )
             update_collaborator(root, collaborator_role, collaborator_name, collaborator_email)
-        if any(value is not None for value in contract_changes):
+        if any(value is not None for value in project_setting_options):
             update_settings(
                 root,
                 name=name,
@@ -382,7 +385,7 @@ def settings(
                 declare_unit_of_inference=declare_unit_of_inference,
                 track_per_probe_status=track_per_probe_status,
             )
-        if any(value is not None for value in preference_changes):
+        if any(value is not None for value in local_preference_options):
             preferences = local_preferences(root)
             if experience is not None:
                 if experience not in {"standard", "advanced"}:

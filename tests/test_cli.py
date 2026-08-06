@@ -2340,6 +2340,12 @@ def test_showing_settings_does_not_rewrite_the_project_contract(tmp_path: Path) 
 
     Asserting bytes alone would pass on the broken code. The inode and modification time are what
     distinguish "left alone" from "replaced with the same text".
+
+    The absence of the "updated" line matters as much as the untouched file. Two things now keep the
+    display read-only: the early return, and a guard on each mutation. Either alone leaves the
+    contract intact, so a test that only stats the file cannot tell whether the early return still
+    exists — remove it and the command prints the settings and then claims "Project Settings
+    updated." for a run that changed nothing. A false report of a write is its own defect.
     """
     destination = tmp_path / "read-only-settings"
     assert create_project(destination).returncode == 0
@@ -2352,6 +2358,7 @@ def test_showing_settings_does_not_rewrite_the_project_contract(tmp_path: Path) 
     assert shown.returncode == 0, shown.stderr
     assert "Project Settings: Test Project" in shown.stdout
     assert "Slug (immutable): test_project" in shown.stdout
+    assert "Project Settings updated." not in shown.stdout
     after_stat = contract.stat()
     assert contract.read_bytes() == before
     assert after_stat.st_ino == before_stat.st_ino, "the contract was replaced by a display command"
